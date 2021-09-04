@@ -4,8 +4,8 @@ Ferium is a package manager like program for Minecraft mods (that are on Modrint
 
 ## Feature TODO
 
-[ ] Check that the version is compatible with a specified Minecraft version
-[ ] Allow configuration through a CLI
-[ ] Release the Labrinth library as a seperate Crate
-[ ] Add support for downloading from Github releases
-[ ] Add support for downloading from CurseForge
+- [ ] Check that the version is compatible with a specified Minecraft version
+- [ ] Allow configuration through a CLI
+- [ ] Release the Labrinth library as a seperate Crate
+- [ ] Add support for downloading from Github releases
+- [ ] Add support for downloading from CurseForge
