@@ -1,3 +1,7 @@
+/*
+ * This file contains typed structs of the data structures used by the Labrinth API
+ */
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::vec::Vec;
@@ -29,6 +33,19 @@ pub struct VersionFile {
     pub hashes: HashMap<String, String>,
     pub url: String,
     pub filename: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct User {
+    pub id: ID,
+    pub github_id: Option<u64>,
+    pub username: String,
+    pub name: String,
+    pub email: Option<String>,
+    pub avatar_url: Option<String>,
+    pub bio: String,
+    pub created: Datetime,
+    pub role: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]

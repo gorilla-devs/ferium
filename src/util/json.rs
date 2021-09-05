@@ -1,15 +1,25 @@
+/*
+ * This file contains convenience wrappers for configurations and general JSON stuff
+ */
+
+use super::wrappers::get_mods_dir;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, to_string_pretty};
 use shellexpand::tilde;
-use std::env::consts::OS;
 use std::fs::{create_dir_all, File, OpenOptions};
-use std::io::{stdout, Read, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
+use std::process::exit;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Config {
     /// The directory to download files to
     pub output_dir: String,
+    // /// (not implemented)
+    // ///
+    // /// If not empty, Ferium will check if the release is compatible with this version of Minecraft
+    // /// Or else, it will just download the latest version
+    // pub version: String,
     /// A list of mod slugs specifiying the mods to download
     pub mod_slugs: Vec<String>,
 }
@@ -20,16 +30,22 @@ pub fn get_config(config_file: &mut File) -> Config {
     let mut contents = String::new();
     match config_file.read_to_string(&mut contents) {
         Ok(_) => (),
-        Err(e) => panic!("Could not read file due to {}", e),
+        Err(e) => {
+            println!("Could not read file due to {}", e);
+            exit(120);
+        }
     }
 
     // Try deserialising contents and return if successful
     match from_str(&contents) {
         Ok(config) => config,
-        Err(e) => panic!(
-            "Config file deserialisation failed due to {}. Check that the formatting is correct!",
-            e
-        ),
+        Err(e) => {
+            println!(
+                "Config file deserialisation failed due to {}. Check that the formatting is correct!",
+                e
+            );
+            exit(120);
+        }
     }
 }
 
@@ -52,7 +68,10 @@ pub fn get_config_file() -> File {
             .open(config_file_path)
         {
             Ok(file) => file,
-            Err(e) => panic!("Could not open config file due to {}", e),
+            Err(e) => {
+                println!("Could not open config file due to {}", e);
+                exit(120);
+            }
         }
 
     // If config file does not exist
@@ -60,7 +79,10 @@ pub fn get_config_file() -> File {
         // Create config directory
         match create_dir_all(config_file_dir) {
             Ok(_) => (),
-            Err(e) => panic!("Could not create config directory due to {}", e)
+            Err(e) => {
+                println!("Could not create config directory due to {}", e);
+                exit(120);
+            }
         }
 
         // Create and open config file
@@ -75,49 +97,43 @@ pub fn get_config_file() -> File {
                 // Write default values to the config file
                 write_to_config(
                     &mut file,
-                    Config {
+                    &Config {
                         output_dir: get_mods_dir().into(),
+                        // version: "".into(),
                         mod_slugs: Vec::new(),
                     },
                 );
                 file
             }
-            Err(e) => panic!("Could not create/open config file due to {}", e),
+            Err(e) => {
+                println!("Could not create/open config file due to {}", e);
+                exit(120);
+            }
         }
     }
 }
 
 /// Serialise and write `config` to `config_file`
-pub fn write_to_config(config_file: &mut File, config: Config) {
+pub fn write_to_config(config_file: &mut File, config: &Config) {
     // Serialise config
     let contents = match to_string_pretty(&config) {
         Ok(contents) => contents,
-        Err(e) => panic!("Could not serialise JSON due to {}", e),
+        Err(e) => {
+            println!("Could not serialise JSON due to {}", e);
+            exit(122);
+        }
     };
 
     // Truncate file and write config
     config_file.set_len(0).unwrap();
+    config_file
+        .seek(SeekFrom::Start(0))
+        .expect("Could not rewind config file");
     match config_file.write_all(contents.as_bytes()) {
         Ok(_) => (),
-        Err(e) => panic!("Could not write to config file due to {}", e),
+        Err(e) => {
+            println!("Could not write to config file due to {}", e);
+            exit(120);
+        }
     }
-}
-
-/// Returns the default directory where mods are stored
-fn get_mods_dir() -> std::borrow::Cow<'static, str> {
-    if OS == "macos" {
-        tilde("~/Library/ApplicationSupport/minecraft/mods/")
-    } else if OS == "linux" {
-        tilde("~/.minecraft/mods/")
-    } else if OS == "windows" {
-        tilde("~\\AppData\\Roaming\\.minecraft\\mods\\")
-    } else {
-        panic!("Not running on a device capable of running Minecraft Java Edition!")
-    }
-}
-
-/// Run `print` macro and flush stdout to make results immediately appear
-pub fn print(msg: &str) {
-    print!("{}", msg);
-    stdout().flush().unwrap();
 }

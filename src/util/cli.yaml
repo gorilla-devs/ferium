@@ -1,0 +1,18 @@
+name: ferium
+version: "3.1.0"
+author: theRookieCoder
+about: An easy to use package manager for Minecraft mods
+subcommands:
+  - list:
+      about: List mods specified in the config file
+  - upgrade:
+      about: Upgrade all mods to the latest version
+  - add:
+      about: Add a mod to the configuration
+      args:
+        - MOD_ID:
+            help: Mod ID f=of the mod to add
+            required: true
+            index: 1
+  - help:
+      about: About page for Ferium
