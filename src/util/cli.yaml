@@ -1,5 +1,5 @@
 name: ferium
-version: "3.1.0"
+version: "3.1.1"
 author: theRookieCoder
 about: An easy to use package manager for Minecraft mods
 subcommands:

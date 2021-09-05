@@ -2,6 +2,12 @@
 
 This changelog is formatted based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## [3.1.1] - 05.08.2021
+
+## Changed
+
+- Made the `License` struct's `url` field nullable
+
 ## [3.1.0] - 05.08.2021
 
 ### Added
