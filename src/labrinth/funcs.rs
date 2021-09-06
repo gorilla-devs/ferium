@@ -19,7 +19,7 @@ pub fn download_version(version: &Version) -> Bytes {
     }
 }
 
-// Chcek if a mod exists. If it does, then the mod is returned, else None is returned
+/// Checks if a mod exists. If it does, then the mod is returned, else None is returned
 pub fn does_exist(mod_id: &ID) -> Option<Mod> {
     let response = request(&format!("/mod/{}", mod_id), true);
     match response.status() {
@@ -56,6 +56,7 @@ pub fn get_mod(mod_slug: &str) -> Mod {
     }
 }
 
+/// Send a request to `url` and return result. If `realitive` is true, the Labrinth base url is prepended
 fn request(url: &str, relative: bool) -> Response {
     let url: String = if relative {
         // If provided URL is specified as relative, then prepend the base url

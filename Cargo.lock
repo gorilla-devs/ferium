@@ -131,7 +131,7 @@ dependencies = [
 
 [[package]]
 name = "ferium"
-version = "3.1.1"
+version = "3.1.2"
 dependencies = [
  "bytes",
  "clap",

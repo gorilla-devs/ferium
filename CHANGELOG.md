@@ -2,9 +2,21 @@
 
 This changelog is formatted based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## [3.1.2] - 06.08.2021
+
+### Added
+
+- Added a makefile for building this project
+- Added full documentation for Labrinth structs
+
+### Changed
+
+- Updated `cli.yaml`'s documentation to match the help page
+- Moved around Labrinth struct definitions to match its documentation
+
 ## [3.1.1] - 05.08.2021
 
-## Changed
+### Changed
 
 - Made the `License` struct's `url` field nullable
 
