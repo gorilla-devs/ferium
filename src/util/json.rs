@@ -6,6 +6,7 @@ use super::wrappers::get_mods_dir;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, to_string_pretty};
 use shellexpand::tilde;
+use std::cmp::PartialEq;
 use std::fs::{create_dir_all, File, OpenOptions};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
@@ -13,15 +14,20 @@ use std::process::exit;
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Config {
-    /// The directory to download files to
+    /// The directory to download mod JARs to
     pub output_dir: String,
-    // /// (not implemented)
-    // ///
-    // /// If not empty, Ferium will check if the release is compatible with this version of Minecraft
-    // /// Or else, it will just download the latest version
-    // pub version: String,
     /// A list of mod slugs specifiying the mods to download
     pub mod_slugs: Vec<String>,
+    /// A list of repositories of mods to download
+    pub repos: Vec<Repo>,
+}
+
+#[derive(Deserialize, Serialize, Debug, PartialEq)]
+pub struct Repo {
+    // Username of the owner of the repository
+    pub owner: String,
+    // Name of the repository
+    pub name: String,
 }
 
 /// Reads from `config_file` and returns a deserialised config
@@ -36,7 +42,7 @@ pub fn get_config(config_file: &mut File) -> Config {
         }
     }
 
-    // Try deserialising contents and return if successful
+    // Try deserialising contents and return it if successful
     match from_str(&contents) {
         Ok(config) => config,
         Err(e) => {
@@ -53,7 +59,7 @@ pub fn get_config(config_file: &mut File) -> Config {
 pub fn get_config_file() -> File {
     // Directory where configs are stored
     let config_file_dir = tilde("~/.ferium/").to_string();
-    // Config file path
+    // Config file's path
     let config_file_path = format!("{}{}", config_file_dir, "config.json");
     let config_file_path = Path::new(&config_file_path);
 
@@ -76,7 +82,7 @@ pub fn get_config_file() -> File {
 
     // If config file does not exist
     } else {
-        // Create config directory
+        // Make sure config directory exists
         match create_dir_all(config_file_dir) {
             Ok(_) => (),
             Err(e) => {
@@ -99,8 +105,8 @@ pub fn get_config_file() -> File {
                     &mut file,
                     &Config {
                         output_dir: get_mods_dir().into(),
-                        // version: "".into(),
                         mod_slugs: Vec::new(),
+                        repos: Vec::new(),
                     },
                 );
                 file
@@ -124,7 +130,7 @@ pub fn write_to_config(config_file: &mut File, config: &Config) {
         }
     };
 
-    // Truncate file and write config
+    // Truncate and rewind file, and write config
     config_file.set_len(0).unwrap();
     config_file
         .seek(SeekFrom::Start(0))

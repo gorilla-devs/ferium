@@ -1,5 +1,5 @@
 name: ferium
-version: "3.1.2"
+version: "3.2.0"
 author: theRookieCoder
 about: Ferium is an open source and easy to use package manager for Minecraft mods (that are on https://modrinth.com)
 subcommands:
@@ -14,5 +14,18 @@ subcommands:
             help: Mod ID is specified as '</> PROJECT ID' in the right sidebar of the mod's Modrith page
             required: true
             index: 1
+  - add-repo:
+      about: Adds a repository to the config
+      args:
+        - OWNER:
+            help: Username of the owner of the repository
+            required: true
+            index: 1
+        - REPO:
+            help: Name of the repository
+            required: true
+            index: 2
   - help:
       about: Show Ferium's help page
+  - version:
+      about: Print Ferium's version
