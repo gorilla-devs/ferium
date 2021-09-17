@@ -1,6 +1,4 @@
-/*
- * This file contains typed structs of the data structures used by the GitHub API
- */
+//! This file contains typed structs of the data structures used by the GitHub API
 
 use serde::{Deserialize, Serialize};
 use std::vec::Vec;

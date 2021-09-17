@@ -1,27 +1,22 @@
 mod labrinth;
 mod octorok;
-mod readme;
 mod util;
 
-use labrinth::funcs::*;
-use octorok::funcs::*;
-use readme::README;
+use labrinth::calls::*;
+use octorok::calls::*;
 use reqwest::Client;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
-use std::process::exit;
-use util::{cli::*, json::*, wrappers::*};
-
-const VERSION: &str = env!("CARGO_PKG_VERSION");
+use util::{cli::SubCommand, *};
 
 #[tokio::main]
 async fn main() {
     // Reference to Ferium's config file
-    let mut config_file = get_config_file();
+    let mut config_file = json::get_config_file();
     // Config deserialised from `config_file`
-    let mut config = get_config(&mut config_file);
+    let mut config = serde_json::from_reader(&config_file).unwrap();
     // Get command to execute from Clap
-    let command = get_subcommand();
+    let command = cli::get_subcommand();
     // HTTP client
     let client: Client = Client::new();
 
@@ -37,13 +32,6 @@ async fn main() {
             upgrade_modrinth(&client, &config).await;
             upgrade_github(&client, &config).await;
         }
-        SubCommand::Help { implied } => {
-            println!("{}", README);
-            if implied {
-                exit(126);
-            }
-        }
-        SubCommand::Version => println!("Ferium version {} by theRookieCoder", VERSION),
     };
 }
 
@@ -52,19 +40,18 @@ async fn add_repo_github(
     client: &Client,
     owner: String,
     repo_name: String,
-    config: &mut Config,
+    config: &mut json::Config,
     config_file: &mut File,
 ) {
     // Check if repo has already been added
-    if config.repos.contains(&Repo {
+    if config.repos.contains(&json::Repo {
         owner: owner.clone(),
         name: repo_name.clone(),
     }) {
-        println!("Repo already added to config!");
-        exit(126);
+        panic!("Repo already added to config!");
     }
 
-    print(&format!("Adding repo {}/{}...", owner, repo_name));
+    wrappers::print(format!("Adding repo {}/{}...", owner, repo_name));
 
     // Get repository metadata
     let repo = get_repository(client, &owner, &repo_name).await;
@@ -76,22 +63,21 @@ async fn add_repo_github(
 
     // Check if the latest release contains JAR files (a mod file)
     for asset in &latest_release.assets {
-        if asset.content_type == "application/java-archive" {
+        if asset.content_type.contains("java") {
             contains_jar_asset = true;
         }
     }
 
     if contains_jar_asset {
         // Append repo to config and write
-        config.repos.push(Repo {
+        config.repos.push(json::Repo {
             owner: owner,
             name: repo_name,
         });
-        write_to_config(config_file, config);
+        json::write_to_config(config_file, config);
         println!("✓")
     } else {
-        println!("Repository does not release mods!");
-        exit(126);
+        panic!("Repository does not release mods!");
     }
 }
 
@@ -99,37 +85,34 @@ async fn add_repo_github(
 async fn add_mod_modrinth(
     client: &Client,
     mod_id: String,
-    config: &mut Config,
+    config: &mut json::Config,
     config_file: &mut File,
 ) {
     // Check if mod has already been added
     if config.mod_slugs.contains(&mod_id) {
-        println!("Mod already added to config!");
-        exit(126);
+        panic!("Mod already added to config!");
     }
 
-    print(&format!("Adding mod {}... ", mod_id));
+    wrappers::print(format!("Adding mod {}... ", mod_id));
 
     // Check if mod exists
     if let Some(mod_) = does_exist(client, &mod_id).await {
         // And if so, append mod to config and write
         config.mod_slugs.push(mod_id);
-        write_to_config(config_file, config);
+        json::write_to_config(config_file, config);
         println!("✓ ({})", mod_.title);
     } else {
-        println!("Mod with ID {} does not exist!", mod_id);
-        exit(126);
+        panic!("Mod with ID {} does not exist!", mod_id);
     }
 }
 
 /// List all the mods in `config` and some of their metadata
-async fn list(client: &Client, config: Config) {
+async fn list(client: &Client, config: json::Config) {
     // Check if mods and repos are empty, and if so tell user to add mods or repos
     if config.mod_slugs.is_empty() && config.mod_slugs.is_empty() {
-        println!(
+        panic!(
             "Your config file contains no mods or repos! Run `ferium help` to see how to add mods or repos."
         );
-        exit(126);
     }
 
     for mod_slug in config.mod_slugs {
@@ -170,16 +153,15 @@ async fn list(client: &Client, config: Config) {
 }
 
 /// Download and install all the mods in `config.repos`
-async fn upgrade_github(client: &Client, config: &Config) {
+async fn upgrade_github(client: &Client, config: &json::Config) {
     // Check if empty and tell user to add mods
     if config.repos.is_empty() {
-        println!("Your config file contains no repos! Run `ferium help` to see how to add repos.");
-        exit(126);
+        panic!("Your config file contains no repos! Run `ferium help` to see how to add repos.");
     }
 
     for repo_name in &config.repos {
         println!("Downloading {}", repo_name.name);
-        print("  [1] Getting release information... ");
+        wrappers::print("  [1] Getting release information... ");
         // Get mod's repository
         let repository = get_repository(client, &repo_name.owner, &repo_name.name).await;
         // Get releases. Index 0 is the latest release because of chronological ordering
@@ -187,43 +169,30 @@ async fn upgrade_github(client: &Client, config: &Config) {
         println!("✓");
 
         // Open the local mod JAR file
-        let mut mod_jar = match OpenOptions::new()
+        let mut mod_jar = OpenOptions::new()
             .read(true)
             .write(true)
             .truncate(true)
             .create(true)
             .open(format!("{}{}.jar", config.output_dir, repo_name.name))
-        {
-            Ok(file) => file,
-            Err(e) => {
-                println!("Could not open file due to {}", e);
-                exit(120)
-            }
-        };
+            .unwrap();
 
         // Download file
-        print(&format!("  [2] Downloading {}... ", latest_release.name));
+        wrappers::print(format!("  [2] Downloading {}... ", latest_release.name));
         let contents = download_release(client, latest_release).await;
         println!("✓");
 
         // Write download to JAR file
-        match mod_jar.write_all(&contents) {
-            Ok(_) => (),
-            Err(e) => {
-                println!("File write failed due to {}", e);
-                exit(120);
-            }
-        }
+        mod_jar.write_all(&contents).unwrap();
         println!("");
     }
 }
 
 /// Download and install all mods in `config.mod_slugs`
-async fn upgrade_modrinth(client: &Client, config: &Config) {
+async fn upgrade_modrinth(client: &Client, config: &json::Config) {
     // Check if empty and tell user to add mods
     if config.mod_slugs.is_empty() {
-        println!("Your config file contains no mods! Run `ferium help` to see how to add mods.");
-        exit(126);
+        panic!("Your config file contains no mods! Run `ferium help` to see how to add mods.");
     }
 
     for mod_slug in &config.mod_slugs {
@@ -232,7 +201,7 @@ async fn upgrade_modrinth(client: &Client, config: &Config) {
         println!("Downloading {}", mod_.title);
 
         // Get versions of the mod
-        print("  [1] Getting version information... ");
+        wrappers::print("  [1] Getting version information... ");
         let versions = get_versions(client, &mod_.id).await;
         println!("✓");
 
@@ -240,33 +209,21 @@ async fn upgrade_modrinth(client: &Client, config: &Config) {
         let latest_version = &versions[0];
 
         // Open mod JAR file
-        let mut mod_jar = match OpenOptions::new()
+        let mut mod_jar = OpenOptions::new()
             .read(true)
             .write(true)
             .truncate(true)
             .create(true)
             .open(format!("{}{}.jar", config.output_dir, mod_.title))
-        {
-            Ok(file) => file,
-            Err(e) => {
-                println!("Could not open file due to {}", e);
-                exit(120)
-            }
-        };
+            .unwrap();
 
         // Download file
-        print(&format!("  [2] Downloading {}... ", latest_version.name));
+        wrappers::print(format!("  [2] Downloading {}... ", latest_version.name));
         let contents = download_version(client, latest_version).await;
         println!("✓");
 
         // Write download to JAR file
-        match mod_jar.write_all(&contents) {
-            Ok(_) => (),
-            Err(e) => {
-                println!("File write failed due to {}", e);
-                exit(120);
-            }
-        }
+        mod_jar.write_all(&contents).unwrap();
         println!("");
     }
 }

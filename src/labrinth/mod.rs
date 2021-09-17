@@ -1,2 +1,2 @@
-pub mod funcs;
+pub mod calls;
 pub mod structs;

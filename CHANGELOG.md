@@ -2,11 +2,24 @@
 
 This changelog is formatted based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
-## [3.2.0] - 06.08.2021
+## [3.3.0] - TBD
 
-> A quick note about Octorok
-> 
-> Octorok is pretty buggy right now. AFAIK GitHub does not provide proper definitions for the structs used by their REST API, hence some fields which are supposed to be nullable may not be. _Please_ file an issue the moment you get an error about Octorok JSON deserialisation failing due to missing fields
+### Added
+
+- Added some metadata to the `cargo.toml`
+- Improved CLI to use Clap's built in `version` and `help` subcommands
+
+### Changed
+
+- Renamed `funcs.rs` to `calls.rs` in Labrinth and Octorok
+- Removed glob imports where possible
+- Switched deserialisation of the file to Serde's built in `from_reader`
+- The relative flag in `request` has been replace with a `relative_request` function
+- Improved file manipulation in `main.rs` and `wrappers.rs` to use `.join()`s instead of `format!()`
+- Removed all `match` and `exit()` pairs to improve error handling in the future. _For now_ these have been replaced with `unwrap()`s
+- Made `print()` accept `impl Display` to decrease `String` copies
+
+## [3.2.0] - 06.08.2021
 
 ### Added
 

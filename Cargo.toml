@@ -1,8 +1,13 @@
 [package]
 name = "ferium"
-version = "3.2.0"
+version = "3.3.0"
 edition = "2018"
 authors = ["theRookieCoder"]
+description = "Ferium is an easy to use package manager for Minecraft mods on Modrinth and Github Releases"
+readme = "README.md"
+repository = "https://github.com/theRookieCoder/ferium"
+license = "GNU LGPL 2.1"
+publish = false
 
 [dependencies]
 reqwest = { version = "0.11", features = ["json", "blocking"] }

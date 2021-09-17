@@ -1,7 +1,5 @@
-/*
- * This file contains typed structs of the data structures used by the Labrinth API
- * These are copied from https://github.com/modrinth/labrinth/wiki/API-Documentation#structure-definitions
- */
+//! This file contains typed structs of the data structures used by the Labrinth API
+//! These are copied from https://github.com/modrinth/labrinth/wiki/API-Documentation#structure-definitions
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

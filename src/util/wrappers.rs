@@ -3,24 +3,38 @@
 use shellexpand::tilde;
 use std::env::consts::OS;
 use std::io::{stdout, Write};
-use std::process::exit;
+use std::path::{Path, PathBuf};
 
 /// Returns the default directory where mods are stored
-pub fn get_mods_dir() -> std::borrow::Cow<'static, str> {
+pub fn get_mods_dir() -> String {
+    let home = tilde("~");
+    let home = Path::new(home.as_ref());
+    let path: PathBuf;
+
     if OS == "macos" {
-        tilde("~/Library/ApplicationSupport/minecraft/mods/")
+        path = home
+            .join("Library")
+            .join("ApplicationSupport")
+            .join("minecraft")
+            .join("mods");
     } else if OS == "linux" {
-        tilde("~/.minecraft/mods/")
+        path = home.join(".minecraft").join("mods");
     } else if OS == "windows" {
-        tilde("~\\AppData\\Roaming\\.minecraft\\mods\\")
+        tilde("~\\AppData\\Roaming\\.minecraft\\mods\\");
+        path = home
+            .join("AppData")
+            .join("Roaming")
+            .join(".minecraft")
+            .join("mods");
     } else {
-        println!("Not running on a device capable of running Minecraft Java Edition!");
-        exit(126)
+        panic!("Not running on a device capable of running Minecraft Java Edition!");
     }
+
+    path.to_str().unwrap().into()
 }
 
 /// Run `print` macro and flush stdout to make results immediately appear
-pub fn print(msg: &str) {
+pub fn print(msg: impl std::fmt::Display) {
     print!("{}", msg);
     stdout().flush().unwrap();
 }
