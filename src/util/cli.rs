@@ -1,8 +1,7 @@
-/*
- * This file contains convenience wrappers for the CLI
- */
+//! This file contains convenience wrappers for the CLI
 
-use clap::{load_yaml, App};
+use crate::ferium_error::*;
+use clap::{crate_version, load_yaml, App};
 
 /// Enum for subcommands
 pub enum SubCommand {
@@ -18,6 +17,8 @@ pub enum SubCommand {
         /// Name of the repository to add
         name: String,
     },
+    /// Remove one or more mods in the config
+    Remove,
     /// List mods and repos in the config
     List,
     /// Download and install the latest version of mods and repos in the config
@@ -25,28 +26,44 @@ pub enum SubCommand {
 }
 
 /// Returns the subcommand (and its arguments) that needs to be executed
-pub fn get_subcommand() -> SubCommand {
+pub fn get_subcommand() -> FResult<SubCommand> {
     // Load command definition from yaml file
     let yaml = load_yaml!("cli.yaml");
-    let app = App::from_yaml(yaml).setting(clap::AppSettings::SubcommandRequiredElseHelp);
+    let app = App::from_yaml(yaml)
+        .setting(clap::AppSettings::SubcommandRequiredElseHelp)
+        .version(crate_version!());
     let matches = app.get_matches();
 
-    // Return enum accorsing to subcommand issued
+    // Return enum according to subcommand issued
     if let Some(_) = matches.subcommand_matches("list") {
-        SubCommand::List
+        Ok(SubCommand::List)
     } else if let Some(_) = matches.subcommand_matches("upgrade") {
-        SubCommand::Upgrade
+        Ok(SubCommand::Upgrade)
     } else if let Some(sub_matches) = matches.subcommand_matches("add") {
-        SubCommand::Add {
-            mod_id: sub_matches.value_of("MOD_ID").unwrap().into(), // Can unwrap because argument is required
-        }
+        Ok(SubCommand::Add {
+            // Can 'unwrap' because argument is required
+            mod_id: sub_matches
+                .value_of("MOD_ID")
+                .ok_or(FError::OptionError)?
+                .into(),
+        })
     } else if let Some(sub_matches) = matches.subcommand_matches("add-repo") {
-        SubCommand::AddRepo {
+        Ok(SubCommand::AddRepo {
             // Can unwrap because arguments are required
-            owner: sub_matches.value_of("OWNER").unwrap().into(),
-            name: sub_matches.value_of("REPO").unwrap().into(),
-        }
+            owner: sub_matches
+                .value_of("OWNER")
+                .ok_or(FError::OptionError)?
+                .into(),
+            name: sub_matches
+                .value_of("REPO")
+                .ok_or(FError::OptionError)?
+                .into(),
+        })
+    } else if let Some(_) = matches.subcommand_matches("remove") {
+        Ok(SubCommand::Remove)
     } else {
-        panic!("Unknown subcommand");
+        Err(FError::Quit {
+            message: "Unknown subcommand".into(),
+        })
     }
 }

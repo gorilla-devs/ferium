@@ -1,19 +1,23 @@
 [package]
 name = "ferium"
-version = "3.3.0"
-edition = "2018"
+version = "3.4.0"
+edition = "2021"
 authors = ["theRookieCoder"]
-description = "Ferium is an easy to use package manager for Minecraft mods on Modrinth and Github Releases"
-readme = "README.md"
+description = "Ferium is an easy to use manager for Minecraft mods on Modrinth and Github Releases"
 repository = "https://github.com/theRookieCoder/ferium"
 license = "GNU LGPL 2.1"
+readme = "README.md"
 publish = false
 
 [dependencies]
-reqwest = { version = "0.11", features = ["json", "blocking"] }
 tokio = { version = "1.11", features = ["full"] }
-serde = { version = "1", features = ["derive"] }
-clap = {version = "2", features = ["yaml"]}
-shellexpand = "2"
-serde_json = "1"
-bytes = "1"
+reqwest = { version = "*", features = ["json"] }
+serde = { version = "*", features = ["derive"] }
+clap = {version = "*", features = ["yaml"]}
+native-dialog = "*"
+fancy-regex = "*"
+shellexpand = "*"
+serde_json = "*"
+dialoguer = "*"
+online = "*"
+bytes = "*"

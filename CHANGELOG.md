@@ -2,11 +2,30 @@
 
 This changelog is formatted based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
-## [3.3.0] - TBD
+## [3.4.0]
+
+- Upgraded to 2021 edition
+- Added `make install` to compile and install `ferium`
+- Added proper error checking! (no more `unwrap()`s and `panic!()`s, only `?`s)
+- Added check for an internet connection
+- Improved check for empty config file
+- Added `remove` command to remove to remove mods or repositories from config
+- Improved checking of releases for `.jar` assets
+- Removed `does_exist` for mod versions, use `match get_mod(...)` instead
+- Added checking of releases and versions for mc version and mod loader compatibility
+- Converted using `format!()`s for path manipulation to using `pathbuf.join()`
+- Made `clap` use version from `crate_version` rather than hardcoding it
+- Added `FError` and `FResult` for error checking support
+- Added first time setup where user selects mod loader, mc version, and mods directory
+- Added abstractions for Mojang's launcher_meta API
+- Added function to get `n` of the latest versions of Minecraft (using launcher_meta)
+- 
+
+## [3.3.0] - 17.08.2021
 
 ### Added
 
-- Added some metadata to the `cargo.toml`
+- Some metadata in `cargo.toml`
 - Improved CLI to use Clap's built in `version` and `help` subcommands
 
 ### Changed
@@ -23,11 +42,11 @@ This changelog is formatted based on [Keep a Changelog](https://keepachangelog.c
 
 ### Added
 
-- Added support for GitHub Releases
-- Added `Octorok`, a Github API abstraction for Ferium
+- Support for GitHub Releases
+- `Octorok`, a Github API for Rust
 - Made the help page a 'copy' of the README file with suitable formatting
-- Added version command for checking the version
-- Added repositories to the configuration
+- Version command for checking the version
+- Repositories to the configuration
 
 ### Changed
 

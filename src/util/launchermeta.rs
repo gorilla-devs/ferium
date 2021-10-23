@@ -1,0 +1,63 @@
+//! This file contains deserialisations and wrappers for accesing Mojang's Minecraft version manifest (version 2)
+
+use crate::ferium_error::*;
+use reqwest::{get, Response};
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct VersionManifestV2 {
+    /// IDs of the latest versions of Minecraft
+    pub latest: LatestVersions,
+    /// All versions of Minecraft
+    pub versions: Vec<Version>,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct LatestVersions {
+    /// Latest release of Minecraft's ID
+    pub release: String,
+    /// Latest snapshot of Minecraft's ID
+    pub snapshot: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct Version {
+    /// Name of version
+    pub id: String,
+    #[serde(rename = "type")]
+    /// Type of versions (snapshot, release, etc)
+    pub type_field: String,
+    /// URL to version's manifest
+    pub url: String,
+    pub time: String,
+    #[serde(rename = "releaseTime")]
+    /// Time when versions was released
+    pub release_time: String,
+    /// SHA1 hash of the version
+    pub sha1: String,
+    #[serde(rename = "complianceLevel")]
+    /// Whether this version is "historical"
+    pub compliance_level: u32,
+}
+
+/// Get the version manifest v2 from Mojang
+pub async fn get_version_manifest() -> FResult<VersionManifestV2> {
+    Ok(
+        request("https://launchermeta.mojang.com/mc/game/version_manifest_v2.json")
+            .await?
+            .json()
+            .await?,
+    )
+}
+
+/// Send a request to `url` with `client` and return response
+async fn request(url: &str) -> FResult<Response> {
+    let response = get(url).await?;
+    if response.status().is_success() {
+        Ok(response)
+    } else {
+        Err(FError::HTTPError {
+            message: format!("HTTP request failed with error code {}", response.status()),
+        })
+    }
+}

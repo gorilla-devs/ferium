@@ -1,9 +1,8 @@
 //! This file contains typed structs of the data structures used by the GitHub API
 
 use serde::{Deserialize, Serialize};
-use std::vec::Vec;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Repository {
     pub id: usize,
     pub node_id: String,
@@ -69,7 +68,7 @@ pub struct Repository {
     pub has_wiki: bool,
     pub has_pages: bool,
     pub forks_count: usize,
-    pub mirror_url: ::serde_json::Value,
+    pub mirror_url: Option<String>,
     pub archived: bool,
     pub disabled: bool,
     pub open_issues_count: usize,
@@ -78,13 +77,13 @@ pub struct Repository {
     pub open_issues: usize,
     pub watchers: usize,
     pub default_branch: String,
-    pub temp_clone_token: ::serde_json::Value,
+    pub temp_clone_token: Option<String>,
     pub organization: Option<User>,
     pub network_count: usize,
     pub subscribers_count: usize,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Release {
     pub url: String,
     pub assets_url: String,
@@ -107,7 +106,7 @@ pub struct Release {
     pub reactions: Option<Reactions>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct User {
     pub login: String,
     pub id: usize,
@@ -130,7 +129,7 @@ pub struct User {
     pub site_admin: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Asset {
     pub url: String,
     pub id: usize,
@@ -147,7 +146,7 @@ pub struct Asset {
     pub browser_download_url: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Reactions {
     pub url: String,
     pub total_count: usize,
@@ -163,11 +162,11 @@ pub struct Reactions {
     pub eyes: usize,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct License {
     pub key: String,
     pub name: String,
     pub spdx_id: String,
-    pub url: String,
+    pub url: Option<String>,
     pub node_id: String,
 }

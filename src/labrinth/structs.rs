@@ -3,7 +3,6 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::vec::Vec;
 
 /// An RFC3339 formatted datetime
 pub type Datetime = String;

@@ -1,5 +1,4 @@
 name: ferium
-version: "3.3.0"
 author: theRookieCoder
 about: Ferium is an open source and easy to use package manager for Minecraft mods on Modrinth and Github Releases
 subcommands:
@@ -21,6 +20,8 @@ subcommands:
             help: Name of the repository
             required: true
             index: 2
+  - remove:
+      about: Pick mods to remove from a list of mods and repositories configured
   - list:
       about: List all the mods and repos configured with some of their metadata
   - upgrade:
