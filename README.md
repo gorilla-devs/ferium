@@ -1,5 +1,6 @@
 # Ferium
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/53ce46e25b19475d83735e7346166849)](https://app.codacy.com/gh/theRookieCoder/ferium?utm_source=github.com&utm_medium=referral&utm_content=theRookieCoder/ferium&utm_campaign=Badge_Grade_Settings)
 [![forthebadge](https://forthebadge.com/images/badges/made-with-rust.svg)](https://forthebadge.com)
 
 Ferium is an open source and easy to use package manager for Minecraft mods on [Modrinth](https://modrinth.com) and [Github Releases](https://github.com/releases). Simply add the mods you use (through the CLI or config file) and in just one command, you can download all the mods and update existing ones.
