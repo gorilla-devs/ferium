@@ -2,7 +2,31 @@
 
 This changelog is formatted based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
-## [3.4.0]
+## [3.5.0] - 24.10.2021
+
+### Added
+
+- Build and release workflow
+- `config` command
+
+### Changed
+
+- Internet connection timeout
+- Improved `remove` command by showing mods and repos at once
+- `ferium list` formatting
+- `get_config_file` returns `None`, rather than erroring out, after first time setup
+- `Select` and `MultiSelect` use the colorful theme
+- Switched to Mozilla Public License 2.0
+- Functions which change `config` values now don't write to the `config_file`. The main function does so with those functions receiving a `&mut Config` instead
+- All the Todo list items have been moved to [a GitHub Project](https://github.com/theRookieCoder/ferium/projects/1) and `README.md`'s todo list section has been removed
+
+### Fixed
+
+- Mod files for Github Releases now use the correct names
+- Repositories which do not release anything no longer crash the program
+- Creation of output directory before `upgrade`ing
+
+## [3.4.0] - 23.10.2021
 
 - Upgraded to 2021 edition
 - Added `make install` to compile and install `ferium`

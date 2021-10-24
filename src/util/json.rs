@@ -2,7 +2,7 @@
 
 use super::wrappers::get_mods_dir;
 use crate::ferium_error::{FError, FResult};
-use dialoguer::{Confirm, Select};
+use dialoguer::{theme::ColorfulTheme, Confirm, Select};
 use native_dialog::FileDialog;
 use serde::{Deserialize, Serialize};
 use serde_json::to_string_pretty;
@@ -41,7 +41,7 @@ impl std::fmt::Display for Repo {
 }
 
 /// Returns the config file. If not found, first time setup will run and write picked values to the config file
-pub async fn get_config_file() -> FResult<File> {
+pub async fn get_config_file() -> FResult<Option<File>> {
     // Get home directory
     let home: PathBuf = tilde("~").as_ref().into();
 
@@ -51,12 +51,14 @@ pub async fn get_config_file() -> FResult<File> {
     // If config file exists
     if config_file_path.exists() {
         // Open and return it
-        Ok(OpenOptions::new()
-            .read(true)
-            .write(true)
-            .truncate(false)
-            .create(false)
-            .open(config_file_path)?)
+        Ok(Some(
+            OpenOptions::new()
+                .read(true)
+                .write(true)
+                .truncate(false)
+                .create(false)
+                .open(config_file_path)?,
+        ))
 
     // If config file does not exist
     } else {
@@ -79,7 +81,7 @@ pub async fn get_config_file() -> FResult<File> {
             "\nThe default mods directory is {}",
             selected_mods_dir.to_str().ok_or(FError::OptionError)?
         );
-        if Confirm::new()
+        if Confirm::with_theme(&ColorfulTheme::default())
             .with_prompt("Would you like to specify a custom mods directory?")
             .interact()?
         {
@@ -94,7 +96,7 @@ pub async fn get_config_file() -> FResult<File> {
         // Let user pick Minecraft version
         let mut latest_versions: Vec<String> = super::wrappers::get_latest_mc_versions(20).await?;
         println!("\nWhich version of Minecraft do you play?");
-        let selected_version = Select::new()
+        let selected_version = Select::with_theme(&ColorfulTheme::default())
             .items(&latest_versions)
             .clear(false)
             .default(0)
@@ -102,9 +104,9 @@ pub async fn get_config_file() -> FResult<File> {
         let selected_version = latest_versions.swap_remove(selected_version);
 
         // Let user pick mod loader
-        let mod_loaders = ["fabric", "forge"];
+        let mod_loaders = ["Fabric", "Forge"];
         println!("\nWhich mod loader do you use?");
-        let selected_loader = mod_loaders[Select::new()
+        let selected_loader = mod_loaders[Select::with_theme(&ColorfulTheme::default())
             .items(&mod_loaders)
             .clear(false)
             .default(0)
@@ -118,13 +120,12 @@ pub async fn get_config_file() -> FResult<File> {
                 mod_slugs: Vec::new(),
                 repos: Vec::new(),
                 version: selected_version,
-                loader: selected_loader.into(),
+                loader: selected_loader.to_lowercase(),
             },
         )?;
 
-        Err(FError::Quit {
-            message: "First time setup complete".into(),
-        })
+        println!("\nFirst time setup complete!");
+        Ok(None)
     }
 }
 

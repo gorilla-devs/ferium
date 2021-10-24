@@ -1,16 +1,16 @@
 [package]
 name = "ferium"
-version = "3.4.0"
+version = "3.5.0"
 edition = "2021"
-authors = ["theRookieCoder"]
+authors = ["theRookieCoder <ileshkt@gmail.com>"]
 description = "Ferium is an easy to use manager for Minecraft mods on Modrinth and Github Releases"
 repository = "https://github.com/theRookieCoder/ferium"
-license = "GNU LGPL 2.1"
 readme = "README.md"
+license = "MPL-2.0"
 publish = false
 
 [dependencies]
-tokio = { version = "1.11", features = ["full"] }
+tokio = { version = "*", features = ["rt-multi-thread", "macros"] }
 reqwest = { version = "*", features = ["json"] }
 serde = { version = "*", features = ["derive"] }
 clap = {version = "*", features = ["yaml"]}

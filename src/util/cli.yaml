@@ -20,9 +20,11 @@ subcommands:
             help: Name of the repository
             required: true
             index: 2
-  - remove:
-      about: Pick mods to remove from a list of mods and repositories configured
+  - config:
+      about: Configure things such as the Minecraft version, mod loader, and mods output directory
   - list:
       about: List all the mods and repos configured with some of their metadata
+  - remove:
+      about: Pick mods to remove from a list of mods and repositories configured
   - upgrade:
       about: Download and install the latest version of the mods specified

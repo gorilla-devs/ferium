@@ -10,7 +10,7 @@ pub enum FError {
     EmptyConfigFile,
     /// An HTTP(S) request returned with an error
     ReqwestError { error: reqwest::Error },
-    /// Failed to unwrap an Option. Basically a `NullPointerError`
+    /// Failure to unwrap an Option, akin to `NullPointerError`s
     OptionError,
     /// Failed to parse a regular expression
     RegexError,

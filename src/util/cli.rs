@@ -17,10 +17,12 @@ pub enum SubCommand {
         /// Name of the repository to add
         name: String,
     },
-    /// Remove one or more mods in the config
-    Remove,
+    /// Show user which setting to configure, and let them change that setting
+    Config,
     /// List mods and repos in the config
     List,
+    /// Remove one or more mods in the config
+    Remove,
     /// Download and install the latest version of mods and repos in the config
     Upgrade,
 }
@@ -61,6 +63,8 @@ pub fn get_subcommand() -> FResult<SubCommand> {
         })
     } else if let Some(_) = matches.subcommand_matches("remove") {
         Ok(SubCommand::Remove)
+    } else if let Some(_) = matches.subcommand_matches("config") {
+        Ok(SubCommand::Config)
     } else {
         Err(FError::Quit {
             message: "Unknown subcommand".into(),

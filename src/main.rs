@@ -2,12 +2,13 @@ mod labrinth;
 mod octorok;
 mod util;
 
-use dialoguer::MultiSelect;
+use dialoguer::{theme::ColorfulTheme, MultiSelect, Select};
 use labrinth::calls::*;
+use native_dialog::FileDialog;
 use octorok::calls::*;
 use reqwest::Client;
 use std::{
-    fs::{File, OpenOptions},
+    fs::{create_dir_all, remove_file, OpenOptions},
     io::Write,
 };
 use util::{
@@ -51,11 +52,11 @@ async fn main() {
 
 async fn actual_main() -> FResult<()> {
     // Check for an internet connection
-    match online::check(Some(3)).await {
+    match online::check(Some(1)).await {
         Ok(_) => (),
         Err(_) => {
             wrappers::print("Checking internet connection... ");
-            match online::check(Some(7)).await {
+            match online::check(Some(4)).await {
                 Ok(_) => println!("✓"),
                 Err(_) => {
                     return Err(FError::Quit {
@@ -67,7 +68,11 @@ async fn actual_main() -> FResult<()> {
     }
 
     // Reference to Ferium's config file
-    let mut config_file = json::get_config_file().await?;
+    let mut config_file = match json::get_config_file().await? {
+        Some(file) => file,
+        // Exit program if first time setup ran
+        None => return Ok(()),
+    };
     // Deserialised config from `config_file`
     let mut config = serde_json::from_reader(&config_file)?;
     // Get the command to execute from Clap
@@ -78,25 +83,33 @@ async fn actual_main() -> FResult<()> {
     // Run function based on command to be executed
     match command {
         SubCommand::Add { mod_id } => {
-            add_mod_modrinth(&client, mod_id, &mut config, &mut config_file).await?;
+            add_mod_modrinth(&client, mod_id, &mut config).await?;
         }
         SubCommand::AddRepo { owner, name } => {
-            add_repo_github(&client, owner, name, &mut config, &mut config_file).await?;
+            add_repo_github(&client, owner, name, &mut config).await?;
         }
-        SubCommand::Remove => {
-            check_empty_config(&config)?;
-            remove(&client, config, &mut config_file).await?;
+        SubCommand::Config => {
+            configure(&mut config).await?;
+            json::write_to_config(&mut config_file, &config)?;
         }
         SubCommand::List => {
             check_empty_config(&config)?;
-            list(&client, config).await?;
+            list(&client, &config).await?;
+        }
+        SubCommand::Remove => {
+            check_empty_config(&config)?;
+            remove(&client, &mut config).await?;
         }
         SubCommand::Upgrade => {
+            create_dir_all(&config.output_dir)?;
             check_empty_config(&config)?;
             upgrade_modrinth(&client, &config).await?;
             upgrade_github(&client, &config).await?;
         }
     };
+
+    // Update config file with new values
+    json::write_to_config(&mut config_file, &config)?;
 
     Ok(())
 }
@@ -110,18 +123,77 @@ fn check_empty_config(config: &json::Config) -> FResult<()> {
     }
 }
 
+async fn configure(config: &mut json::Config) -> FResult<()> {
+    let items = vec![
+        // Show dialog to change directory
+        "Mods output directory",
+        // Show picker to change Minecraft version
+        "Minecraft version",
+        // Show picker to change mod loader
+        "Mod loader",
+    ];
+
+    println!("Which setting would you like to change?");
+    let selection = Select::with_theme(&ColorfulTheme::default())
+        .items(&items)
+        .interact_opt()?;
+
+    match selection {
+        Some(index) => {
+            println!();
+            match index {
+                0 => {
+                    // Let user pick output directory
+                    let output_dir = FileDialog::new().show_open_single_dir()?;
+                    match output_dir {
+                        Some(dir) => config.output_dir = dir,
+                        None => (),
+                    }
+                }
+                1 => {
+                    // Let user pick mc version from latest 10 versions
+                    let mut versions = wrappers::get_latest_mc_versions(10).await?;
+                    println!("Select a Minecraft version");
+                    let index = Select::with_theme(&ColorfulTheme::default())
+                        .items(&versions)
+                        .default(0)
+                        .interact_opt()?;
+                    match index {
+                        Some(i) => config.version = versions.swap_remove(i),
+                        None => (),
+                    }
+                }
+                2 => {
+                    // Let user pick mod loader
+                    let mod_loaders = ["Fabric", "Forge"];
+                    println!("Pick a mod loader");
+                    let index = Select::with_theme(&ColorfulTheme::default())
+                        .items(&mod_loaders)
+                        .interact_opt()?;
+                    match index {
+                        Some(i) => config.loader = mod_loaders[i].to_lowercase(),
+                        None => (),
+                    }
+                }
+                _ => return Err(FError::OptionError),
+            }
+        }
+        None => return Ok(()),
+    };
+
+    Ok(())
+}
+
 /// Display a list of mods and repos in the config to select and remove selected ones from `config_file`
-async fn remove(client: &Client, config: json::Config, config_file: &mut File) -> FResult<()> {
-    let mut mod_items: Vec<String> = Vec::new();
-    let mut repo_items: Vec<String> = Vec::new();
-    let mut mods_repos_removed = String::new();
-    let mut config = config;
+async fn remove(client: &Client, config: &mut json::Config) -> FResult<()> {
+    let mut items: Vec<String> = Vec::new();
+    let mut items_removed = String::new();
 
     wrappers::print("Gathering mod and repository information... ");
     // Store the names of the mods
     for i in 0..config.mod_slugs.len() {
         let mod_ = labrinth::calls::get_mod(client, &config.mod_slugs[i]).await?;
-        mod_items.push(mod_.title);
+        items.push(mod_.title);
     }
 
     // Store the names of the repos
@@ -129,69 +201,72 @@ async fn remove(client: &Client, config: json::Config, config_file: &mut File) -
         let repo =
             octorok::calls::get_repository(client, &config.repos[i].owner, &config.repos[i].name)
                 .await?;
-        repo_items.push(repo.full_name);
+        items.push(repo.name);
     }
     println!("✓");
 
     // If list is not empty
-    if !mod_items.is_empty() {
+    if !items.is_empty() {
         // Show selection menu
-        println!("\nSelect mods to remove");
-        let mods_to_remove = MultiSelect::new().items(&mod_items).clear(false).interact();
+        println!("\nSelect mods and/or repositories to remove");
+        let items_to_remove = MultiSelect::with_theme(&ColorfulTheme::default())
+            .items(&items)
+            .clear(false)
+            .interact_opt()?;
 
-        match mods_to_remove {
-            Ok(mods_to_remove) => {
+        match items_to_remove {
+            Some(items_to_remove) => {
                 // Sort vector in descending order to fix moving indices
-                let mut mods_to_remove = mods_to_remove;
-                mods_to_remove.sort_unstable();
-                mods_to_remove.reverse();
+                let mut items_to_remove = items_to_remove;
+                items_to_remove.sort_unstable();
+                items_to_remove.reverse();
 
                 // For each mod to remove
-                for mod_to_remove in mods_to_remove {
-                    // Remove it from config and store its name in a string
-                    mods_repos_removed.push_str(&config.mod_slugs.remove(mod_to_remove));
-                    mods_repos_removed.push_str(", ");
+                for item_to_remove in items_to_remove {
+                    // If index is larger than mod_slugs length, then the index is for repos
+                    if item_to_remove >= config.mod_slugs.len() {
+                        // Offset the array by the proper amount
+                        let index = item_to_remove - config.mod_slugs.len();
+
+                        // Remove item from config
+                        config.repos.remove(index);
+                        // Get the item's name
+                        let name = &items[item_to_remove];
+
+                        // Remove the mod from downloaded mods
+                        let mut mod_file_path = config.output_dir.join(name);
+                        mod_file_path.set_extension("jar");
+                        let _ = remove_file(mod_file_path);
+
+                        // Store its name in a string
+                        items_removed.push_str(&format!("{}, ", name));
+                    } else {
+                        // Remove item from config
+                        config.mod_slugs.remove(item_to_remove);
+                        // Get the item's name
+                        let name = &items[item_to_remove];
+
+                        // Remove the mod from downloaded mods
+                        let mut mod_file_path = config.output_dir.join(name);
+                        mod_file_path.set_extension("jar");
+                        let _ = remove_file(mod_file_path);
+
+                        // Store its name in a string
+                        items_removed.push_str(&format!("{}, ", name));
+                    }
                 }
             }
-            Err(_) => (),
+
+            // Exit if none are selected
+            None => (),
         }
     }
-
-    // If list is not empty
-    if !repo_items.is_empty() {
-        // Show selection menu
-        println!("\nSelect repositories to remove");
-        let repos_to_remove = MultiSelect::new()
-            .items(&repo_items)
-            .clear(false)
-            .interact();
-
-        match repos_to_remove {
-            Ok(repos_to_remove) => {
-                // Sort vector in descending order to fix moving indices
-                let mut repos_to_remove = repos_to_remove;
-                repos_to_remove.sort_unstable();
-                repos_to_remove.reverse();
-
-                // For each repo to remove
-                for repo_to_remove in repos_to_remove {
-                    // Remove it from config and store its name in a string
-                    mods_repos_removed
-                        .push_str(&format!("{}, ", config.repos.remove(repo_to_remove)));
-                }
-            }
-            Err(_) => (),
-        }
-    }
-
-    // Write updated info to config file
-    json::write_to_config(config_file, &config)?;
 
     // Display mods/repos removed
-    if !mods_repos_removed.is_empty() {
+    if !items_removed.is_empty() {
         // Remove trailing ", "
-        mods_repos_removed.truncate(mods_repos_removed.len() - 2);
-        println!("Removed {} from config", mods_repos_removed);
+        items_removed.truncate(items_removed.len() - 2);
+        println!("Removed {} from config", items_removed);
     }
 
     Ok(())
@@ -203,7 +278,6 @@ async fn add_repo_github(
     owner: String,
     repo_name: String,
     config: &mut json::Config,
-    config_file: &mut File,
 ) -> FResult<()> {
     // Check if repo has already been added
     if config.repos.contains(&json::Repo {
@@ -220,16 +294,19 @@ async fn add_repo_github(
     // Get repository metadata
     let repo = get_repository(client, &owner, &repo_name).await?;
 
-    // Get the latest release from repo
-    let latest_release = &get_releases(client, repo).await?[0];
+    // Get repo's releases
+    let releases = &get_releases(client, &repo).await?;
 
     let mut contains_jar_asset = false;
 
-    // Check if the latest release contains JAR files (a mod file)
-    for asset in &latest_release.assets {
-        if asset.name.contains(".jar") {
-            // If JAR release is found, set flag to true
-            contains_jar_asset = true;
+    // Check if the releases contain JAR files (a mod file)
+    'outer: for release in releases {
+        for asset in &release.assets {
+            if asset.name.contains(".jar") {
+                // If JAR release is found, set flag to true and break
+                contains_jar_asset = true;
+                break 'outer;
+            }
         }
     }
 
@@ -239,7 +316,6 @@ async fn add_repo_github(
             owner,
             name: repo_name,
         });
-        json::write_to_config(config_file, config)?;
         println!("✓")
     } else {
         return Err(FError::Quit {
@@ -255,7 +331,6 @@ async fn add_mod_modrinth(
     client: &Client,
     mod_id: String,
     config: &mut json::Config,
-    config_file: &mut File,
 ) -> FResult<()> {
     // Check if mod has already been added
     if config.mod_slugs.contains(&mod_id) {
@@ -271,7 +346,6 @@ async fn add_mod_modrinth(
         Ok(mod_) => {
             // And if so, append mod to config and write
             config.mod_slugs.push(mod_id);
-            json::write_to_config(config_file, config)?;
             println!("✓ ({})", mod_.title);
         }
         Err(_) => {
@@ -286,19 +360,19 @@ async fn add_mod_modrinth(
 }
 
 /// List all the mods in `config` with some of their metadata
-async fn list(client: &Client, config: json::Config) -> FResult<()> {
-    for mod_slug in config.mod_slugs {
+async fn list(client: &Client, config: &json::Config) -> FResult<()> {
+    for mod_slug in &config.mod_slugs {
         // Get mod metadata
         let mod_ = get_mod(client, &mod_slug).await?;
 
         // Print mod data formatted
         println!(
-            " -  {}
-          \r        {}
-          \r        Downloads:   {}
-          \r        Client side: {}
-          \r        Server side: {}
-          \r        License:     {}\n",
+            "- {}
+          \r       {}
+          \r       Downloads:   {}
+          \r       Client side: {}
+          \r       Server side: {}
+          \r       License:     {}\n",
             mod_.title,
             mod_.description,
             mod_.downloads,
@@ -308,17 +382,17 @@ async fn list(client: &Client, config: json::Config) -> FResult<()> {
         );
     }
 
-    for repo_name in config.repos {
+    for repo_name in &config.repos {
         // Get repository metadata
         let repo = get_repository(client, &repo_name.owner, &repo_name.name).await?;
 
         // Print repository data formatted
         println!(
-            " -  {}
-          \r        {}
-          \r        Stars:      {}
-          \r        Developer:  {}
-          \r        License:    {}\n",
+            "- {}
+          \r       {}
+          \r       Stars:      {}
+          \r       Developer:  {}
+          \r       License:    {}\n",
             repo.name, repo.description, repo.stargazers_count, repo.owner.login, repo.license.name,
         )
     }
@@ -334,7 +408,7 @@ async fn upgrade_github(client: &Client, config: &json::Config) -> FResult<()> {
         // Get mod's repository
         let repository = get_repository(client, &repo_name.owner, &repo_name.name).await?;
         // Get releases
-        let releases = get_releases(client, repository).await?;
+        let releases = get_releases(client, &repository).await?;
 
         let mut latest_release: Option<&octorok::structs::Release> = None;
 
@@ -363,7 +437,7 @@ async fn upgrade_github(client: &Client, config: &json::Config) -> FResult<()> {
 
         wrappers::print(format!("  [2] Downloading {}... ", latest_release.name));
 
-        let mut mod_file_path = config.output_dir.join(&repo_name.name);
+        let mut mod_file_path = config.output_dir.join(&repository.name);
         mod_file_path.set_extension("jar");
 
         // Get file contents

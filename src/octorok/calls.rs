@@ -42,7 +42,7 @@ pub async fn get_repository(client: &Client, owner: &str, repo: &str) -> FResult
 }
 
 /// Returns the releases in `repo` sorted in chronologically descending order
-pub async fn get_releases(client: &Client, repo: Repository) -> FResult<Vec<Release>> {
+pub async fn get_releases(client: &Client, repo: &Repository) -> FResult<Vec<Release>> {
     Ok(
         request_rel(client, format!("/repos/{}/releases", repo.full_name))
             .await?
