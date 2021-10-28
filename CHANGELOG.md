@@ -2,6 +2,15 @@
 
 This changelog is formatted based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## [3.5.1] - 28.10.2021
+
+- Migrated from `native-dialog` to [`rfd`](https://crates.io/crates/rfd)
+- Removed `NativeDialogError` as its no longer required
+- Removed `wrappers::print()` and replaced it with `eprint!`
+- Removed GitHub Actions workflow
+- `FError` now prints error messages in its custom implementation of `std::fmt::Debug`
+- Made the main function also return an `FResult<()>` which on error, prints the error message from `FError`'s `Debug` and exits with code `1`
+
 ## [3.5.0] - 24.10.2021
 
 ### Added

@@ -5,8 +5,21 @@ use crate::ferium_error::{FError, FResult};
 use fancy_regex::Regex;
 use shellexpand::tilde;
 use std::env::consts::OS;
-use std::io::{stdout, Write};
 use std::path::{Path, PathBuf};
+
+// Only macOS uses a sync file picker
+#[cfg(target_os = "macos")]
+/// Uses the appropriate file picker to pick a file
+pub async fn pick_folder() -> Option<PathBuf> {
+    rfd::FileDialog::new().pick_folder()
+}
+
+// Other OSs can use the async version
+#[cfg(not(target_os = "macos"))]
+/// Uses the appropriate file picker to pick a file
+pub async fn pick_folder() -> Option<PathBuf> {
+    rfd::AsyncFileDialog::new().pick_folder().await
+}
 
 /// Get a maximum of `count` number of the latest versions of Minecraft
 ///
@@ -69,10 +82,4 @@ pub fn get_mods_dir() -> FResult<PathBuf> {
             .join("mods")),
         _ => Err(FError::InvalidDeviceError),
     }
-}
-
-/// Run `print` macro and flush stdout to make results immediately appear
-pub fn print(msg: impl std::fmt::Display) {
-    print!("{}", msg);
-    stdout().flush().unwrap();
 }

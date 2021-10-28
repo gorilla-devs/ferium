@@ -4,7 +4,6 @@ mod util;
 
 use dialoguer::{theme::ColorfulTheme, MultiSelect, Select};
 use labrinth::calls::*;
-use native_dialog::FileDialog;
 use octorok::calls::*;
 use reqwest::Client;
 use std::{
@@ -18,44 +17,12 @@ use util::{
 };
 
 #[tokio::main]
-async fn main() {
-    // Error catching and error messages
-    match actual_main().await {
-        Ok(_) => (),
-        Err(err) => match err {
-            FError::EmptyConfigFile => println!("× Your config file is empty! Run `ferium help` to see how to add mods or repositories"),
-            FError::HTTPError { message } => println!("× An HTTP(S) request returned an error, {}", message),
-            FError::InvalidDeviceError => println!("× The device you are currently running on is unsupported by Ferium"),
-            FError::IOError {description} => println!("× Encountered an Input/Output error, {}", description),
-            FError::JsonError { category } => match category {
-                serde_json::error::Category::Syntax => {
-                    println!("× Syntax error encountered in JSON file")
-                },
-                serde_json::error::Category::Data => {
-                    println!("× Non matching type while deserialising JSON")
-                },
-                serde_json::error::Category::Eof => {
-                    println!("× Unexpected end of file while reading JSON")
-                },
-                serde_json::error::Category::Io => {
-                    println!("× Encountered an Input/Output error while handling JSON")
-                },
-            },
-            FError::NativeDialogError => println!("× An error occured while interacting with native device libraries"),
-            FError::OptionError => println!("× Could not access an expected value"),
-            FError::Quit { message } => println!("× {}", message),
-            FError::RegexError => println!("× Failed to parse regular expression"),
-            FError::ReqwestError { error }=> println!("× Failed to send/process an HTTP(S) request due to {}", error),
-        },
-    };
-}
-
-async fn actual_main() -> FResult<()> {
+async fn main() -> FResult<()> {
     // Check for an internet connection
     match online::check(Some(1)).await {
         Ok(_) => (),
         Err(_) => {
-            wrappers::print("Checking internet connection... ");
+            eprint!("Checking internet connection... ");
             match online::check(Some(4)).await {
                 Ok(_) => println!("✓"),
                 Err(_) => {
@@ -67,6 +34,10 @@ async fn actual_main() -> FResult<()> {
         }
     }
 
+    // Get the command to execute from Clap
+    let command = cli::get_subcommand()?;
+    // HTTP(S) client
+    let client = Client::new();
     // Reference to Ferium's config file
     let mut config_file = match json::get_config_file().await? {
         Some(file) => file,
@@ -75,12 +46,8 @@ async fn actual_main() -> FResult<()> {
     };
     // Deserialised config from `config_file`
     let mut config = serde_json::from_reader(&config_file)?;
-    // Get the command to execute from Clap
-    let command = cli::get_subcommand()?;
-    // HTTP(S) client
-    let client = Client::new();
 
-    // Run function based on command to be executed
+    // Run function(s) based on command to be executed
     match command {
         SubCommand::Add { mod_id } => {
             add_mod_modrinth(&client, mod_id, &mut config).await?;
@@ -90,7 +57,6 @@ async fn actual_main() -> FResult<()> {
         }
         SubCommand::Config => {
             configure(&mut config).await?;
-            json::write_to_config(&mut config_file, &config)?;
         }
         SubCommand::List => {
             check_empty_config(&config)?;
@@ -101,8 +67,8 @@ async fn actual_main() -> FResult<()> {
             remove(&client, &mut config).await?;
         }
         SubCommand::Upgrade => {
-            create_dir_all(&config.output_dir)?;
             check_empty_config(&config)?;
+            create_dir_all(&config.output_dir)?;
             upgrade_modrinth(&client, &config).await?;
             upgrade_github(&client, &config).await?;
         }
@@ -144,8 +110,7 @@ async fn configure(config: &mut json::Config) -> FResult<()> {
             match index {
                 0 => {
                     // Let user pick output directory
-                    let output_dir = FileDialog::new().show_open_single_dir()?;
-                    match output_dir {
+                    match wrappers::pick_folder().await {
                         Some(dir) => config.output_dir = dir,
                         None => (),
                     }
@@ -189,7 +154,7 @@ async fn remove(client: &Client, config: &mut json::Config) -> FResult<()> {
     let mut items: Vec<String> = Vec::new();
     let mut items_removed = String::new();
 
-    wrappers::print("Gathering mod and repository information... ");
+    eprint!("Gathering mod and repository information... ");
     // Store the names of the mods
     for i in 0..config.mod_slugs.len() {
         let mod_ = labrinth::calls::get_mod(client, &config.mod_slugs[i]).await?;
@@ -289,7 +254,7 @@ async fn add_repo_github(
         });
     }
 
-    wrappers::print(format!("Adding repo {}/{}... ", owner, repo_name));
+    eprint!("Adding repo {}/{}... ", owner, repo_name);
 
     // Get repository metadata
     let repo = get_repository(client, &owner, &repo_name).await?;
@@ -326,7 +291,7 @@ async fn add_repo_github(
     Ok(())
 }
 
-/// Check if mod with `mod_id` exists and releases mods for configured mod loader, and if so add that mod to `config_file`
+/// Check if mod with `mod_id` exists and releases mods for configured mod loader, and if so add that mod to `config`
 async fn add_mod_modrinth(
     client: &Client,
     mod_id: String,
@@ -339,7 +304,7 @@ async fn add_mod_modrinth(
         });
     }
 
-    wrappers::print(format!("Adding mod {}... ", mod_id));
+    eprint!("Adding mod {}... ", mod_id);
 
     // Check if mod exists
     match get_mod(client, &mod_id).await {
@@ -404,7 +369,7 @@ async fn list(client: &Client, config: &json::Config) -> FResult<()> {
 async fn upgrade_github(client: &Client, config: &json::Config) -> FResult<()> {
     for repo_name in &config.repos {
         println!("Downloading {}", repo_name.name);
-        wrappers::print("  [1] Getting release information... ");
+        eprint!("  [1] Getting release information... ");
         // Get mod's repository
         let repository = get_repository(client, &repo_name.owner, &repo_name.name).await?;
         // Get releases
@@ -435,8 +400,9 @@ async fn upgrade_github(client: &Client, config: &json::Config) -> FResult<()> {
             }
         };
 
-        wrappers::print(format!("  [2] Downloading {}... ", latest_release.name));
+        eprint!("  [2] Downloading {}... ", latest_release.name);
 
+        // Compute mod file's output path
         let mut mod_file_path = config.output_dir.join(&repository.name);
         mod_file_path.set_extension("jar");
 
@@ -466,7 +432,7 @@ async fn upgrade_modrinth(client: &Client, config: &json::Config) -> FResult<()>
         let mod_ = get_mod(client, &mod_slug).await?;
         println!("Downloading {}", mod_.title);
 
-        wrappers::print("  [1] Getting version information... ");
+        eprint!("  [1] Getting version information... ");
         // Get versions of the mod
         let versions = get_versions(client, &mod_.id).await?;
 
@@ -495,7 +461,7 @@ async fn upgrade_modrinth(client: &Client, config: &json::Config) -> FResult<()>
 
         println!("✓");
 
-        wrappers::print(format!("  [2] Downloading {}... ", latest_version.name));
+        eprint!("  [2] Downloading {}... ", latest_version.name);
 
         let mut mod_file_path = config.output_dir.join(mod_.title);
         mod_file_path.set_extension("jar");

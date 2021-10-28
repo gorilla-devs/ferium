@@ -3,7 +3,7 @@
 use super::wrappers::get_mods_dir;
 use crate::ferium_error::{FError, FResult};
 use dialoguer::{theme::ColorfulTheme, Confirm, Select};
-use native_dialog::FileDialog;
+use rfd::AsyncFileDialog;
 use serde::{Deserialize, Serialize};
 use serde_json::to_string_pretty;
 use shellexpand::tilde;
@@ -85,8 +85,8 @@ pub async fn get_config_file() -> FResult<Option<File>> {
             .with_prompt("Would you like to specify a custom mods directory?")
             .interact()?
         {
-            match FileDialog::new().show_open_single_dir()? {
-                Some(dir) => selected_mods_dir = dir,
+            match AsyncFileDialog::new().pick_folder().await {
+                Some(dir) => selected_mods_dir = dir.path().into(),
                 None => (),
             };
         }

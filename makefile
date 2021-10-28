@@ -15,9 +15,12 @@ build-win:
 build-linux:
 	cargo clean
 	# For Linux x86-64
-	cargo build --target=x86_64-unknown-linux-gnu --release
+	cargo build --target=x86_64-unknown-linux-musl --release
 	# For Linux arm
-	cargo build --target=aarch64-unknown-linux-gnu --release
+	cargo build --target=aarch64-unknown-linux-musl --release
 
 install:
-	cargo install -v --force --path . --root ~
+	cargo install --force --path . --root ~
+
+install-dev:
+	cargo install --debug --force --path . --root ~ 

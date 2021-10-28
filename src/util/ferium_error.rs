@@ -1,11 +1,11 @@
-use std::convert::From;
+use std::{
+    convert::From,
+    fmt::{Debug, Formatter},
+};
 
 pub type FResult<T> = std::result::Result<T, FError>;
 
-#[derive(Debug)]
 pub enum FError {
-    /// Error with file picker occured
-    NativeDialogError,
     /// The config file does not contain mods or repos
     EmptyConfigFile,
     /// An HTTP(S) request returned with an error
@@ -28,21 +28,38 @@ pub enum FError {
     Quit { message: String },
 }
 
-impl From<reqwest::Error> for FError {
-    fn from(err: reqwest::Error) -> Self {
-        Self::ReqwestError { error: err }
+impl Debug for FError {
+    fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
+        match self {
+            FError::EmptyConfigFile => write!(fmt, "Your config file is empty! Run `ferium help` to see how to add mods or repositories"),
+            FError::HTTPError { message } => write!(fmt, "An HTTP(S) request returned an error, {}", message),
+            FError::InvalidDeviceError => write!(fmt, "The device you are currently running on is unsupported by Ferium"),
+            FError::IOError {description} => write!(fmt, "Encountered an Input/Output error, {}", description),
+            FError::JsonError { category } => match category {
+                serde_json::error::Category::Syntax => {
+                    write!(fmt, "Syntax error encountered in JSON file")
+                },
+                serde_json::error::Category::Data => {
+                    write!(fmt, "Non matching type while deserialising JSON")
+                },
+                serde_json::error::Category::Eof => {
+                    write!(fmt, "Unexpected end of file while reading JSON")
+                },
+                serde_json::error::Category::Io => {
+                    write!(fmt, "Encountered an Input/Output error while handling JSON")
+                },
+            },
+            FError::OptionError => write!(fmt, "Could not access an expected value"),
+            FError::Quit { message } => write!(fmt, "{}", message),
+            FError::RegexError => write!(fmt, "Failed to parse regular expression"),
+            FError::ReqwestError { error }=> write!(fmt, "Failed to send/process an HTTP(S) request due to {}", error),
+        }
     }
 }
 
-impl From<native_dialog::Error> for FError {
-    fn from(err: native_dialog::Error) -> Self {
-        match err {
-            native_dialog::Error::IoFailure(io_err) => Self::IOError {
-                description: io_err.to_string(),
-            },
-            native_dialog::Error::NoImplementation => Self::InvalidDeviceError,
-            _ => Self::NativeDialogError,
-        }
+impl From<reqwest::Error> for FError {
+    fn from(err: reqwest::Error) -> Self {
+        Self::ReqwestError { error: err }
     }
 }
 
