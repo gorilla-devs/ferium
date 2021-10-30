@@ -5,32 +5,12 @@ use crate::ferium_error::{FError, FResult};
 use bytes::Bytes;
 use reqwest::{header::USER_AGENT, Client, Response};
 
-/// Returns the contents of `release`'s JAR file as bytes
-pub async fn download_release(client: &Client, release: &Release) -> FResult<Bytes> {
-    let mut contents: Option<Bytes> = None;
-
-    // For each asset
-    for asset in &release.assets {
-        // If it is a JAR file
-        if asset.name.contains(".jar") {
-            // Download the file and store it to `contents`
-            contents = Some(
-                request(client, asset.browser_download_url.clone())
-                    .await?
-                    .bytes()
-                    .await?,
-            )
-        }
-    }
-
-    match contents {
-        // If contents is not null, return it
-        Some(c) => Ok(c),
-        // Otherwise, the release doesn't have JAR assets
-        None => Err(FError::Quit {
-            message: "Could not find JAR asset!".into(),
-        }),
-    }
+/// Downloads `asset`'s contents and returns them as bytes
+pub async fn download_asset(client: &Client, asset: &Asset) -> FResult<Bytes> {
+    Ok(request(client, asset.browser_download_url.clone())
+        .await?
+        .bytes()
+        .await?)
 }
 
 /// Returns the repository at https://github.com/{owner}/{repo}

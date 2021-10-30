@@ -42,16 +42,13 @@ pub async fn get_latest_mc_versions(count: usize) -> FResult<Vec<String>> {
     let versions = get_version_manifest().await?.versions;
     let mut versions_to_display: Vec<String> = Vec::new();
     let mut major_versions_added: Vec<String> = Vec::new();
-    // Remove minor version (e.g. "1.7.10" -> "1.7", "1.14" -> "1.14")
-    let min_ver_remove = Regex::new(r"(?<=1.\d|\d\d)(\.\d{1,2}$)")?;
 
     for version in versions {
         if versions_to_display.len() > count {
             break;
         }
 
-        // Remove minor version (e.g. "1.17.1" -> "1.17")
-        let major_version = min_ver_remove.replace_all(&version.id, "").into();
+        let major_version = remove_minor_version(&version.id)?;
 
         // If version is a release and it hasn't already been added
         if version.type_field == "release" && !major_versions_added.contains(&major_version) {
@@ -61,6 +58,19 @@ pub async fn get_latest_mc_versions(count: usize) -> FResult<Vec<String>> {
     }
 
     Ok(versions_to_display)
+}
+
+/// Removes the minor version from semver formatted strings
+///
+/// ```rust
+/// assert_eq!(remove_minor_version("1.7.10"), "1.7");
+/// assert_eq!(remove_minor_version("1.14.4"), "1.14");
+/// // Versions already without a minor version are preserved
+/// assert_eq!(remove_minor_version("1.14"), "1.14");
+/// ```
+pub fn remove_minor_version(string: &str) -> FResult<String> {
+    let min_ver_remove = Regex::new(r"(?<=1.\d|\d\d)(\.\d{1,2}$)")?;
+    Ok(min_ver_remove.replace_all(string, "").into())
 }
 
 /// Returns the default directory where mods are stored

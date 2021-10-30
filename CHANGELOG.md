@@ -2,6 +2,16 @@
 
 This changelog is formatted based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
+## [3.6.0] - 30.10.2021
+
+- Added a check for mod loader compatibility in `upgrade_modrinth()` and `upgrade_github()`
+- Improved the GitHub Releases version and mod loader checking algorithm
+- `download_release()` and `download_version()` are now `download_asset()` and `download_version_file()` repectively
+- If multiple compatible assets were found, a selector is shown to let the user pick the latest version
+- The progress indicators updates now show the name of the asset being downloaded rather than the name of the `Version` or `Release`
+- Added function `remove_minor_version()` which is extracted from `get_latest_mc_versions()`
+- 
+
 ## [3.5.1] - 28.10.2021
 
 - Migrated from `native-dialog` to [`rfd`](https://crates.io/crates/rfd)

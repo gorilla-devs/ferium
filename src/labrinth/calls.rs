@@ -6,8 +6,8 @@ use bytes::Bytes;
 use reqwest::{Client, Response};
 
 /// Return the contents of `version`'s JAR file as bytes
-pub async fn download_version(client: &Client, version: Version) -> FResult<Bytes> {
-    Ok(request(client, version.files[0].url.clone())
+pub async fn download_version_file(client: &Client, version_file: &VersionFile) -> FResult<Bytes> {
+    Ok(request(client, version_file.url.clone())
         .await?
         .bytes()
         .await?)

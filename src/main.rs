@@ -9,6 +9,7 @@ use reqwest::Client;
 use std::{
     fs::{create_dir_all, remove_file, OpenOptions},
     io::Write,
+    path::PathBuf,
 };
 use util::{
     cli::SubCommand,
@@ -27,7 +28,7 @@ async fn main() -> FResult<()> {
                 Ok(_) => println!("✓"),
                 Err(_) => {
                     return Err(FError::Quit {
-                        message: "Ferium requires an internet connection to work".into(),
+                        message: "× Ferium requires an internet connection to work".into(),
                     })
                 }
             }
@@ -78,6 +79,15 @@ async fn main() -> FResult<()> {
     json::write_to_config(&mut config_file, &config)?;
 
     Ok(())
+}
+
+/// Fetch a mod file's path based on a `name` and `config`uration
+fn get_mod_file_path(config: &json::Config, name: &str) -> PathBuf {
+    let mut mod_file_path = config
+        .output_dir
+        .join(format!("{}-{}-{}", name, config.loader, config.version));
+    mod_file_path.set_extension("jar");
+    mod_file_path
 }
 
 /// Check if `config`'s mods and repos are empty, and if so return an error
@@ -199,8 +209,7 @@ async fn remove(client: &Client, config: &mut json::Config) -> FResult<()> {
                         let name = &items[item_to_remove];
 
                         // Remove the mod from downloaded mods
-                        let mut mod_file_path = config.output_dir.join(name);
-                        mod_file_path.set_extension("jar");
+                        let mod_file_path = get_mod_file_path(config, name);
                         let _ = remove_file(mod_file_path);
 
                         // Store its name in a string
@@ -212,8 +221,7 @@ async fn remove(client: &Client, config: &mut json::Config) -> FResult<()> {
                         let name = &items[item_to_remove];
 
                         // Remove the mod from downloaded mods
-                        let mut mod_file_path = config.output_dir.join(name);
-                        mod_file_path.set_extension("jar");
+                        let mod_file_path = get_mod_file_path(config, name);
                         let _ = remove_file(mod_file_path);
 
                         // Store its name in a string
@@ -231,7 +239,7 @@ async fn remove(client: &Client, config: &mut json::Config) -> FResult<()> {
     if !items_removed.is_empty() {
         // Remove trailing ", "
         items_removed.truncate(items_removed.len() - 2);
-        println!("Removed {} from config", items_removed);
+        println!("Removed {}", items_removed);
     }
 
     Ok(())
@@ -244,17 +252,17 @@ async fn add_repo_github(
     repo_name: String,
     config: &mut json::Config,
 ) -> FResult<()> {
+    eprint!("Adding repo {}/{}... ", owner, repo_name);
+
     // Check if repo has already been added
     if config.repos.contains(&json::Repo {
         owner: owner.clone(),
         name: repo_name.clone(),
     }) {
         return Err(FError::Quit {
-            message: "Repo already added to config!".into(),
+            message: "× Repsitory already added to config!".into(),
         });
     }
-
-    eprint!("Adding repo {}/{}... ", owner, repo_name);
 
     // Get repository metadata
     let repo = get_repository(client, &owner, &repo_name).await?;
@@ -267,7 +275,7 @@ async fn add_repo_github(
     // Check if the releases contain JAR files (a mod file)
     'outer: for release in releases {
         for asset in &release.assets {
-            if asset.name.contains(".jar") {
+            if asset.name.contains("jar") {
                 // If JAR release is found, set flag to true and break
                 contains_jar_asset = true;
                 break 'outer;
@@ -284,7 +292,7 @@ async fn add_repo_github(
         println!("✓")
     } else {
         return Err(FError::Quit {
-            message: "Repository does not release mods!".into(),
+            message: "× Repository does not release mods!".into(),
         });
     }
 
@@ -297,14 +305,14 @@ async fn add_mod_modrinth(
     mod_id: String,
     config: &mut json::Config,
 ) -> FResult<()> {
+    eprint!("Adding mod ID {}... ", mod_id);
+
     // Check if mod has already been added
     if config.mod_slugs.contains(&mod_id) {
         return Err(FError::Quit {
-            message: "Mod already added to config!".into(),
+            message: "× Mod already added to config!".into(),
         });
     }
-
-    eprint!("Adding mod {}... ", mod_id);
 
     // Check if mod exists
     match get_mod(client, &mod_id).await {
@@ -316,7 +324,7 @@ async fn add_mod_modrinth(
         Err(_) => {
             // Else return an error
             return Err(FError::Quit {
-                message: format!("Mod with ID {} does not exist!", mod_id),
+                message: format!("× Mod with ID `{}` does not exist!", mod_id),
             });
         }
     };
@@ -332,14 +340,16 @@ async fn list(client: &Client, config: &json::Config) -> FResult<()> {
 
         // Print mod data formatted
         println!(
-            "- {}
-          \r       {}
+            "- {} (Modrinth)
+          \r       {}\n
+          \r       Link:        https://modrinth.com/mod/{}
           \r       Downloads:   {}
           \r       Client side: {}
           \r       Server side: {}
           \r       License:     {}\n",
             mod_.title,
             mod_.description,
+            mod_.slug,
             mod_.downloads,
             mod_.client_side,
             mod_.server_side,
@@ -350,15 +360,30 @@ async fn list(client: &Client, config: &json::Config) -> FResult<()> {
     for repo_name in &config.repos {
         // Get repository metadata
         let repo = get_repository(client, &repo_name.owner, &repo_name.name).await?;
+        let releases = get_releases(client, &repo).await?;
+        let mut downloads = 0;
+
+        // Calculate number of downloads
+        for release in releases {
+            for asset in release.assets {
+                downloads += asset.download_count;
+            }
+        }
 
         // Print repository data formatted
         println!(
-            "- {}
-          \r       {}
-          \r       Stars:      {}
-          \r       Developer:  {}
-          \r       License:    {}\n",
-            repo.name, repo.description, repo.stargazers_count, repo.owner.login, repo.license.name,
+            "- {} (GitHub)
+          \r       {}\n
+          \r       Link:        {}
+          \r       Downloads:   {}
+          \r       Developer:   {}
+          \r       License:     {}\n",
+            repo.name,
+            repo.description,
+            repo.html_url,
+            downloads,
+            repo.owner.login,
+            repo.license.name,
         )
     }
 
@@ -370,44 +395,71 @@ async fn upgrade_github(client: &Client, config: &json::Config) -> FResult<()> {
     for repo_name in &config.repos {
         println!("Downloading {}", repo_name.name);
         eprint!("  [1] Getting release information... ");
-        // Get mod's repository
+
         let repository = get_repository(client, &repo_name.owner, &repo_name.name).await?;
-        // Get releases
         let releases = get_releases(client, &repository).await?;
 
-        let mut latest_release: Option<&octorok::structs::Release> = None;
+        // A vector of assets that are compatible
+        let mut asset_candidates: Vec<&octorok::structs::Asset> = Vec::new();
+        // Whether the mod specifies the mod loader in its Assets' names
+        let mut specifies_loader = false;
 
-        // Try to get the latest compatible release
+        // Try to get the latest compatible assets
         for release in &releases {
-            if release.name.contains(&config.version) {
-                latest_release = Some(release);
+            // If a release with compatible assets has been found, stop searching older releases
+            if !asset_candidates.is_empty() {
                 break;
+            }
+
+            for asset in &release.assets {
+                // If the asset specifies the mod loader, set the `specifies_loader` flag to true
+                if asset.name.to_lowercase().contains("fabric")
+                    || asset.name.to_lowercase().contains("forge")
+                {
+                    specifies_loader = true;
+                }
+
+                if asset
+                    .name
+                    // Check that the asset supports the user's specified version
+                    .contains(&wrappers::remove_minor_version(&config.version)?)
+                    // Check that the asset is a JAR file
+                    && asset.name.contains("jar")
+                    // If the asset specifies a mod loader, check for it, if not don't check and return true
+                    && !(specifies_loader && !asset.name.to_lowercase().contains(&config.loader))
+                {
+                    // Specify this asset as a compatible asset
+                    asset_candidates.push(asset);
+                }
             }
         }
 
-        let latest_release = match latest_release {
-            // If a compatible release was found, install it
-            Some(release) => {
-                println!("✓");
-                release
-            }
-            // If not, default to the latest one
-            None => {
-                println!(
-                    "✓ Warning! Did not find release with version in name. Defaulting to latest"
-                );
-                &releases[0]
-            }
+        // If 1 compatible asset was found, use it
+        let asset_to_download = if asset_candidates.len() == 1 {
+            println!("✓");
+            asset_candidates[0]
+        // If none were found, throw an error
+        } else if asset_candidates.len() == 0 {
+            return Err(FError::Quit {
+                message: "× Could not find a compatible asset to download".into(),
+            });
+        // If more than 1 was found, let the user select which one to use
+        } else {
+            println!("✓");
+            println!("Select the asset to downloaded:");
+            let selection = Select::with_theme(&ColorfulTheme::default())
+                .items(&asset_candidates)
+                .interact()?;
+            asset_candidates[selection]
         };
 
-        eprint!("  [2] Downloading {}... ", latest_release.name);
+        eprint!("  [2] Downloading {}... ", asset_to_download.name);
 
-        // Compute mod file's output path
-        let mut mod_file_path = config.output_dir.join(&repository.name);
-        mod_file_path.set_extension("jar");
+        // Compute output mod file's path
+        let mod_file_path = get_mod_file_path(config, &repository.name);
 
         // Get file contents
-        let contents = download_release(client, latest_release).await?;
+        let contents = download_asset(client, asset_to_download).await?;
 
         // Open the mod JAR file
         let mut mod_file = OpenOptions::new()
@@ -438,9 +490,11 @@ async fn upgrade_modrinth(client: &Client, config: &json::Config) -> FResult<()>
 
         let mut latest_version: Option<labrinth::structs::Version> = None;
 
-        // Check if a version compatible with the game version specified in the config is available
+        // Check if a version compatible with the game version and mod loader specified in the config is available
         for version in versions {
-            if version.game_versions.contains(&config.version) {
+            if version.game_versions.contains(&config.version)
+                && version.loaders.contains(&config.loader)
+            {
                 latest_version = Some(version);
                 break;
             }
@@ -452,8 +506,8 @@ async fn upgrade_modrinth(client: &Client, config: &json::Config) -> FResult<()>
             None => {
                 return Err(FError::Quit {
                     message: format!(
-                        "No version of {} is compatible for Minecraft {}",
-                        mod_.title, config.version,
+                        "× No version of {} is compatible for {} {}",
+                        mod_.title, config.loader, config.version,
                     ),
                 });
             }
@@ -463,11 +517,11 @@ async fn upgrade_modrinth(client: &Client, config: &json::Config) -> FResult<()>
 
         eprint!("  [2] Downloading {}... ", latest_version.name);
 
-        let mut mod_file_path = config.output_dir.join(mod_.title);
-        mod_file_path.set_extension("jar");
+        // Compute output mod file's path
+        let mod_file_path = get_mod_file_path(config, &mod_.title);
 
         // Get file contents
-        let contents = download_version(client, latest_version).await?;
+        let contents = download_version_file(client, &latest_version.files[0]).await?;
 
         // Open mod JAR file
         let mut mod_file = OpenOptions::new()

@@ -34,7 +34,7 @@ impl Debug for FError {
             FError::EmptyConfigFile => write!(fmt, "Your config file is empty! Run `ferium help` to see how to add mods or repositories"),
             FError::HTTPError { message } => write!(fmt, "An HTTP(S) request returned an error, {}", message),
             FError::InvalidDeviceError => write!(fmt, "The device you are currently running on is unsupported by Ferium"),
-            FError::IOError {description} => write!(fmt, "Encountered an Input/Output error, {}", description),
+            FError::IOError {description} => write!(fmt, "Encountered an input/output error, {}", description),
             FError::JsonError { category } => match category {
                 serde_json::error::Category::Syntax => {
                     write!(fmt, "Syntax error encountered in JSON file")

@@ -146,6 +146,12 @@ pub struct Asset {
     pub browser_download_url: String,
 }
 
+impl std::fmt::Display for Asset {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        write!(fmt, "{}", self.name)
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Reactions {
     pub url: String,

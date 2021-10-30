@@ -9,3 +9,7 @@ Ferium is an open source and easy to use package manager for Minecraft mods on [
 ## Feature requests
 
 If you want to have a feature added, check the [project](https://github.com/theRookieCoder/ferium/projects/1) to see if the feature is already added/planned. If not, you can [create a new issue](https://github.com/theRookieCoder/ferium/issues/new)
+
+## Building or working on Ferium
+
+You can build the project and install it to `~/bin` by running `make install`. If you are working on the project, you can use `make install-dev`. If you want to obtain executables for a specific OS, you can run `make build-<OS>` and replace `<OS>` with `mac`, `win`, or `linux`
