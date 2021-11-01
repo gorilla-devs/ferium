@@ -1,6 +1,6 @@
 # Changelog for Ferium
 
-## [3.6.1] - 31.10.2021
+## [3.6.1] - 01.11.2021
 
 - Switched to Clap's GitHub repo to get Clap v3
 - Added starting directory argument to `pick_folder()`
