@@ -1,6 +1,16 @@
 # Changelog for Ferium
 
-This changelog is formatted based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+## [3.6.1] - 31.10.2021
+
+- Switched to Clap's GitHub repo to get Clap v3
+- Added starting directory argument to `pick_folder()`
+- Some wording changes in `cli.yaml`
+- Some small tweaks in `cli.rs` to support Clap v3
+- In `json.rs`, the first time config has been moved to `Config::new()`
+- Previously when using a `dialouger` picker, the message was printed using `println!()` then the picker was rendered. Now that message has been moved to the `with_prompt()` modifier
+- `configure()` now loops until Quit is selected
+- Some other small improvements to `ferium config`	
+- Tweaked `list()`'s output
 
 ## [3.6.0] - 30.10.2021
 
@@ -10,7 +20,6 @@ This changelog is formatted based on [Keep a Changelog](https://keepachangelog.c
 - If multiple compatible assets were found, a selector is shown to let the user pick the latest version
 - The progress indicators updates now show the name of the asset being downloaded rather than the name of the `Version` or `Release`
 - Added function `remove_minor_version()` which is extracted from `get_latest_mc_versions()`
-- 
 
 ## [3.5.1] - 28.10.2021
 

@@ -2,6 +2,7 @@ mod labrinth;
 mod octorok;
 mod util;
 
+use ansi_term::Colour::{Green, White};
 use dialoguer::{theme::ColorfulTheme, MultiSelect, Select};
 use labrinth::calls::*;
 use octorok::calls::*;
@@ -81,7 +82,7 @@ async fn main() -> FResult<()> {
     Ok(())
 }
 
-/// Fetch a mod file's path based on a `name` and `config`uration
+/// Fetch a mod file's path based on a `name` and the `config`
 fn get_mod_file_path(config: &json::Config, name: &str) -> PathBuf {
     let mut mod_file_path = config
         .output_dir
@@ -107,54 +108,69 @@ async fn configure(config: &mut json::Config) -> FResult<()> {
         "Minecraft version",
         // Show picker to change mod loader
         "Mod loader",
+        // Quit the configuration
+        "Quit",
     ];
 
-    println!("Which setting would you like to change?");
-    let selection = Select::with_theme(&ColorfulTheme::default())
-        .items(&items)
-        .interact_opt()?;
+    loop {
+        let selection = Select::with_theme(&ColorfulTheme::default())
+            .with_prompt("Which setting would you like to change")
+            .items(&items)
+            .interact_opt()?;
 
-    match selection {
-        Some(index) => {
-            println!();
-            match index {
-                0 => {
-                    // Let user pick output directory
-                    match wrappers::pick_folder().await {
-                        Some(dir) => config.output_dir = dir,
-                        None => (),
+        match selection {
+            Some(index) => {
+                match index {
+                    0 => {
+                        eprint!(
+                            "{} {}",
+                            Green.paint("✔"),
+                            White.bold().paint("Pick a mod output directory   "),
+                        );
+                        // Let user pick output directory
+                        match wrappers::pick_folder(&config.output_dir).await {
+                            Some(dir) => config.output_dir = dir,
+                            None => (),
+                        }
+                        println!(
+                            "{}\n",
+                            Green.paint(config.output_dir.to_str().ok_or(FError::OptionError)?)
+                        );
                     }
-                }
-                1 => {
-                    // Let user pick mc version from latest 10 versions
-                    let mut versions = wrappers::get_latest_mc_versions(10).await?;
-                    println!("Select a Minecraft version");
-                    let index = Select::with_theme(&ColorfulTheme::default())
-                        .items(&versions)
-                        .default(0)
-                        .interact_opt()?;
-                    match index {
-                        Some(i) => config.version = versions.swap_remove(i),
-                        None => (),
+                    1 => {
+                        // Let user pick mc version from latest 10 versions
+                        let mut versions = wrappers::get_latest_mc_versions(10).await?;
+                        let index = Select::with_theme(&ColorfulTheme::default())
+                            .with_prompt("Select a Minecraft version")
+                            .items(&versions)
+                            .default(0)
+                            .interact_opt()?;
+                        match index {
+                            Some(i) => config.version = versions.swap_remove(i),
+                            None => (),
+                        }
+                        println!();
                     }
-                }
-                2 => {
-                    // Let user pick mod loader
-                    let mod_loaders = ["Fabric", "Forge"];
-                    println!("Pick a mod loader");
-                    let index = Select::with_theme(&ColorfulTheme::default())
-                        .items(&mod_loaders)
-                        .interact_opt()?;
-                    match index {
-                        Some(i) => config.loader = mod_loaders[i].to_lowercase(),
-                        None => (),
+                    2 => {
+                        // Let user pick mod loader
+                        let mod_loaders = ["Fabric", "Forge"];
+                        let index = Select::with_theme(&ColorfulTheme::default())
+                            .with_prompt("Pick a mod loader")
+                            .items(&mod_loaders)
+                            .interact_opt()?;
+                        match index {
+                            Some(i) => config.loader = mod_loaders[i].to_lowercase(),
+                            None => (),
+                        }
+                        println!();
                     }
+                    3 => break,
+                    _ => return Err(FError::OptionError),
                 }
-                _ => return Err(FError::OptionError),
             }
-        }
-        None => return Ok(()),
-    };
+            None => break,
+        };
+    }
 
     Ok(())
 }
@@ -183,8 +199,8 @@ async fn remove(client: &Client, config: &mut json::Config) -> FResult<()> {
     // If list is not empty
     if !items.is_empty() {
         // Show selection menu
-        println!("\nSelect mods and/or repositories to remove");
         let items_to_remove = MultiSelect::with_theme(&ColorfulTheme::default())
+            .with_prompt("Select mods and/or repositories to remove")
             .items(&items)
             .clear(false)
             .interact_opt()?;
@@ -286,8 +302,8 @@ async fn add_repo_github(
     if contains_jar_asset {
         // Append repo to config and write
         config.repos.push(json::Repo {
-            owner,
-            name: repo_name,
+            owner: repo.owner.login,
+            name: repo.name,
         });
         println!("✓")
     } else {
@@ -337,16 +353,19 @@ async fn list(client: &Client, config: &json::Config) -> FResult<()> {
     for mod_slug in &config.mod_slugs {
         // Get mod metadata
         let mod_ = get_mod(client, &mod_slug).await?;
+        // TODO: Get mod's owner data here
 
         // Print mod data formatted
+        // TODO: Add `Developer:` field
         println!(
-            "- {} (Modrinth)
-          \r       {}\n
-          \r       Link:        https://modrinth.com/mod/{}
-          \r       Downloads:   {}
-          \r       Client side: {}
-          \r       Server side: {}
-          \r       License:     {}\n",
+            "- {}
+           \r      {}\n
+           \r      Link:        https://modrinth.com/mod/{}
+           \r      Source:      Modrinth Mod
+           \r      Downloads:   {}
+           \r      Client side: {}
+           \r      Server side: {}
+           \r      License:     {}\n",
             mod_.title,
             mod_.description,
             mod_.slug,
@@ -372,12 +391,13 @@ async fn list(client: &Client, config: &json::Config) -> FResult<()> {
 
         // Print repository data formatted
         println!(
-            "- {} (GitHub)
-          \r       {}\n
-          \r       Link:        {}
-          \r       Downloads:   {}
-          \r       Developer:   {}
-          \r       License:     {}\n",
+            "- {}
+           \r      {}\n
+           \r      Link:        {}
+           \r      Source:      GitHub Repository
+           \r      Downloads:   {}
+           \r      Developer:   {}
+           \r      License:     {}\n",
             repo.name,
             repo.description,
             repo.html_url,
@@ -398,6 +418,7 @@ async fn upgrade_github(client: &Client, config: &json::Config) -> FResult<()> {
 
         let repository = get_repository(client, &repo_name.owner, &repo_name.name).await?;
         let releases = get_releases(client, &repository).await?;
+        let version_to_check = wrappers::remove_minor_version(&config.version)?;
 
         // A vector of assets that are compatible
         let mut asset_candidates: Vec<&octorok::structs::Asset> = Vec::new();
@@ -419,10 +440,9 @@ async fn upgrade_github(client: &Client, config: &json::Config) -> FResult<()> {
                     specifies_loader = true;
                 }
 
-                if asset
-                    .name
-                    // Check that the asset supports the user's specified version
-                    .contains(&wrappers::remove_minor_version(&config.version)?)
+                if
+                // Check that the asset supports the user's specified version
+                (asset.name.contains(&version_to_check) || release.body.contains(&version_to_check))
                     // Check that the asset is a JAR file
                     && asset.name.contains("jar")
                     // If the asset specifies a mod loader, check for it, if not don't check and return true
@@ -446,8 +466,8 @@ async fn upgrade_github(client: &Client, config: &json::Config) -> FResult<()> {
         // If more than 1 was found, let the user select which one to use
         } else {
             println!("✓");
-            println!("Select the asset to downloaded:");
             let selection = Select::with_theme(&ColorfulTheme::default())
+                .with_prompt("Select the asset to downloaded")
                 .items(&asset_candidates)
                 .interact()?;
             asset_candidates[selection]

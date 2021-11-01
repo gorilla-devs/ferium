@@ -1,7 +1,7 @@
 //! This file contains convenience wrappers for the CLI
 
 use crate::ferium_error::*;
-use clap::{crate_version, load_yaml, App};
+use clap::{crate_version, load_yaml, App, AppSettings};
 
 /// Enum for subcommands
 pub enum SubCommand {
@@ -31,8 +31,8 @@ pub enum SubCommand {
 pub fn get_subcommand() -> FResult<SubCommand> {
     // Load command definition from yaml file
     let yaml = load_yaml!("cli.yaml");
-    let app = App::from_yaml(yaml)
-        .setting(clap::AppSettings::SubcommandRequiredElseHelp)
+    let app = App::from(yaml)
+        .setting(AppSettings::SubcommandRequiredElseHelp)
         .version(crate_version!());
     let matches = app.get_matches();
 

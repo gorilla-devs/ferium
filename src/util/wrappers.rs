@@ -4,21 +4,23 @@ use super::launchermeta::get_version_manifest;
 use crate::ferium_error::{FError, FResult};
 use fancy_regex::Regex;
 use shellexpand::tilde;
-use std::env::consts::OS;
-use std::path::{Path, PathBuf};
+use std::{
+    env::consts::OS,
+    path::{Path, PathBuf},
+};
 
 // Only macOS uses a sync file picker
 #[cfg(target_os = "macos")]
 /// Uses the appropriate file picker to pick a file
-pub async fn pick_folder() -> Option<PathBuf> {
-    rfd::FileDialog::new().pick_folder()
+pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
+    rfd::FileDialog::new().set_directory(path).pick_folder()
 }
 
 // Other OSs can use the async version
 #[cfg(not(target_os = "macos"))]
 /// Uses the appropriate file picker to pick a file
-pub async fn pick_folder() -> Option<PathBuf> {
-    rfd::AsyncFileDialog::new().pick_folder().await
+pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
+    rfd::AsyncFileDialog::new().set_directory(path).pick_folder().await
 }
 
 /// Get a maximum of `count` number of the latest versions of Minecraft
