@@ -1,6 +1,6 @@
 # Changelog for Ferium
 
-## [3.7.0] - 
+## [3.7.0] - 04.11.2021
 
 - Migrated to [Ferinth](https://crates.io/ferinth)
 - Fixed a bug where GitHub API requests are using HTTP rather than HTTPS
