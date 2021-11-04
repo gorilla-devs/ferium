@@ -1,10 +1,9 @@
-mod labrinth;
 mod octorok;
 mod util;
 
 use ansi_term::Colour::{Green, White};
 use dialoguer::{theme::ColorfulTheme, MultiSelect, Select};
-use labrinth::calls::*;
+use ferinth::{structures::*, Ferinth};
 use octorok::calls::*;
 use reqwest::Client;
 use std::{
@@ -20,6 +19,10 @@ use util::{
 
 #[tokio::main]
 async fn main() -> FResult<()> {
+    // Get the command to execute from Clap
+    // This also displays help, version
+    let command = cli::get_subcommand()?;
+
     // Check for an internet connection
     match online::check(Some(1)).await {
         Ok(_) => (),
@@ -36,10 +39,9 @@ async fn main() -> FResult<()> {
         }
     }
 
-    // Get the command to execute from Clap
-    let command = cli::get_subcommand()?;
     // HTTP(S) client
     let client = Client::new();
+    let modrinth = Ferinth::new("ferium");
     // Reference to Ferium's config file
     let mut config_file = match json::get_config_file().await? {
         Some(file) => file,
@@ -52,7 +54,7 @@ async fn main() -> FResult<()> {
     // Run function(s) based on command to be executed
     match command {
         SubCommand::Add { mod_id } => {
-            add_mod_modrinth(&client, mod_id, &mut config).await?;
+            add_mod_modrinth(&modrinth, mod_id, &mut config).await?;
         }
         SubCommand::AddRepo { owner, name } => {
             add_repo_github(&client, owner, name, &mut config).await?;
@@ -62,17 +64,17 @@ async fn main() -> FResult<()> {
         }
         SubCommand::List => {
             check_empty_config(&config)?;
-            list(&client, &config).await?;
+            list(&modrinth, &client, &config).await?;
         }
         SubCommand::Remove => {
             check_empty_config(&config)?;
-            remove(&client, &mut config).await?;
+            remove(&modrinth, &client, &mut config).await?;
         }
         SubCommand::Upgrade => {
             check_empty_config(&config)?;
             create_dir_all(&config.output_dir)?;
-            upgrade_modrinth(&client, &config).await?;
-            upgrade_github(&client, &config).await?;
+            upgrade_modrinth(&modrinth, &config).await?;
+            upgrade_github(&client, &config).await?
         }
     };
 
@@ -84,9 +86,7 @@ async fn main() -> FResult<()> {
 
 /// Fetch a mod file's path based on a `name` and the `config`
 fn get_mod_file_path(config: &json::Config, name: &str) -> PathBuf {
-    let mut mod_file_path = config
-        .output_dir
-        .join(format!("{}-{}-{}", name, config.loader, config.version));
+    let mut mod_file_path = config.output_dir.join(format!("{}", name));
     mod_file_path.set_extension("jar");
     mod_file_path
 }
@@ -176,14 +176,14 @@ async fn configure(config: &mut json::Config) -> FResult<()> {
 }
 
 /// Display a list of mods and repos in the config to select and remove selected ones from `config_file`
-async fn remove(client: &Client, config: &mut json::Config) -> FResult<()> {
+async fn remove(modrinth: &Ferinth, client: &Client, config: &mut json::Config) -> FResult<()> {
     let mut items: Vec<String> = Vec::new();
     let mut items_removed = String::new();
 
     eprint!("Gathering mod and repository information... ");
     // Store the names of the mods
     for i in 0..config.mod_slugs.len() {
-        let mod_ = labrinth::calls::get_mod(client, &config.mod_slugs[i]).await?;
+        let mod_ = modrinth.get_mod(&config.mod_slugs[i]).await?;
         items.push(mod_.title);
     }
 
@@ -317,7 +317,7 @@ async fn add_repo_github(
 
 /// Check if mod with `mod_id` exists and releases mods for configured mod loader, and if so add that mod to `config`
 async fn add_mod_modrinth(
-    client: &Client,
+    modrinth: &Ferinth,
     mod_id: String,
     config: &mut json::Config,
 ) -> FResult<()> {
@@ -331,7 +331,7 @@ async fn add_mod_modrinth(
     }
 
     // Check if mod exists
-    match get_mod(client, &mod_id).await {
+    match modrinth.get_mod(&mod_id).await {
         Ok(mod_) => {
             // And if so, append mod to config and write
             config.mod_slugs.push(mod_id);
@@ -349,27 +349,38 @@ async fn add_mod_modrinth(
 }
 
 /// List all the mods in `config` with some of their metadata
-async fn list(client: &Client, config: &json::Config) -> FResult<()> {
+async fn list(modrinth: &Ferinth, client: &Client, config: &json::Config) -> FResult<()> {
     for mod_slug in &config.mod_slugs {
         // Get mod metadata
-        let mod_ = get_mod(client, &mod_slug).await?;
-        // TODO: Get mod's owner data here
+        let mod_ = modrinth.get_mod(&mod_slug).await?;
+        let team_members = modrinth.list_team_members(&mod_.team).await?;
+
+        // Get the usernames of all the developers
+        let mut developers = String::new();
+        for member in team_members {
+            let user = modrinth.get_user(&member.user_id).await?;
+            developers.push_str(&user.username);
+            developers.push_str(", ");
+        }
+        // Trim trailing ', '
+        developers.truncate(developers.len() - 2);
 
         // Print mod data formatted
-        // TODO: Add `Developer:` field
         println!(
-            "- {}
-           \r      {}\n
-           \r      Link:        https://modrinth.com/mod/{}
-           \r      Source:      Modrinth Mod
-           \r      Downloads:   {}
-           \r      Client side: {}
-           \r      Server side: {}
-           \r      License:     {}\n",
+            "{}
+           \r   {}\n
+           \r   Link:           https://modrinth.com/mod/{}
+           \r   Source:         Modrinth Mod
+           \r   Downloads:      {}
+           \r   Developers:     {}
+           \r   Client side:    {}
+           \r   Server side:    {}
+           \r   License:        {}\n",
             mod_.title,
             mod_.description,
             mod_.slug,
             mod_.downloads,
+            developers,
             mod_.client_side,
             mod_.server_side,
             mod_.license.name,
@@ -391,13 +402,13 @@ async fn list(client: &Client, config: &json::Config) -> FResult<()> {
 
         // Print repository data formatted
         println!(
-            "- {}
-           \r      {}\n
-           \r      Link:        {}
-           \r      Source:      GitHub Repository
-           \r      Downloads:   {}
-           \r      Developer:   {}
-           \r      License:     {}\n",
+            "{}
+           \r   {}\n
+           \r   Link:       {}
+           \r   Source:     GitHub Repository
+           \r   Downloads:  {}
+           \r   Developer:  {}
+           \r   License:    {}\n",
             repo.name,
             repo.description,
             repo.html_url,
@@ -498,23 +509,29 @@ async fn upgrade_github(client: &Client, config: &json::Config) -> FResult<()> {
 }
 
 /// Download and install all mods in `config.mod_slugs`
-async fn upgrade_modrinth(client: &Client, config: &json::Config) -> FResult<()> {
+async fn upgrade_modrinth(modrinth: &Ferinth, config: &json::Config) -> FResult<()> {
     for mod_slug in &config.mod_slugs {
         // Get mod metadata
-        let mod_ = get_mod(client, &mod_slug).await?;
+        let mod_ = modrinth.get_mod(&mod_slug).await?;
         println!("Downloading {}", mod_.title);
 
         eprint!("  [1] Getting version information... ");
         // Get versions of the mod
-        let versions = get_versions(client, &mod_.id).await?;
+        let versions = modrinth.list_versions(&mod_.id).await?;
 
-        let mut latest_version: Option<labrinth::structs::Version> = None;
+        let mut latest_version: Option<version_structs::Version> = None;
 
         // Check if a version compatible with the game version and mod loader specified in the config is available
         for version in versions {
-            if version.game_versions.contains(&config.version)
-                && version.loaders.contains(&config.loader)
-            {
+            let mut compatible_version = false;
+
+            for v in &version.game_versions {
+                if v.contains(&wrappers::remove_minor_version(&config.version)?) {
+                    compatible_version = true;
+                }
+            }
+
+            if compatible_version && version.loaders.contains(&config.loader) {
                 latest_version = Some(version);
                 break;
             }
@@ -541,7 +558,9 @@ async fn upgrade_modrinth(client: &Client, config: &json::Config) -> FResult<()>
         let mod_file_path = get_mod_file_path(config, &mod_.title);
 
         // Get file contents
-        let contents = download_version_file(client, &latest_version.files[0]).await?;
+        let contents = modrinth
+            .download_version_file(&latest_version.files[0])
+            .await?;
 
         // Open mod JAR file
         let mut mod_file = OpenOptions::new()

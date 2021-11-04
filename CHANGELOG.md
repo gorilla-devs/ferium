@@ -1,5 +1,14 @@
 # Changelog for Ferium
 
+## [3.7.0] - 
+
+- Migrated to [Ferinth](https://crates.io/ferinth)
+- Fixed a bug where GitHub API requests are using HTTP rather than HTTPS
+- Added developers field to `ferium list`
+- Tweaked `ferium list` formatting
+- Made internet connection check come after clap subcommand parsing so that `ferium help` and `ferium version` can be run without an internet connection
+- Tweaked `upgrade_modrinth()` version compatibility checking
+
 ## [3.6.1] - 01.11.2021
 
 - Switched to Clap's GitHub repo to get Clap v3

@@ -1,6 +1,6 @@
 [package]
 name = "ferium"
-version = "3.6.1"
+version = "3.7.0"
 edition = "2021"
 authors = ["theRookieCoder <ileshkt@gmail.com>"]
 description = "Ferium is an easy to use manager for Minecraft mods on Modrinth and Github Releases"
@@ -20,6 +20,7 @@ shellexpand = "2"
 serde_json = "1"
 ansi_term = "0"
 dialoguer = "0"
+ferinth = "1"
 online = "3"
 bytes = "1"
 rfd = "0"

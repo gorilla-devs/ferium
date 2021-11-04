@@ -1,6 +1,6 @@
 //! This file contains miscellanous convenience functions
 
-use super::launchermeta::get_version_manifest;
+use super::launchermeta::{get_version_manifest, VersionType};
 use crate::ferium_error::{FError, FResult};
 use fancy_regex::Regex;
 use shellexpand::tilde;
@@ -20,7 +20,10 @@ pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
 #[cfg(not(target_os = "macos"))]
 /// Uses the appropriate file picker to pick a file
 pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
-    rfd::AsyncFileDialog::new().set_directory(path).pick_folder().await
+    rfd::AsyncFileDialog::new()
+        .set_directory(path)
+        .pick_folder()
+        .await
 }
 
 /// Get a maximum of `count` number of the latest versions of Minecraft
@@ -53,7 +56,9 @@ pub async fn get_latest_mc_versions(count: usize) -> FResult<Vec<String>> {
         let major_version = remove_minor_version(&version.id)?;
 
         // If version is a release and it hasn't already been added
-        if version.type_field == "release" && !major_versions_added.contains(&major_version) {
+        if matches!(version.type_field, VersionType::Release)
+            && !major_versions_added.contains(&major_version)
+        {
             versions_to_display.push(version.id);
             major_versions_added.push(major_version);
         }

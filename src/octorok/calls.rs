@@ -33,7 +33,7 @@ pub async fn get_releases(client: &Client, repo: &Repository) -> FResult<Vec<Rel
 
 /// Send a request to `url` with `client` and return response. Labrinth's base URL will be prepended to `url`
 async fn request_rel(client: &Client, url: String) -> FResult<Response> {
-    Ok(request(client, format!("http://api.github.com{}", url)).await?)
+    Ok(request(client, format!("https://api.github.com{}", url)).await?)
 }
 
 /// Send a request to `url` with `client` and return response

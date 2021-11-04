@@ -25,8 +25,8 @@ pub struct Version {
     /// Name of version
     pub id: String,
     #[serde(rename = "type")]
-    /// Type of versions (snapshot, release, etc)
-    pub type_field: String,
+    /// Type of version
+    pub type_field: VersionType,
     /// URL to version's manifest
     pub url: String,
     pub time: String,
@@ -38,6 +38,18 @@ pub struct Version {
     #[serde(rename = "complianceLevel")]
     /// Whether this version is "historical"
     pub compliance_level: u32,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub enum VersionType {
+    #[serde(rename = "release")]
+    Release,
+    #[serde(rename = "snapshot")]
+    Snapshot,
+    #[serde(rename = "old_beta")]
+    Beta,
+    #[serde(rename = "old_alpha")]
+    Alpha,
 }
 
 /// Get the version manifest v2 from Mojang
