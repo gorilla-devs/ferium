@@ -1,5 +1,10 @@
 # Changelog for Ferium
 
+## [3.7.1] - 06.11.2021
+
+- Ferium now compiles successfully on Linux
+- `add_mod()` now adds the mod_id to the config rather than the provided mod ID/slug
+
 ## [3.7.0] - 04.11.2021
 
 - Migrated to [Ferinth](https://crates.io/ferinth)

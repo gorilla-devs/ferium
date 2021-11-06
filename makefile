@@ -8,16 +8,12 @@ build-mac:
 build-win:
 	cargo clean
 	# For Windows x64
-	cargo build --target=x86_64-pc-windows-msvc --release
-	# For Windows on arm
-	cargo build --target=aarch64-pc-windows-msvc --release
+	cargo build --target=x86_64-pc-windows-gnu --release
 
 build-linux:
 	cargo clean
 	# For Linux x86-64
-	cargo build --target=x86_64-unknown-linux-musl --release
-	# For Linux arm
-	cargo build --target=aarch64-unknown-linux-musl --release
+	cargo build --target=x86_64-unknown-linux-gnu --release
 
 install:
 	cargo install --force --path . --root ~

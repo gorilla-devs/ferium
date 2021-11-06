@@ -10,6 +10,7 @@ license = "MPL-2.0"
 publish = false
 
 [dependencies]
+# Use `rustls` rather than OpenSSL
 reqwest = { version = "0", default-features = false, features = ["json", "rustls-tls"] }
 # Use bleeding edge version of `clap`
 clap = { git = "https://github.com/clap-rs/clap/", features = ["yaml"] }

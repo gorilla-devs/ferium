@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-// Only macOS uses a sync file picker
+// macOS can only uses a sync file picker
 #[cfg(target_os = "macos")]
 /// Uses the appropriate file picker to pick a file
 pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
@@ -20,10 +20,13 @@ pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
 #[cfg(not(target_os = "macos"))]
 /// Uses the appropriate file picker to pick a file
 pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
-    rfd::AsyncFileDialog::new()
+    match rfd::AsyncFileDialog::new()
         .set_directory(path)
         .pick_folder()
-        .await
+        .await {
+            Some(handle) => Some(handle.path().into()),
+            None => None,
+        }
 }
 
 /// Get a maximum of `count` number of the latest versions of Minecraft

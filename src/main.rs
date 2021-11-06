@@ -334,7 +334,7 @@ async fn add_mod_modrinth(
     match modrinth.get_mod(&mod_id).await {
         Ok(mod_) => {
             // And if so, append mod to config and write
-            config.mod_slugs.push(mod_id);
+            config.mod_slugs.push(mod_.id);
             println!("✓ ({})", mod_.title);
         }
         Err(_) => {
