@@ -1,6 +1,6 @@
 [package]
 name = "ferium"
-version = "3.7.0"
+version = "3.7.1"
 edition = "2021"
 authors = ["theRookieCoder <ileshkt@gmail.com>"]
 description = "Ferium is an easy to use manager for Minecraft mods on Modrinth and Github Releases"
@@ -10,10 +10,10 @@ license = "MPL-2.0"
 publish = false
 
 [dependencies]
+reqwest = { version = "0", default-features = false, features = ["json", "rustls-tls"] }
 # Use bleeding edge version of `clap`
 clap = { git = "https://github.com/clap-rs/clap/", features = ["yaml"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
-reqwest = { version = "0", features = ["json"] }
 serde = { version = "1", features = ["derive"] }
 fancy-regex = "0"
 shellexpand = "2"

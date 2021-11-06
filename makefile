@@ -1,13 +1,13 @@
 build-mac:
 	cargo clean
-	# For macOS aarch64
-	cargo build --target=aarch64-apple-darwin --release
-	# For macOS x86-64
+	# For macOS on Intel
 	cargo build --target=x86_64-apple-darwin --release
+	# For macOS on Apple Silicon
+	cargo build --target=aarch64-apple-darwin --release
 
 build-win:
 	cargo clean
-	# For Windows x86-64
+	# For Windows x64
 	cargo build --target=x86_64-pc-windows-msvc --release
 	# For Windows on arm
 	cargo build --target=aarch64-pc-windows-msvc --release
