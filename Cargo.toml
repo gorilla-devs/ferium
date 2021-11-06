@@ -1,6 +1,6 @@
 [package]
 name = "ferium"
-version = "3.7.1"
+version = "3.7.2"
 edition = "2021"
 authors = ["theRookieCoder <ileshkt@gmail.com>"]
 description = "Ferium is an easy to use manager for Minecraft mods on Modrinth and Github Releases"
@@ -12,15 +12,15 @@ publish = false
 [dependencies]
 # Use `rustls` rather than OpenSSL
 reqwest = { version = "0", default-features = false, features = ["json", "rustls-tls"] }
-# Use bleeding edge version of `clap`
-clap = { git = "https://github.com/clap-rs/clap/", features = ["yaml"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+clap = { version = "3.0.0-beta", features = ["yaml"] }
 serde = { version = "1", features = ["derive"] }
 fancy-regex = "0"
 shellexpand = "2"
 serde_json = "1"
 ansi_term = "0"
 dialoguer = "0"
+thiserror = "1"
 ferinth = "1"
 online = "3"
 bytes = "1"

@@ -18,7 +18,14 @@ use util::{
 };
 
 #[tokio::main]
-async fn main() -> FResult<()> {
+async fn main() {
+    if let Some(err) = actual_main().await.err() {
+        println!("{}", err);
+        std::process::exit(1);
+    }
+}
+
+async fn actual_main() -> FResult<()> {
     // Get the command to execute from Clap
     // This also displays help, version
     let command = cli::get_subcommand()?;

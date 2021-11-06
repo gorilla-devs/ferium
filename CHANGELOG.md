@@ -1,5 +1,9 @@
 # Changelog for Ferium
 
+## [3.7.2] - 06.11.2021
+
+- Switched to `thiserror` for error handling
+
 ## [3.7.1] - 06.11.2021
 
 - Ferium now compiles successfully on Linux

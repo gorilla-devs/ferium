@@ -1,86 +1,48 @@
-use std::{
-    convert::From,
-    fmt::{Debug, Formatter},
-};
+use std::fmt::Debug;
+use thiserror::Error;
 
 pub type FResult<T> = std::result::Result<T, FError>;
 
+#[derive(Error, Debug)]
 pub enum FError {
     /// The config file does not contain mods or repos
+    #[error("Your config file is empty! Run `ferium help` to see how to add mods or repositories")]
     EmptyConfigFile,
     /// An HTTP(S) request returned with an error
-    ReqwestError { error: reqwest::Error },
+    #[error("Failed to send/process an HTTP(S) request due to {}", .0)]
+    ReqwestError(#[from] reqwest::Error),
     /// Failure to unwrap an Option, akin to `NullPointerError`s
+    #[error("Could not access an expected value")]
     OptionError,
     /// Failed to parse a regular expression
-    RegexError,
+    #[error("Failed to parse regular expression")]
+    RegexError(#[from] fancy_regex::Error),
     /// A JSON error occured
-    JsonError {
-        category: serde_json::error::Category,
-    },
+    #[error("{}", match .0.classify() {
+        serde_json::error::Category::Syntax => {
+            "Syntax error encountered in JSON file"
+        },
+        serde_json::error::Category::Data => {
+            "Non matching type while deserialising JSON"
+        },
+        serde_json::error::Category::Eof => {
+            "Unexpected end of file while reading JSON"
+        },
+        serde_json::error::Category::Io => {
+            "Encountered an Input/Output error while handling JSON"
+        },
+    })]
+    JsonError(#[from] serde_json::Error),
     /// An HTTP(S) request encountered an error
+    #[error("An HTTP(S) request returned an error, {}", message)]
     HTTPError { message: String },
     /// An I/O error occured
-    IOError { description: String },
+    #[error("Encountered an input/output error, {}", .0.to_string())]
+    IOError(#[from] std::io::Error),
     /// The program is running on an unsupported device
+    #[error("The device you are currently running on is unsupported by Ferium")]
     InvalidDeviceError,
     /// The application should print `message` and quit (gracefully)
+    #[error("{}", message)]
     Quit { message: String },
-}
-
-impl Debug for FError {
-    fn fmt(&self, fmt: &mut Formatter) -> Result<(), std::fmt::Error> {
-        match self {
-            FError::EmptyConfigFile => write!(fmt, "Your config file is empty! Run `ferium help` to see how to add mods or repositories"),
-            FError::HTTPError { message } => write!(fmt, "An HTTP(S) request returned an error, {}", message),
-            FError::InvalidDeviceError => write!(fmt, "The device you are currently running on is unsupported by Ferium"),
-            FError::IOError {description} => write!(fmt, "Encountered an input/output error, {}", description),
-            FError::JsonError { category } => match category {
-                serde_json::error::Category::Syntax => {
-                    write!(fmt, "Syntax error encountered in JSON file")
-                },
-                serde_json::error::Category::Data => {
-                    write!(fmt, "Non matching type while deserialising JSON")
-                },
-                serde_json::error::Category::Eof => {
-                    write!(fmt, "Unexpected end of file while reading JSON")
-                },
-                serde_json::error::Category::Io => {
-                    write!(fmt, "Encountered an Input/Output error while handling JSON")
-                },
-            },
-            FError::OptionError => write!(fmt, "Could not access an expected value"),
-            FError::Quit { message } => write!(fmt, "{}", message),
-            FError::RegexError => write!(fmt, "Failed to parse regular expression"),
-            FError::ReqwestError { error }=> write!(fmt, "Failed to send/process an HTTP(S) request due to {}", error),
-        }
-    }
-}
-
-impl From<reqwest::Error> for FError {
-    fn from(err: reqwest::Error) -> Self {
-        Self::ReqwestError { error: err }
-    }
-}
-
-impl From<fancy_regex::Error> for FError {
-    fn from(_: fancy_regex::Error) -> Self {
-        Self::RegexError
-    }
-}
-
-impl From<std::io::Error> for FError {
-    fn from(err: std::io::Error) -> Self {
-        Self::IOError {
-            description: err.to_string(),
-        }
-    }
-}
-
-impl From<serde_json::Error> for FError {
-    fn from(err: serde_json::Error) -> Self {
-        Self::JsonError {
-            category: err.classify(),
-        }
-    }
 }
