@@ -16,7 +16,7 @@ build-win:
 
 	cargo build --target=x86_64-pc-windows-gnu --release
 
-	zip -r out/ferium-windows-gnu.zip -j target/x86_64-pc-windows-gnu/release/ferium
+	zip -r out/ferium-windows-gnu.zip -j target/x86_64-pc-windows-gnu/release/ferium.exe
 
 build-linux:
 	cargo clean
