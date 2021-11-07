@@ -93,7 +93,7 @@ async fn actual_main() -> FResult<()> {
 
 /// Fetch a mod file's path based on a `name` and the `config`
 fn get_mod_file_path(config: &json::Config, name: &str) -> PathBuf {
-    let mut mod_file_path = config.output_dir.join(format!("{}", name));
+    let mut mod_file_path = config.output_dir.join(name.to_string());
     mod_file_path.set_extension("jar");
     mod_file_path
 }
@@ -135,9 +135,8 @@ async fn configure(config: &mut json::Config) -> FResult<()> {
                             White.bold().paint("Pick a mod output directory   "),
                         );
                         // Let user pick output directory
-                        match wrappers::pick_folder(&config.output_dir).await {
-                            Some(dir) => config.output_dir = dir,
-                            None => (),
+                        if let Some(dir) = wrappers::pick_folder(&config.output_dir).await {
+                            config.output_dir = dir;
                         }
                         println!(
                             "{}\n",
@@ -152,9 +151,8 @@ async fn configure(config: &mut json::Config) -> FResult<()> {
                             .items(&versions)
                             .default(0)
                             .interact_opt()?;
-                        match index {
-                            Some(i) => config.version = versions.swap_remove(i),
-                            None => (),
+                        if let Some(i) = index {
+                            config.version = versions.swap_remove(i);
                         }
                         println!();
                     }
@@ -165,9 +163,8 @@ async fn configure(config: &mut json::Config) -> FResult<()> {
                             .with_prompt("Pick a mod loader")
                             .items(&mod_loaders)
                             .interact_opt()?;
-                        match index {
-                            Some(i) => config.loader = mod_loaders[i].to_lowercase(),
-                            None => (),
+                        if let Some(i) = index {
+                            config.loader = mod_loaders[i].to_lowercase();
                         }
                         println!();
                     }
@@ -212,49 +209,36 @@ async fn remove(modrinth: &Ferinth, client: &Client, config: &mut json::Config) 
             .clear(false)
             .interact_opt()?;
 
-        match items_to_remove {
-            Some(items_to_remove) => {
-                // Sort vector in descending order to fix moving indices
-                let mut items_to_remove = items_to_remove;
-                items_to_remove.sort_unstable();
-                items_to_remove.reverse();
+        if let Some(items_to_remove) = items_to_remove {
+            // Sort vector in descending order to fix moving indices
+            let mut items_to_remove = items_to_remove;
+            items_to_remove.sort_unstable();
+            items_to_remove.reverse();
 
-                // For each mod to remove
-                for item_to_remove in items_to_remove {
-                    // If index is larger than mod_slugs length, then the index is for repos
-                    if item_to_remove >= config.mod_slugs.len() {
-                        // Offset the array by the proper amount
-                        let index = item_to_remove - config.mod_slugs.len();
+            // For each mod to remove
+            for index in items_to_remove {
+                // If index is larger than mod_slugs length, then the index is for repos
+                if index >= config.mod_slugs.len() {
+                    // Offset the array by the proper amount
+                    let index = index - config.mod_slugs.len();
 
-                        // Remove item from config
-                        config.repos.remove(index);
-                        // Get the item's name
-                        let name = &items[item_to_remove];
-
-                        // Remove the mod from downloaded mods
-                        let mod_file_path = get_mod_file_path(config, name);
-                        let _ = remove_file(mod_file_path);
-
-                        // Store its name in a string
-                        items_removed.push_str(&format!("{}, ", name));
-                    } else {
-                        // Remove item from config
-                        config.mod_slugs.remove(item_to_remove);
-                        // Get the item's name
-                        let name = &items[item_to_remove];
-
-                        // Remove the mod from downloaded mods
-                        let mod_file_path = get_mod_file_path(config, name);
-                        let _ = remove_file(mod_file_path);
-
-                        // Store its name in a string
-                        items_removed.push_str(&format!("{}, ", name));
-                    }
+                    // Remove item from config
+                    config.repos.remove(index);
+                } else {
+                    // Remove item from config
+                    config.mod_slugs.remove(index);
                 }
-            }
 
-            // Exit if none are selected
-            None => (),
+                // Get the item's name
+                let name = &items[index];
+
+                // Remove the mod from downloaded mods
+                let mod_file_path = get_mod_file_path(config, name);
+                let _ = remove_file(mod_file_path);
+
+                // Store its name in a string
+                items_removed.push_str(&format!("{}, ", name));
+            }
         }
     }
 
@@ -359,7 +343,7 @@ async fn add_mod_modrinth(
 async fn list(modrinth: &Ferinth, client: &Client, config: &json::Config) -> FResult<()> {
     for mod_slug in &config.mod_slugs {
         // Get mod metadata
-        let mod_ = modrinth.get_mod(&mod_slug).await?;
+        let mod_ = modrinth.get_mod(mod_slug).await?;
         let team_members = modrinth.list_team_members(&mod_.team).await?;
 
         // Get the usernames of all the developers
@@ -458,13 +442,13 @@ async fn upgrade_github(client: &Client, config: &json::Config) -> FResult<()> {
                     specifies_loader = true;
                 }
 
-                if
-                // Check that the asset supports the user's specified version
-                (asset.name.contains(&version_to_check) || release.body.contains(&version_to_check))
-                    // Check that the asset is a JAR file
+                // Check if mod loader is correct
+                if (asset.name.to_lowercase().contains(&config.loader) || !specifies_loader)
+                    // Check if version is correct
+                    && (release.body.contains(&version_to_check)
+                        || asset.name.contains(&version_to_check))
+                    // Check if its a JAR file
                     && asset.name.contains("jar")
-                    // If the asset specifies a mod loader, check for it, if not don't check and return true
-                    && !(specifies_loader && !asset.name.to_lowercase().contains(&config.loader))
                 {
                     // Specify this asset as a compatible asset
                     asset_candidates.push(asset);
@@ -477,7 +461,7 @@ async fn upgrade_github(client: &Client, config: &json::Config) -> FResult<()> {
             println!("✓");
             asset_candidates[0]
         // If none were found, throw an error
-        } else if asset_candidates.len() == 0 {
+        } else if asset_candidates.is_empty() {
             return Err(FError::Quit {
                 message: "× Could not find a compatible asset to download".into(),
             });
@@ -519,7 +503,7 @@ async fn upgrade_github(client: &Client, config: &json::Config) -> FResult<()> {
 async fn upgrade_modrinth(modrinth: &Ferinth, config: &json::Config) -> FResult<()> {
     for mod_slug in &config.mod_slugs {
         // Get mod metadata
-        let mod_ = modrinth.get_mod(&mod_slug).await?;
+        let mod_ = modrinth.get_mod(mod_slug).await?;
         println!("Downloading {}", mod_.title);
 
         eprint!("  [1] Getting version information... ");

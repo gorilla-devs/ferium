@@ -41,9 +41,8 @@ impl Config {
             .with_prompt("Would you like to specify a custom mods directory?")
             .interact()?
         {
-            match super::wrappers::pick_folder(&selected_mods_dir).await {
-                Some(dir) => selected_mods_dir = dir,
-                None => (),
+            if let Some(dir) = super::wrappers::pick_folder(&selected_mods_dir).await {
+                selected_mods_dir = dir;
             };
         }
 

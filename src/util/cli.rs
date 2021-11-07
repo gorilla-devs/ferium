@@ -37,9 +37,9 @@ pub fn get_subcommand() -> FResult<SubCommand> {
     let matches = app.get_matches();
 
     // Return enum according to subcommand issued
-    if let Some(_) = matches.subcommand_matches("list") {
+    if matches.subcommand_matches("list").is_some() {
         Ok(SubCommand::List)
-    } else if let Some(_) = matches.subcommand_matches("upgrade") {
+    } else if matches.subcommand_matches("upgrade").is_some() {
         Ok(SubCommand::Upgrade)
     } else if let Some(sub_matches) = matches.subcommand_matches("add") {
         Ok(SubCommand::Add {
@@ -61,9 +61,9 @@ pub fn get_subcommand() -> FResult<SubCommand> {
                 .ok_or(FError::OptionError)?
                 .into(),
         })
-    } else if let Some(_) = matches.subcommand_matches("remove") {
+    } else if matches.subcommand_matches("remove").is_some() {
         Ok(SubCommand::Remove)
-    } else if let Some(_) = matches.subcommand_matches("config") {
+    } else if matches.subcommand_matches("config").is_some() {
         Ok(SubCommand::Config)
     } else {
         Err(FError::Quit {

@@ -1,4 +1,5 @@
 build-mac:
+	cargo clippy -- -D clippy::all
 	cargo clean
 	rm -f out/ferium-macos-x64.zip out/ferium-macos-arm.zip
 	mkdir -p out
@@ -10,6 +11,7 @@ build-mac:
 	zip -r out/ferium-macos-arm.zip -j target/aarch64-apple-darwin/release/ferium
 
 build-win:
+	cargo clippy -- -D clippy::all
 	cargo clean
 	rm -f out/ferium-windows-gnu.zip
 	mkdir -p out
@@ -19,6 +21,7 @@ build-win:
 	zip -r out/ferium-windows-gnu.zip -j target/x86_64-pc-windows-gnu/release/ferium.exe
 
 build-linux:
+	cargo clippy -- -D clippy::all
 	cargo clean
 	rm -f out/ferium-linux-gnu.zip
 	mkdir -p out
