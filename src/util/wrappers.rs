@@ -1,24 +1,24 @@
-//! This file contains miscellanous convenience functions
+//! Contains miscellanous convenience functions
 
 use super::launchermeta::{get_version_manifest, VersionType};
 use crate::ferium_error::{FError, FResult};
-use fancy_regex::Regex;
+use onig::Regex;
 use shellexpand::tilde;
 use std::{
     env::consts::OS,
     path::{Path, PathBuf},
 };
 
-// macOS can only uses a sync file picker
+// macOS can only use a sync file picker
 #[cfg(target_os = "macos")]
-/// Uses the appropriate file picker to pick a file
+/// Use the file picker to pick a file, defaulting to `path`
 pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
     rfd::FileDialog::new().set_directory(path).pick_folder()
 }
 
 // Other OSs can use the async version
 #[cfg(not(target_os = "macos"))]
-/// Uses the appropriate file picker to pick a file
+/// Use the file picker to pick a file, defaulting to `path`
 pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
     match rfd::AsyncFileDialog::new()
         .set_directory(path)
@@ -33,18 +33,17 @@ pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
 ///
 /// Example:
 /// ```rust
-/// let latest_versions = get_latest_mc_versions(5);
-/// println!("{:#?}", latest_versions);
-/// ```
-/// Output: (as of 08.2021)
-/// ```text
-/// [
-///   1.17.1,
-///   1.16.5,
-///   1.15.2,
-///   1.14.4,
-///   1.13.2,
-/// ]
+/// assert_eq!(
+///     get_latest_mc_versions(5),
+///     // This will change as Minecraft updates get released
+///     vec!([
+///         "1.17.1".into(),
+///         "1.16.5".into(),
+///         "1.15.2".into(),
+///         "1.14.4".into(),
+///         "1.13.2".into(),
+///     ])
+/// );
 /// ```
 pub async fn get_latest_mc_versions(count: usize) -> FResult<Vec<String>> {
     let versions = get_version_manifest().await?.versions;
@@ -56,7 +55,7 @@ pub async fn get_latest_mc_versions(count: usize) -> FResult<Vec<String>> {
             break;
         }
 
-        let major_version = remove_minor_version(&version.id)?;
+        let major_version = remove_semver_patch(&version.id)?;
 
         // If version is a release and it hasn't already been added
         if matches!(version.type_field, VersionType::Release)
@@ -70,17 +69,17 @@ pub async fn get_latest_mc_versions(count: usize) -> FResult<Vec<String>> {
     Ok(versions_to_display)
 }
 
-/// Removes the minor version from semver formatted strings
+/// Removes the patch segment from semver formatted strings using a regex
 ///
 /// ```rust
-/// assert_eq!(remove_minor_version("1.7.10"), "1.7");
-/// assert_eq!(remove_minor_version("1.14.4"), "1.14");
+/// assert_eq!(remove_semver_patch("1.7.10")?, "1.7".into());
+/// assert_eq!(remove_semver_patch("1.14.4")?, "1.14".into());
 /// // Versions already without a minor version are preserved
-/// assert_eq!(remove_minor_version("1.14"), "1.14");
+/// assert_eq!(remove_semver_patch("1.14")?, "1.14".into());
 /// ```
-pub fn remove_minor_version(string: &str) -> FResult<String> {
-    let min_ver_remove = Regex::new(r"(?<=1.\d|\d\d)(\.\d{1,2}$)")?;
-    Ok(min_ver_remove.replace_all(string, "").into())
+pub fn remove_semver_patch(semver: &str) -> FResult<String> {
+    let semver_patch_remove = Regex::new(r"(?<=\d{1,}\.\d{1,})(\.\d{1,}$)")?;
+    Ok(semver_patch_remove.replace_all(semver, ""))
 }
 
 /// Returns the default directory where mods are stored

@@ -1,4 +1,4 @@
-//! This file contains deserialisations and wrappers for accesing Mojang's Minecraft version manifest (version 2)
+//! Contains deserialisations and wrappers for accesing Mojang's Minecraft version manifest (version 2)
 
 use crate::ferium_error::*;
 use reqwest::{get, Response};
@@ -64,12 +64,8 @@ pub async fn get_version_manifest() -> FResult<VersionManifestV2> {
 
 /// Send a request to `url` with `client` and return response
 async fn request(url: &str) -> FResult<Response> {
-    let response = get(url).await?;
-    if response.status().is_success() {
-        Ok(response)
-    } else {
-        Err(FError::HTTPError {
-            message: format!("HTTP request failed with error code {}", response.status()),
-        })
+    match get(url).await?.error_for_status() {
+        Ok(response) => Ok(response),
+        Err(err) => Err(err.into())
     }
 }

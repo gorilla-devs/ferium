@@ -1,4 +1,5 @@
 build-mac:
+	make test
 	cargo clippy -- -D clippy::all
 	cargo clean
 	rm -f out/ferium-macos-x64.zip out/ferium-macos-arm.zip
@@ -11,6 +12,7 @@ build-mac:
 	zip -r out/ferium-macos-arm.zip -j target/aarch64-apple-darwin/release/ferium
 
 build-win:
+	make test
 	cargo clippy -- -D clippy::all
 	cargo clean
 	rm -f out/ferium-windows-gnu.zip
@@ -21,6 +23,7 @@ build-win:
 	zip -r out/ferium-windows-gnu.zip -j target/x86_64-pc-windows-gnu/release/ferium.exe
 
 build-linux:
+	make test
 	cargo clippy -- -D clippy::all
 	cargo clean
 	rm -f out/ferium-linux-gnu.zip
@@ -30,6 +33,12 @@ build-linux:
 
 	mkdir out
 	zip -r out/ferium-linux-gnu.zip -j target/x86_64-unknown-linux-gnu/release/ferium
+
+test:
+	python3 save_config.py
+	echo "Please remove both mods on the final 'remove' test"
+	-cargo test -- --test-threads=1
+	python3 restore_config.py
 
 install:
 	cargo install --force --path . --root ~

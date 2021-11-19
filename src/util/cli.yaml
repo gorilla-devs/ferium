@@ -21,9 +21,14 @@ subcommands:
             required: true
             index: 2
   - config:
-      about: Configure the Minecraft version, mod loader, and mods' output directory
+      about: Configure the Minecraft version, mod loader, and output directory
   - list:
-      about: List all the mods and repositories configured with some of their metadata
+      about: List all the mods and repositories configured with their metadata
+      args:
+        - verbose:
+            short: v
+            long: verbose
+            about: Print more data about mods and/or repositories. Increases loading time
   - remove:
       about: Pick mods to remove from a list of mods and repositories configured
   - upgrade:

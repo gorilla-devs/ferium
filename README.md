@@ -11,4 +11,6 @@ If you want to have a feature added, check the [project](https://github.com/theR
 ## Building or working on Ferium
 
 First you have to install the Rust toolchain (`cargo`, `rustup`, etc). 
-To build the project and install it to `~/bin`,  run `make install`. If you want to test the project, you can use `make install-dev` which compiles with `--debug`. If you want to obtain executables for a specific OS, you can run `make build-<OS>` and replace `<OS>` with `mac`, `win`, or `linux`. The produced binaries will be zipped and moved to `out/`
+To build the project and install it to `~/bin`,  run `make install`. If you want to test the project by yourself, you can use `make install-dev` which is `make install` but compiles with `--debug`. 
+If you want to obtain executables for a specific OS, you can run `make build-<OS>` and replace `<OS>` with `mac`, `win`, or `linux`. The produced binaries will be zipped and moved to `out/`. 
+You can also run unit and integration tests using `make test`. The reason we don't use `cargo test` is that it will interfere with your existing config, and the integration tests do not work when run in parallel. `make test` saves your config, forces tests to run sequentially, then restores your config (whether the tests failed or not).

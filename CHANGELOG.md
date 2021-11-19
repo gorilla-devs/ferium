@@ -1,5 +1,18 @@
 # Changelog for Ferium
 
+## [3.8.0] - 12.11.2021
+
+- Switched to `octocrab` and removed `octorok`
+- Lots of code has been refactored and many comments and docs have been edited and improved
+- The name of config file fields have been edited so that they more accurately represent the data they hold. **This breaks previous configs** and requires editing field names to fix
+- In the config file, repos are now stored as tuples rather than structs
+- Added verbose option to the list command. So now the non-verbose list command gives less information, but is faster
+- Improved error handling
+- Tweaked semver patch remove function so that it works on semvers other than Minecraft's
+- Switched from `fancy-regex` to `onig`
+- Added integration tests (**check the readme on how to properly run these**) and some unit tests too. These tests run before makefile builds
+- 
+
 ## [3.7.2] - 06.11.2021
 
 - Switched to `thiserror` for error handling

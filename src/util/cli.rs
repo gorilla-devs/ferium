@@ -1,4 +1,4 @@
-//! This file contains convenience wrappers for the CLI
+//! Contains convenience wrappers for argument parsing
 
 use crate::ferium_error::*;
 use clap::{crate_version, load_yaml, App, AppSettings};
@@ -19,8 +19,8 @@ pub enum SubCommand {
     },
     /// Show user which setting to configure, and let them change that setting
     Config,
-    /// List mods and repos in the config
-    List,
+    /// List mods and repos in the config. Print more information if set to true (verbosity)
+    List (bool),
     /// Remove one or more mods in the config
     Remove,
     /// Download and install the latest version of mods and repos in the config
@@ -37,8 +37,8 @@ pub fn get_subcommand() -> FResult<SubCommand> {
     let matches = app.get_matches();
 
     // Return enum according to subcommand issued
-    if matches.subcommand_matches("list").is_some() {
-        Ok(SubCommand::List)
+    if let Some(sub_matches) = matches.subcommand_matches("list") {
+        Ok(SubCommand::List (sub_matches.is_present("verbose")))
     } else if matches.subcommand_matches("upgrade").is_some() {
         Ok(SubCommand::Upgrade)
     } else if let Some(sub_matches) = matches.subcommand_matches("add") {

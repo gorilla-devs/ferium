@@ -1,4 +1,4 @@
-//! This file contains convenience wrappers for configurations and general JSON stuff
+//! Contains convenience wrappers for the configuration/settings
 
 use super::wrappers::get_mods_dir;
 use crate::ferium_error::{FError, FResult};
@@ -6,7 +6,6 @@ use dialoguer::{theme::ColorfulTheme, Confirm, Select};
 use serde::{Deserialize, Serialize};
 use serde_json::to_string_pretty;
 use shellexpand::tilde;
-use std::cmp::PartialEq;
 use std::fs::{create_dir_all, File, OpenOptions};
 use std::io::{Seek, SeekFrom, Write};
 use std::path::PathBuf;
@@ -16,13 +15,13 @@ pub struct Config {
     /// The directory to download mod JARs to
     pub output_dir: PathBuf,
     /// Check if versions/releases are compatible with this Minecraft version
-    pub version: String,
+    pub game_version: String,
     /// Check if versions/releases are compatible with this mod loader
-    pub loader: String,
+    pub mod_loader: String,
     /// A list of mod slugs of Modrinth mods to download
-    pub mod_slugs: Vec<String>,
+    pub mod_ids: Vec<String>,
     /// A list GitHub repositories to download
-    pub repos: Vec<Repo>,
+    pub repos: Vec<(String, String)>,
 }
 
 impl Config {
@@ -68,25 +67,11 @@ impl Config {
         println!("First time setup complete!");
         Ok(Config {
             output_dir: selected_mods_dir,
-            mod_slugs: Vec::new(),
+            mod_ids: Vec::new(),
             repos: Vec::new(),
-            version: selected_version,
-            loader: selected_loader.to_lowercase(),
+            game_version: selected_version,
+            mod_loader: selected_loader.to_lowercase(),
         })
-    }
-}
-
-#[derive(Deserialize, Serialize, PartialEq)]
-pub struct Repo {
-    /// Username of the owner of the repository
-    pub owner: String,
-    /// Name of the repository
-    pub name: String,
-}
-
-impl std::fmt::Display for Repo {
-    fn fmt(&self, fmter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(fmter, "{}/{}", self.owner, self.name)
     }
 }
 
