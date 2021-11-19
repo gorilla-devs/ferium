@@ -1,7 +1,10 @@
 use std::process::Command;
 
 pub fn run_command(args: Vec<&str>) -> std::io::Result<()> {
-    match Command::new("/Users/ilesh/bin/ferium").args(args).output() {
+    match Command::new(env!("CARGO_BIN_EXE_ferium"))
+        .args(args)
+        .output()
+    {
         Ok(out) => {
             if out.status.success() {
                 Ok(())
@@ -21,7 +24,10 @@ pub fn run_command(args: Vec<&str>) -> std::io::Result<()> {
 }
 
 pub fn run_command_visible(args: Vec<&str>) -> std::io::Result<()> {
-    match Command::new("/Users/ilesh/bin/ferium").args(args).status() {
+    match Command::new(env!("CARGO_BIN_EXE_ferium"))
+        .args(args)
+        .status()
+    {
         Ok(out) => {
             if out.success() {
                 Ok(())

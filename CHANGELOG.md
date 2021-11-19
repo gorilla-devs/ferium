@@ -11,7 +11,6 @@
 - Tweaked semver patch remove function so that it works on semvers other than Minecraft's
 - Switched from `fancy-regex` to `onig`
 - Added integration tests (**check the readme on how to properly run these**) and some unit tests too. These tests run before makefile builds
-- 
 
 ## [3.7.2] - 06.11.2021
 

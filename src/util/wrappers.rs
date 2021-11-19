@@ -20,13 +20,11 @@ pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
 #[cfg(not(target_os = "macos"))]
 /// Use the file picker to pick a file, defaulting to `path`
 pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
-    match rfd::AsyncFileDialog::new()
+    rfd::AsyncFileDialog::new()
         .set_directory(path)
         .pick_folder()
-        .await {
-            Some(handle) => Some(handle.path().into()),
-            None => None,
-        }
+        .await
+        .map(|handle| handle.path().into())
 }
 
 /// Get a maximum of `count` number of the latest versions of Minecraft
