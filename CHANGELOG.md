@@ -1,6 +1,6 @@
 # Changelog for Ferium
 
-## [3.8.0] - 12.11.2021
+## [3.8.0] - 19.11.2021
 
 - Switched to `octocrab` and removed `octorok`
 - Lots of code has been refactored and many comments and docs have been edited and improved
