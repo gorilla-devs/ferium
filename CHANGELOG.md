@@ -1,5 +1,11 @@
 # Changelog for Ferium
 
+## [3.8.1] - 29.11.2021
+
+- Added `rustfmt.toml` and formatted code according to that
+- Upgraded dependencies
+- Some code has been modified to support the many more nullable fields in Octocrab (WHY ARE ALL OF THEM `Option`S NOW??)
+
 ## [3.8.0] - 19.11.2021
 
 - Switched to `octocrab` and removed `octorok`

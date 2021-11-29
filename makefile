@@ -1,3 +1,5 @@
+.SILENT: test
+
 build-mac:
 # Run clippy
 	cargo clippy -- -D clippy::all
@@ -58,7 +60,7 @@ build-linux:
 
 test:
 	python3 save_config.py
-	echo "Please remove both mods on the final 'remove' integration test"
+	echo "Please remove both mods on the final 'remove' integration test (can't integration test user interaction. sad)"
 	-cargo test -- --test-threads=1
 	python3 restore_config.py
 
