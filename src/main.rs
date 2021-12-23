@@ -2,7 +2,7 @@ mod util;
 
 use ansi_term::Colour::{Green, White};
 use dialoguer::{theme::ColorfulTheme, MultiSelect, Select};
-use ferinth::{structures::*, Ferinth};
+use ferinth::{structures::version_structs, Ferinth};
 use octocrab::Octocrab;
 use std::{
 	fs::{create_dir_all, remove_file, OpenOptions},
@@ -10,9 +10,11 @@ use std::{
 	path::PathBuf,
 };
 use util::{
+	cli,
 	cli::SubCommand,
+	ferium_error,
 	ferium_error::{FError, FResult},
-	*,
+	json, wrappers,
 };
 
 #[tokio::main]
@@ -31,81 +33,131 @@ async fn actual_main() -> FResult<()> {
 	let command = cli::get_subcommand()?;
 
 	// Check for an internet connection
-	match online::check(Some(1)).await {
-		Ok(_) => (),
-		Err(_) => {
-			eprint!("Checking internet connection... ");
-			match online::check(Some(4)).await {
-				Ok(_) => println!("✓"),
-				Err(_) => {
-					return Err(FError::Quit {
-						message: "× Ferium requires an internet connection to work".into(),
-					})
-				}
+	if online::check(Some(1)).await.is_err() {
+		eprint!("Checking internet connection... ");
+		match online::check(Some(4)).await {
+			Ok(_) => println!("✓"),
+			Err(_) => {
+				return Err(FError::Quit {
+					message: "× Ferium requires an internet connection to work".into(),
+				})
 			}
 		}
-	}
+	};
 
 	let github = octocrab::instance();
 	let modrinth = Ferinth::new("ferium");
 	// Reference to Ferium's config file
-	let mut config_file = match json::get_config_file().await? {
+	let config_file = match json::get_config_file().await? {
 		Some(file) => file,
 		// Exit program if first time setup ran
 		None => return Ok(()),
 	};
-	// Deserialise `config_file`
-	let mut config = serde_json::from_reader(&config_file)?;
+	// Deserialise `config_file` to a config
+	let mut config: json::Config = serde_json::from_reader(&config_file)?;
+	// Get a mutable pointer to the active profile
+	let profile = if let Some(profile) = config.profiles.get_mut(config.active_profile) {
+		profile
+	} else {
+		if config.profiles.is_empty() {
+			return Err(FError::Quit {
+				message: "There are no profiles configured".into(),
+			});
+		}
+		// Default to first profile is index is set incorrectly
+		config.active_profile = 0;
+		json::write_to_config(config_file, &config)?;
+		return Err(FError::Quit {
+			message: "Active profile points to a non existent profile. Switched to first profile"
+				.into(),
+		});
+	};
 
 	// Run function(s) based on command to be executed
 	match command {
 		SubCommand::Add { mod_id } => {
-			add_mod_modrinth(&modrinth, mod_id, &mut config).await?;
+			add_mod_modrinth(&modrinth, mod_id, profile).await?;
 		}
 		SubCommand::AddRepo { owner, name } => {
-			add_repo_github(&github, owner, name, &mut config).await?;
+			add_repo_github(&github, owner, name, profile).await?;
 		}
 		SubCommand::Config => {
-			configure(&mut config).await?;
+			configure(profile).await?;
+		}
+		SubCommand::Create => {
+			create(&mut config).await?;
 		}
 		SubCommand::List(verbosity) => {
-			check_empty_config(&config)?;
-			list(&modrinth, &github, &config, verbosity).await?;
+			check_empty_profile(profile)?;
+			list(&modrinth, &github, profile, verbosity).await?;
 		}
 		SubCommand::Remove => {
-			check_empty_config(&config)?;
-			remove(&modrinth, &github, &mut config).await?;
+			check_empty_profile(profile)?;
+			remove(&modrinth, &github, profile).await?;
+		}
+		SubCommand::Switch => {
+			switch(&mut config)?;
 		}
 		SubCommand::Upgrade => {
-			check_empty_config(&config)?;
-			create_dir_all(&config.output_dir)?;
-			upgrade_modrinth(&modrinth, &config).await?;
-			upgrade_github(&github, &config).await?
+			check_empty_profile(profile)?;
+			create_dir_all(&profile.output_dir)?;
+			upgrade_modrinth(&modrinth, profile).await?;
+			upgrade_github(&github, profile).await?;
 		}
 	};
 
 	// Update config file with new values
-	json::write_to_config(&mut config_file, &config)?;
+	json::write_to_config(config_file, &config)?;
 
 	Ok(())
 }
 
-/// Fetch a mod file's path based on a `name` and the `config`
-fn get_mod_file_path(config: &json::Config, name: &str) -> PathBuf {
-	let mut mod_file_path = config.output_dir.join(name.to_string());
+/// Fetch a mod file's path based on a `name` and the `profile`
+fn get_mod_file_path(profile: &json::Profile, name: &str) -> PathBuf {
+	let mut mod_file_path = profile.output_dir.join(name.to_string());
 	mod_file_path.set_extension("jar");
 	mod_file_path
 }
 
-/// Check if `config` is empty, and if so return an error
-fn check_empty_config(config: &json::Config) -> FResult<()> {
-	match config.repos.is_empty() && config.mod_ids.is_empty() {
+/// Check if `profile` is empty, and if so return an error
+fn check_empty_profile(profile: &json::Profile) -> FResult<()> {
+	#[allow(clippy::match_bool)]
+	match profile.repos.is_empty() && profile.mod_ids.is_empty() {
 		true => Err(FError::EmptyConfigFile),
 		false => Ok(()),
 	}
 }
 
-async fn configure(config: &mut json::Config) -> FResult<()> {
+async fn create(config: &mut json::Config) -> FResult<()> {
+	println!("Please enter the details for the new profile");
+	config.profiles.push(json::Profile::new().await?); // Create profile
+	config.active_profile = config.profiles.len() - 1; // Make created profile active
+	Ok(())
+}
+
+fn switch(config: &mut json::Config) -> FResult<()> {
+	if config.profiles.len() < 2 {
+		Err(FError::Quit {
+			message: "There is only one profile in your config".into(),
+		})
+	} else {
+		let profile_names = config
+			.profiles
+			.iter()
+			.map(|profile| &profile.name)
+			.collect::<Vec<_>>();
+
+		let selection = Select::with_theme(&ColorfulTheme::default())
+			.with_prompt("Select which profile to switch to")
+			.items(&profile_names)
+			.default(config.active_profile)
+			.interact()?;
+		config.active_profile = selection;
+		Ok(())
+	}
+}
+
+async fn configure(profile: &mut json::Profile) -> FResult<()> {
 	let items = vec![
 		// Show a file dialog
 		"Mods output directory",
@@ -133,12 +185,12 @@ async fn configure(config: &mut json::Config) -> FResult<()> {
 							White.bold().paint("Pick a mod output directory   "),
 						);
 						// Let user pick output directory
-						if let Some(dir) = wrappers::pick_folder(&config.output_dir).await {
-							config.output_dir = dir;
+						if let Some(dir) = wrappers::pick_folder(&profile.output_dir).await {
+							profile.output_dir = dir;
 						}
 						println!(
 							"{}\n",
-							Green.paint(config.output_dir.to_str().ok_or(FError::OptionError)?)
+							Green.paint(profile.output_dir.to_str().ok_or(FError::OptionError)?)
 						);
 					}
 					1 => {
@@ -150,7 +202,7 @@ async fn configure(config: &mut json::Config) -> FResult<()> {
 							.default(0)
 							.interact_opt()?;
 						if let Some(i) = index {
-							config.game_version = versions.swap_remove(i);
+							profile.game_version = versions.swap_remove(i);
 						}
 						println!();
 					}
@@ -162,7 +214,7 @@ async fn configure(config: &mut json::Config) -> FResult<()> {
 							.items(&mod_loaders)
 							.interact_opt()?;
 						if let Some(i) = index {
-							config.mod_loader = mod_loaders[i].to_lowercase();
+							profile.mod_loader = mod_loaders[i].to_lowercase();
 						}
 						println!();
 					}
@@ -177,20 +229,20 @@ async fn configure(config: &mut json::Config) -> FResult<()> {
 	Ok(())
 }
 
-/// Display a list of mods and repos in the config to select and remove selected ones from `config_file`
-async fn remove(modrinth: &Ferinth, github: &Octocrab, config: &mut json::Config) -> FResult<()> {
+/// Display a list of mods and repos in the profile to select from and remove selected ones
+async fn remove(modrinth: &Ferinth, github: &Octocrab, profile: &mut json::Profile) -> FResult<()> {
 	let mut items: Vec<String> = Vec::new();
 	let mut items_removed = String::new();
 
 	eprint!("Gathering mod and repository information... ");
 	// Store the names of the mods
-	for mod_id in &config.mod_ids {
+	for mod_id in &profile.mod_ids {
 		let mod_ = modrinth.get_mod(mod_id).await?;
 		items.push(mod_.title);
 	}
 
 	// Store the names of the repos
-	for repo_name in &config.repos {
+	for repo_name in &profile.repos {
 		let repo = github.repos(&repo_name.0, &repo_name.1).get().await?;
 		items.push(repo.name);
 	}
@@ -214,23 +266,23 @@ async fn remove(modrinth: &Ferinth, github: &Octocrab, config: &mut json::Config
 			// For each mod to remove
 			for index in items_to_remove {
 				// If index is larger than mod_ids length, then the index is for repos
-				if index >= config.mod_ids.len() {
+				if index >= profile.mod_ids.len() {
 					// Offset the array by the proper amount
-					let index = index - config.mod_ids.len();
+					let index = index - profile.mod_ids.len();
 
-					// Remove item from config
-					config.repos.remove(index);
+					// Remove item from profile
+					profile.repos.remove(index);
 				} else {
-					// Remove item from config
-					config.mod_ids.remove(index);
+					// Remove item from profile
+					profile.mod_ids.remove(index);
 				}
 
 				// Get the item's name
 				let name = &items[index];
 
 				// Remove the mod from downloaded mods
-				let mod_file_path = get_mod_file_path(config, name);
-				let _ = remove_file(mod_file_path);
+				let mod_file_path = get_mod_file_path(profile, name);
+				std::mem::drop(remove_file(mod_file_path));
 
 				// Store its name in a string
 				items_removed.push_str(&format!("{}, ", name));
@@ -248,12 +300,12 @@ async fn remove(modrinth: &Ferinth, github: &Octocrab, config: &mut json::Config
 	Ok(())
 }
 
-/// Check if https://github.com/{owner}/{repo_name} exists and releases mods, and if so add repo to `config_file`
+/// Check if repo `owner`/`repo_name` exists and releases mods, and if so add repo to `profile`
 async fn add_repo_github(
 	github: &Octocrab,
 	owner: String,
 	repo_name: String,
-	config: &mut json::Config,
+	profile: &mut json::Profile,
 ) -> FResult<()> {
 	eprint!("Adding repo {}/{}... ", owner, repo_name);
 
@@ -262,7 +314,7 @@ async fn add_repo_github(
 	let repo = repo_handler.get().await?;
 
 	// Check if repo has already been added
-	if config.repos.contains(&(
+	if profile.repos.contains(&(
 		repo.owner
 			.as_ref()
 			.ok_or(FError::OptionError)?
@@ -271,7 +323,7 @@ async fn add_repo_github(
 		repo.name.clone(),
 	)) {
 		return Err(FError::Quit {
-			message: "× Repsitory already added to config!".into(),
+			message: "× Repsitory already added to profile!".into(),
 		});
 	}
 
@@ -290,11 +342,11 @@ async fn add_repo_github(
 	}
 
 	if contains_jar_asset {
-		// Append repo to config
-		config
+		// Append repo to profile
+		profile
 			.repos
 			.push((repo.owner.ok_or(FError::OptionError)?.login, repo.name));
-		println!("✓")
+		println!("✓");
 	} else {
 		return Err(FError::Quit {
 			message: "× Repository does not release mods!".into(),
@@ -304,11 +356,11 @@ async fn add_repo_github(
 	Ok(())
 }
 
-/// Check if mod with `mod_id` exists and releases mods for configured mod loader. If so add that mod to `config`
+/// Check if mod with ID `mod_id` exists, if so add that mod to `profile`
 async fn add_mod_modrinth(
 	modrinth: &Ferinth,
 	mod_id: String,
-	config: &mut json::Config,
+	profile: &mut json::Profile,
 ) -> FResult<()> {
 	eprint!("Adding mod... ");
 
@@ -316,13 +368,13 @@ async fn add_mod_modrinth(
 	match modrinth.get_mod(&mod_id).await {
 		Ok(mod_) => {
 			// Check if mod has already been added
-			if config.mod_ids.contains(&mod_.id) {
+			if profile.mod_ids.contains(&mod_.id) {
 				return Err(FError::Quit {
-					message: "× Mod already added to config!".into(),
+					message: "× Mod already added to profile!".into(),
 				});
 			}
-			// And if so, append mod to config and write
-			config.mod_ids.push(mod_.id);
+			// And if so, append mod to profile and write
+			profile.mod_ids.push(mod_.id);
 			println!("✓ ({})", mod_.title);
 		}
 		Err(_) => {
@@ -336,14 +388,15 @@ async fn add_mod_modrinth(
 	Ok(())
 }
 
-/// List all the mods in `config` with some of their metadata
+#[allow(clippy::too_many_lines)]
+/// List all the mods in `profile` with some of their metadata
 async fn list(
 	modrinth: &Ferinth,
 	github: &Octocrab,
-	config: &json::Config,
+	profile: &json::Profile,
 	verbose: bool,
 ) -> FResult<()> {
-	for mod_id in &config.mod_ids {
+	for mod_id in &profile.mod_ids {
 		// Get mod metadata
 		let mod_ = modrinth.get_mod(mod_id).await?;
 		if verbose {
@@ -373,19 +426,16 @@ async fn list(
 				mod_.title,
 				mod_.description,
 				mod_.slug,
-				match mod_.source_url {
-					Some(url) => format!("Yes ({})", url),
-					None => "No".into(),
-				},
+				mod_.source_url
+					.map_or("No".into(), |url| { format!("Yes ({})", url) }),
 				mod_.downloads,
 				developers,
 				mod_.client_side,
 				mod_.server_side,
 				mod_.license.name,
-				match mod_.license.url {
-					Some(url) => format!(" ({})", url),
-					None => "".into(),
-				}
+				mod_.license
+					.url
+					.map_or("".into(), |url| { format!(" ({})", url) }),
 			);
 		} else {
 			println!(
@@ -398,16 +448,14 @@ async fn list(
 				mod_.title,
 				mod_.description,
 				mod_.slug,
-				match mod_.source_url {
-					Some(url) => url,
-					None => "Closed source".into(),
-				},
+				mod_.source_url
+					.map_or("Closed source".into(), |url| { url }),
 				mod_.license.name
-			)
+			);
 		}
 	}
 
-	for repo_name in &config.repos {
+	for repo_name in &profile.repos {
 		// Get repository metadata
 		let repo_handler = github.repos(&repo_name.0, &repo_name.1);
 		let repo = repo_handler.get().await?;
@@ -430,11 +478,8 @@ async fn list(
             \r  Downloads:      {}
             \r  Developer:      {}{}\n",
 				repo.name,
-				if let Some(description) = repo.description {
-					format!("\n  {}", description)
-				} else {
-					"".into()
-				},
+				repo.description
+					.map_or("".into(), |description| { format!("\n  {}", description) }),
 				repo.html_url.ok_or(FError::OptionError)?,
 				downloads,
 				repo.owner.ok_or(FError::OptionError)?.login,
@@ -442,49 +487,45 @@ async fn list(
 					format!(
 						"\n  License:        {}{}",
 						license.name,
-						match license.html_url {
-							Some(url) => format!(" ({})", url),
-							None => "".into(),
-						}
+						license
+							.html_url
+							.map_or("".into(), |url| { format!(" ({})", url) })
 					)
 				} else {
 					"".into()
 				},
-			)
+			);
 		} else {
 			println!(
 				"{}{}\n
                 \r  Link:     {}
                 \r  Source:   GitHub Repository{}\n",
 				repo.name,
-				if let Some(description) = repo.description {
-					format!("\n  {}", description)
-				} else {
-					"".into()
-				},
+				repo.description
+					.map_or("".into(), |description| { format!("\n  {}", description) }),
 				repo.html_url.ok_or(FError::OptionError)?,
 				if let Some(license) = repo.license {
 					format!("\n  License:  {}", license.name)
 				} else {
 					"".into()
 				},
-			)
+			);
 		}
 	}
 
 	Ok(())
 }
 
-/// Download and install all the mods in `config.repos`
-async fn upgrade_github(github: &Octocrab, config: &json::Config) -> FResult<()> {
-	for repo_name in &config.repos {
+/// Download and install all the mods in `profile`'s repositories
+async fn upgrade_github(github: &Octocrab, profile: &json::Profile) -> FResult<()> {
+	for repo_name in &profile.repos {
 		println!("Downloading {}", repo_name.0);
 		eprint!("  [1] Getting release information... ");
 
 		let repo_handler = github.repos(&repo_name.0, &repo_name.1);
 		let repository = repo_handler.get().await?;
 		let releases = repo_handler.releases().list().send().await?;
-		let version_to_check = wrappers::remove_semver_patch(&config.game_version)?;
+		let version_to_check = wrappers::remove_semver_patch(&profile.game_version)?;
 
 		// A vector of assets that are compatible
 		let mut asset_candidates = Vec::new();
@@ -507,7 +548,7 @@ async fn upgrade_github(github: &Octocrab, config: &json::Config) -> FResult<()>
 				}
 
 				// Check if mod loader is compatible
-				if (asset.name.to_lowercase().contains(&config.mod_loader) || !specifies_loader)
+				if (asset.name.to_lowercase().contains(&profile.mod_loader) || !specifies_loader)
                     // Check if the game version is compatible
                     && (
                         // Check the release body
@@ -560,7 +601,7 @@ async fn upgrade_github(github: &Octocrab, config: &json::Config) -> FResult<()>
 			.write(true)
 			.truncate(true)
 			.create(true)
-			.open(get_mod_file_path(config, &repository.name))?;
+			.open(get_mod_file_path(profile, &repository.name))?;
 
 		// Write download to mod JAR file
 		mod_file.write_all(&contents)?;
@@ -570,9 +611,9 @@ async fn upgrade_github(github: &Octocrab, config: &json::Config) -> FResult<()>
 	Ok(())
 }
 
-/// Download and install all mods in `config`
-async fn upgrade_modrinth(modrinth: &Ferinth, config: &json::Config) -> FResult<()> {
-	for mod_id in &config.mod_ids {
+/// Download and install all mods in `profile`
+async fn upgrade_modrinth(modrinth: &Ferinth, profile: &json::Profile) -> FResult<()> {
+	for mod_id in &profile.mod_ids {
 		// Get mod metadata
 		let mod_ = modrinth.get_mod(mod_id).await?;
 		println!("Downloading {}", mod_.title);
@@ -583,17 +624,17 @@ async fn upgrade_modrinth(modrinth: &Ferinth, config: &json::Config) -> FResult<
 
 		let mut latest_version: Option<version_structs::Version> = None;
 
-		// Check if a version compatible with the game version and mod loader specified in the config is available
+		// Check if a version compatible with the game version and mod loader specified in the profile is available
 		for version in versions {
 			let mut compatible_version = false;
 
 			for v in &version.game_versions {
-				if v.contains(&wrappers::remove_semver_patch(&config.game_version)?) {
+				if v.contains(&wrappers::remove_semver_patch(&profile.game_version)?) {
 					compatible_version = true;
 				}
 			}
 
-			if compatible_version && version.loaders.contains(&config.mod_loader) {
+			if compatible_version && version.loaders.contains(&profile.mod_loader) {
 				latest_version = Some(version);
 				break;
 			}
@@ -606,7 +647,7 @@ async fn upgrade_modrinth(modrinth: &Ferinth, config: &json::Config) -> FResult<
 				return Err(FError::Quit {
 					message: format!(
 						"× No version of {} is compatible for {} {}",
-						mod_.title, config.mod_loader, config.game_version,
+						mod_.title, profile.mod_loader, profile.game_version,
 					),
 				});
 			}
@@ -617,7 +658,7 @@ async fn upgrade_modrinth(modrinth: &Ferinth, config: &json::Config) -> FResult<
 		eprint!("  [2] Downloading {}... ", latest_version.name);
 
 		// Compute output mod file's path
-		let mod_file_path = get_mod_file_path(config, &mod_.title);
+		let mod_file_path = get_mod_file_path(profile, &mod_.title);
 
 		// Get file contents
 		let contents = modrinth

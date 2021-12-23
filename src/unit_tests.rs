@@ -1,14 +1,13 @@
 use super::*;
-use util::json::Config;
-use util::launchermeta::get_version_manifest;
-use util::wrappers::remove_semver_patch;
+use util::json::Profile;
+use util::wrappers::{get_latest_mc_versions, remove_semver_patch};
 
 fn s() -> String {
-	"".into()
+	String::new()
 }
 
 fn p() -> PathBuf {
-	"".into()
+	PathBuf::new()
 }
 
 fn v<T>() -> Vec<T> {
@@ -17,7 +16,8 @@ fn v<T>() -> Vec<T> {
 
 #[test]
 fn test_check_empty_config() {
-	assert!(check_empty_config(&Config {
+	assert!(check_empty_profile(&Profile {
+		name: s(),
 		output_dir: p(),
 		game_version: s(),
 		mod_loader: s(),
@@ -25,7 +25,8 @@ fn test_check_empty_config() {
 		repos: v()
 	})
 	.is_ok());
-	assert!(check_empty_config(&Config {
+	assert!(check_empty_profile(&Profile {
+		name: s(),
 		output_dir: p(),
 		game_version: s(),
 		mod_loader: s(),
@@ -33,7 +34,8 @@ fn test_check_empty_config() {
 		repos: vec![(s(), s())]
 	})
 	.is_ok());
-	assert!(check_empty_config(&Config {
+	assert!(check_empty_profile(&Profile {
+		name: s(),
 		output_dir: p(),
 		game_version: s(),
 		mod_loader: s(),
@@ -41,7 +43,8 @@ fn test_check_empty_config() {
 		repos: vec![(s(), s())]
 	})
 	.is_ok());
-	assert!(check_empty_config(&Config {
+	assert!(check_empty_profile(&Profile {
+		name: s(),
 		output_dir: p(),
 		game_version: s(),
 		mod_loader: s(),
@@ -55,7 +58,8 @@ fn test_check_empty_config() {
 async fn test_add_mod_modrinth() {
 	let modrinth = ferinth::Ferinth::new("ferium-test");
 
-	let mut config = Config {
+	let mut config = Profile {
+		name: s(),
 		output_dir: p(),
 		game_version: s(),
 		mod_loader: s(),
@@ -81,7 +85,8 @@ async fn test_add_mod_modrinth() {
 async fn test_add_repo_github() {
 	let github = octocrab::instance();
 
-	let mut config = Config {
+	let mut config = Profile {
+		name: s(),
 		output_dir: p(),
 		game_version: s(),
 		mod_loader: s(),
@@ -109,8 +114,12 @@ async fn test_add_repo_github() {
 }
 
 #[tokio::test]
-async fn test_get_version_manifest() {
-	assert!(get_version_manifest().await.is_ok())
+async fn test_get_latest_mc_versions() -> FResult<()> {
+	let versions = get_latest_mc_versions(6).await?;
+	println!("{:#?}", versions);
+	assert!(versions.len() == 6);
+
+	Ok(())
 }
 
 #[test]

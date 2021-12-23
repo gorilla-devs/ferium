@@ -1,10 +1,23 @@
 # Changelog for Ferium
 
+## [3.9.0] - 23.12.2021
+
+Merry Christmas and a Happy New Year!
+
+- The previous `Config` is now a `Profile`. The `Profile` has a new field, `name`
+- The new `Config` contains a list of profiles and the index of the active profile
+- Added a `create` command to create a new profile
+- Added a `switch` command to switch between profiles
+- A remove command for profiles will be added in the next update
+- Switch back to Clap v2 because I'm rewriting the command system in the next update
+- Edited makefile to run clippy in `make test` and builds
+- Many code changes based on Clippy suggestions
+
 ## [3.8.1] - 29.11.2021
 
 - Added `rustfmt.toml` and formatted code according to that
 - Upgraded dependencies
-- Some code has been modified to support the many more nullable fields in Octocrab (WHY ARE ALL OF THEM `Option`S NOW??)
+- Some code has been modified to support the many more nullable fields in Octocrab (WHY ARE ALL OF THEM `Option`S!?)
 
 ## [3.8.0] - 19.11.2021
 

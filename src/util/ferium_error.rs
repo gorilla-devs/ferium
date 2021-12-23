@@ -4,8 +4,8 @@ pub type FResult<T> = std::result::Result<T, FError>;
 
 #[derive(thiserror::Error, Debug)]
 pub enum FError {
-	/// The config file does not contain mods or repos
-	#[error("Your config file is empty! Run `ferium help` to see how to add mods or repositories")]
+	/// The current profile does not contain mods or repos
+	#[error("Your current profile file is empty! Run `ferium help` to see how to add mods or repositories")]
 	EmptyConfigFile,
 	/// An HTTP(S) request returned with an error
 	#[error("Failed to send/process an HTTP(S) request due to {}", .0)]

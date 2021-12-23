@@ -3,33 +3,37 @@ author: theRookieCoder <ileshkt@gmail.com>
 about: Ferium is a CLI program for managing Minecraft mods from Modrinth and Github Releases
 subcommands:
   - add:
-      about: Add a Modrinth mod to the config
+      about: Add a Modrinth mod to the profile
       args:
         - MOD_ID:
-            about: Mod ID is specified as '</> PROJECT ID' in the right sidebar of a mod's Modrith page
+            help: Mod ID is specified as '</> PROJECT ID' in the right sidebar of a mod's Modrith page
             required: true
             index: 1
   - add-repo:
-      about: Add a GitHub reopsitory to the config
+      about: Add a GitHub reopsitory to the profile
       args:
         - OWNER:
-            about: Username of the owner of the repository
+            help: Username of the owner of the repository
             required: true
             index: 1
         - REPO:
-            about: Name of the repository
+            help: Name of the repository
             required: true
             index: 2
   - config:
       about: Configure the Minecraft version, mod loader, and output directory
+  - create:
+      about: Create a new profile
   - list:
       about: List all the mods and repositories configured with their metadata
       args:
         - verbose:
             short: v
             long: verbose
-            about: Print more data about mods and/or repositories. Increases loading time
+            help: Print more data about mods and/or repositories. Increases loading time
   - remove:
       about: Pick mods to remove from a list of mods and repositories configured
+  - switch:
+      about: Switch to a different profile
   - upgrade:
       about: Download and install the latest version of the mods specified

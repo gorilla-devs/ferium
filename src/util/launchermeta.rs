@@ -1,6 +1,6 @@
 //! Contains deserialisations and wrappers for accesing Mojang's Minecraft version manifest (version 2)
 
-use crate::ferium_error::*;
+use crate::ferium_error::FResult;
 use reqwest::{get, Response};
 use serde::{Deserialize, Serialize};
 

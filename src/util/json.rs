@@ -2,7 +2,7 @@
 
 use super::wrappers::get_mods_dir;
 use crate::ferium_error::{FError, FResult};
-use dialoguer::{theme::ColorfulTheme, Confirm, Select};
+use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use serde::{Deserialize, Serialize};
 use serde_json::to_string_pretty;
 use shellexpand::tilde;
@@ -11,7 +11,9 @@ use std::io::{Seek, SeekFrom, Write};
 use std::path::PathBuf;
 
 #[derive(Deserialize, Serialize)]
-pub struct Config {
+pub struct Profile {
+	/// This profile's name
+	pub name: String,
 	/// The directory to download mod JARs to
 	pub output_dir: PathBuf,
 	/// Check if versions/releases are compatible with this Minecraft version
@@ -24,12 +26,17 @@ pub struct Config {
 	pub repos: Vec<(String, String)>,
 }
 
-impl Config {
-	/// Run a first time setup where the user picks the settings
-	async fn new() -> FResult<Self> {
-		println!("Welcome to Ferium, your easy to use Minecraft mod manager.");
-		println!("This seems to be your first time using Ferium, so we are going go through some settings.\n");
+#[derive(Deserialize, Serialize)]
+pub struct Config {
+	// The index of the active profile
+	pub active_profile: usize,
+	// The profiles
+	pub profiles: Vec<Profile>,
+}
 
+impl Profile {
+	/// Run a first time setup where the user picks the settings
+	pub async fn new() -> FResult<Self> {
 		// Let user pick mods directory
 		let mut selected_mods_dir = get_mods_dir()?;
 		println!(
@@ -44,6 +51,10 @@ impl Config {
 				selected_mods_dir = dir;
 			};
 		}
+
+		let name = Input::with_theme(&ColorfulTheme::default())
+			.with_prompt("What should this profile be called? ")
+			.interact_text()?;
 
 		// Let user pick Minecraft version
 		let mut latest_versions: Vec<String> = super::wrappers::get_latest_mc_versions(10).await?;
@@ -65,7 +76,8 @@ impl Config {
 
 		// Return config with the configured values
 		println!("First time setup complete!");
-		Ok(Config {
+		Ok(Self {
+			name,
 			output_dir: selected_mods_dir,
 			mod_ids: Vec::new(),
 			repos: Vec::new(),
@@ -100,27 +112,36 @@ pub async fn get_config_file() -> FResult<Option<File>> {
 		create_dir_all(config_file_path.parent().ok_or(FError::OptionError)?)?;
 
 		// Create and open config file
-		let mut file = OpenOptions::new()
+		let file = OpenOptions::new()
 			.read(true)
 			.write(true)
 			.truncate(false)
 			.create(true)
 			.open(config_file_path)?;
 
+		println!("Welcome to Ferium, your easy to use Minecraft mod manager.");
+		println!("This seems to be your first time using Ferium, so now we are going to create a new profile.\n");
+
 		// Write to config file with values from first time setup
-		write_to_config(&mut file, &Config::new().await?)?;
+		write_to_config(
+			file,
+			&Config {
+				active_profile: 0,
+				profiles: vec![Profile::new().await?],
+			},
+		)?;
 		Ok(None)
 	}
 }
 
 /// Serialise and write `config` to `config_file`
-pub fn write_to_config(config_file: &mut File, config: &Config) -> FResult<()> {
+pub fn write_to_config(config_file: File, config: &Config) -> FResult<()> {
 	// Serialise config
 	let contents = to_string_pretty(&config)?;
+	let mut config_file = config_file;
 
-	// Erase the file
-	config_file.set_len(0)?;
-	config_file.seek(SeekFrom::Start(0))?;
+	config_file.set_len(0)?; // Truncate the file to 0
+	config_file.seek(SeekFrom::Start(0))?; // Set header to beginning
 
 	// Write config to file
 	config_file.write_all(contents.as_bytes())?;

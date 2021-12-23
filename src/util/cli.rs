@@ -1,15 +1,15 @@
 //! Contains convenience wrappers for argument parsing using Clap
 
-use crate::ferium_error::*;
+use crate::ferium_error::{FError, FResult};
 use clap::{crate_version, load_yaml, App, AppSettings};
 
 pub enum SubCommand {
-	/// Check and add `mod_id` to config
+	/// Check and add `mod_id` to profile
 	Add {
 		/// ID of the mod to add
 		mod_id: String,
 	},
-	/// Check and add `owner` and `name` to config
+	/// Check and add `owner` and `name` to profile
 	AddRepo {
 		/// Username of the owner of the repository to add
 		owner: String,
@@ -18,11 +18,15 @@ pub enum SubCommand {
 	},
 	/// Prompt user about which setting to configure, and let them change that setting
 	Config,
-	/// List mods and repos in the config. Print more information if set to true (verbosity)
+	/// Create a new profile and add it to config
+	Create,
+	/// List mods and repos in the profile. Print more information if set to true (verbosity)
 	List(bool),
-	/// Remove one or more mods in the config
+	/// Remove one or more mods in the profile
 	Remove,
-	/// Download and install the latest version of mods and repos in the config
+	/// Switch to a different profile
+	Switch,
+	/// Download and install the latest version of mods and repos in the profile
 	Upgrade,
 }
 
@@ -64,6 +68,10 @@ pub fn get_subcommand() -> FResult<SubCommand> {
 		Ok(SubCommand::Remove)
 	} else if matches.subcommand_matches("config").is_some() {
 		Ok(SubCommand::Config)
+	} else if matches.subcommand_matches("create").is_some() {
+		Ok(SubCommand::Create)
+	} else if matches.subcommand_matches("switch").is_some() {
+		Ok(SubCommand::Switch)
 	} else {
 		Err(FError::Quit {
 			message: "Unknown subcommand".into(),

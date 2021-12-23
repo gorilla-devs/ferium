@@ -11,6 +11,7 @@ use std::{
 
 // macOS can only use a sync file picker
 #[cfg(target_os = "macos")]
+#[allow(clippy::unused_async)]
 /// Use the file picker to pick a file, defaulting to `path`
 pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
 	rfd::FileDialog::new().set_directory(path).pick_folder()
@@ -32,9 +33,10 @@ pub async fn pick_folder(path: &Path) -> Option<PathBuf> {
 /// Example:
 /// ```rust
 /// assert_eq!(
-///     get_latest_mc_versions(5),
+///     get_latest_mc_versions(6),
 ///     // This will change as Minecraft updates get released
 ///     vec!([
+///         "1.18.1".into()
 ///         "1.17.1".into(),
 ///         "1.16.5".into(),
 ///         "1.15.2".into(),
@@ -49,7 +51,7 @@ pub async fn get_latest_mc_versions(count: usize) -> FResult<Vec<String>> {
 	let mut major_versions_added: Vec<String> = Vec::new();
 
 	for version in versions {
-		if versions_to_display.len() > count {
+		if versions_to_display.len() >= count {
 			break;
 		}
 
@@ -73,7 +75,7 @@ pub async fn get_latest_mc_versions(count: usize) -> FResult<Vec<String>> {
 /// assert_eq!(remove_semver_patch("1.7.10")?, "1.7".into());
 /// assert_eq!(remove_semver_patch("1.14.4")?, "1.14".into());
 /// // Versions already without a minor version are preserved
-/// assert_eq!(remove_semver_patch("1.14")?, "1.14".into());
+/// assert_eq!(remove_semver_patch("1.18")?, "1.18".into());
 /// ```
 pub fn remove_semver_patch(semver: &str) -> FResult<String> {
 	let semver_patch_remove = Regex::new(r"(?<=\d{1,}\.\d{1,})(\.\d{1,}$)")?;
