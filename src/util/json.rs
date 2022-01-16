@@ -2,6 +2,7 @@
 
 use super::wrappers::get_mods_dir;
 use crate::ferium_error::{FError, FResult};
+use clap::ArgEnum;
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use serde::{Deserialize, Serialize};
 use serde_json::to_string_pretty;
@@ -12,15 +13,15 @@ use std::path::PathBuf;
 
 #[derive(Deserialize, Serialize)]
 pub struct Profile {
-	/// This profile's name
+	/// The profile's name
 	pub name: String,
 	/// The directory to download mod JARs to
 	pub output_dir: PathBuf,
 	/// Check if versions/releases are compatible with this Minecraft version
 	pub game_version: String,
 	/// Check if versions/releases are compatible with this mod loader
-	pub mod_loader: String,
-	/// A list of mod slugs of Modrinth mods to download
+	pub mod_loader: ModLoaders,
+	/// A list of mod slugs/IDs of Modrinth mods to download
 	pub mod_ids: Vec<String>,
 	/// A list GitHub repositories to download
 	pub repos: Vec<(String, String)>,
@@ -34,14 +35,28 @@ pub struct Config {
 	pub profiles: Vec<Profile>,
 }
 
+#[derive(ArgEnum, Clone, Deserialize, Serialize, Debug)]
+pub enum ModLoaders {
+	Fabric,
+	Forge,
+}
+
+impl std::fmt::Display for ModLoaders {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		write!(f, "{:?}", self)?;
+
+		Ok(())
+	}
+}
+
 impl Profile {
-	/// Run a first time setup where the user picks the settings
-	pub async fn new() -> FResult<Self> {
+	/// Run a first time setup where the user picks the settings through a UI
+	pub async fn create_ui(config: &Config) -> FResult<Self> {
 		// Let user pick mods directory
 		let mut selected_mods_dir = get_mods_dir()?;
 		println!(
-			"The default mods directory is {}",
-			selected_mods_dir.to_str().ok_or(FError::OptionError)?
+			"The default mods directory is {:?}",
+			selected_mods_dir
 		);
 		if Confirm::with_theme(&ColorfulTheme::default())
 			.with_prompt("Would you like to specify a custom mods directory?")
@@ -52,9 +67,21 @@ impl Profile {
 			};
 		}
 
-		let name = Input::with_theme(&ColorfulTheme::default())
-			.with_prompt("What should this profile be called? ")
-			.interact_text()?;
+		let mut name = String::new();
+		let mut prompt = true;
+		while prompt {
+			name = Input::with_theme(&ColorfulTheme::default())
+				.with_prompt("What should this profile be called? ")
+				.interact_text()?;
+
+			prompt = false;
+			for profile in &config.profiles {
+				if profile.name == name {
+					println!("A profile with name {} already exists!", name);
+					prompt = true;
+				}
+			}
+		}
 
 		// Let user pick Minecraft version
 		let mut latest_versions: Vec<String> = super::wrappers::get_latest_mc_versions(10).await?;
@@ -68,77 +95,75 @@ impl Profile {
 
 		// Let user pick mod loader
 		let mod_loaders = ["Fabric", "Forge"];
-		let selected_loader = mod_loaders[Select::with_theme(&ColorfulTheme::default())
+		let selected_loader = if Select::with_theme(&ColorfulTheme::default())
 			.with_prompt("Which mod loader do you use?")
 			.items(&mod_loaders)
-			.default(0)
-			.interact()?];
+			.interact()? == 0
+		{
+			ModLoaders::Fabric
+		} else {
+			ModLoaders::Forge
+		};
 
 		// Return config with the configured values
-		println!("First time setup complete!");
 		Ok(Self {
 			name,
 			output_dir: selected_mods_dir,
 			mod_ids: Vec::new(),
 			repos: Vec::new(),
 			game_version: selected_version,
-			mod_loader: selected_loader.to_lowercase(),
+			mod_loader: selected_loader,
 		})
 	}
 }
 
-/// Returns the config file. If not found, first time setup will run and write picked values to the config file
-pub async fn get_config_file() -> FResult<Option<File>> {
+/// Get the path to the config file
+pub fn get_config_file_path() -> PathBuf {
 	// Home directory
 	let home: PathBuf = tilde("~").as_ref().into();
-	// Config file's path
-	let config_file_path = home.join(".config").join("ferium").join("config.json");
+	home.join(".config").join("ferium").join("config.json")
+}
 
-	// If config file exists
-	if config_file_path.exists() {
-		// Open and return it
-		Ok(Some(
-			OpenOptions::new()
-				.read(true)
-				.write(true)
-				.truncate(false)
-				.create(false)
-				.open(config_file_path)?,
-		))
+/// Returns the config file, if it doesn't exist, an empty config is created
+pub fn get_config_file() -> FResult<File> {
+	let config_file_path = get_config_file_path();
 
 	// If config file does not exist
-	} else {
+	if !config_file_path.exists() {
 		// Make sure config directory exists
 		create_dir_all(config_file_path.parent().ok_or(FError::OptionError)?)?;
 
-		// Create and open config file
+		// Create and the open config file
 		let file = OpenOptions::new()
 			.read(true)
 			.write(true)
 			.truncate(false)
 			.create(true)
-			.open(config_file_path)?;
+			.open(&config_file_path)?;
 
-		println!("Welcome to Ferium, your easy to use Minecraft mod manager.");
-		println!("This seems to be your first time using Ferium, so now we are going to create a new profile.\n");
-
-		// Write to config file with values from first time setup
+		// Write an empty config to the config file
 		write_to_config(
 			file,
 			&Config {
 				active_profile: 0,
-				profiles: vec![Profile::new().await?],
+				profiles: Vec::new(),
 			},
 		)?;
-		Ok(None)
 	}
+
+	// Open and return the config file
+	Ok(OpenOptions::new()
+		.read(true)
+		.write(true)
+		.truncate(false)
+		.create(false)
+		.open(config_file_path)?)
 }
 
 /// Serialise and write `config` to `config_file`
-pub fn write_to_config(config_file: File, config: &Config) -> FResult<()> {
+pub fn write_to_config(mut config_file: File, config: &Config) -> FResult<()> {
 	// Serialise config
 	let contents = to_string_pretty(&config)?;
-	let mut config_file = config_file;
 
 	config_file.set_len(0)?; // Truncate the file to 0
 	config_file.seek(SeekFrom::Start(0))?; // Set header to beginning

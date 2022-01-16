@@ -1,9 +1,9 @@
 [package]
 name = "ferium"
-version = "3.9.0"
+version = "3.10.0"
 edition = "2021"
 authors = ["theRookieCoder <ileshkt@gmail.com>"]
-description = "Ferium is an easy to use manager for Minecraft mods on Modrinth and Github Releases"
+description = "Ferium is an easy to use CLI program for managing Minecraft mods on Modrinth and Github Releases"
 repository = "https://github.com/theRookieCoder/ferium"
 readme = "README.md"
 license = "MPL-2.0"
@@ -15,7 +15,7 @@ reqwest = { version = "0", default-features = false, features = ["rustls-tls"] }
 octocrab = { version = "0", default-features = false, features = ["rustls"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 serde = { version = "1", features = ["derive"] }
-clap = { version = "2", features = ["yaml"] }
+clap = { version = "3", features = ["derive"] }
 shellexpand = "2"
 serde_json = "1"
 ansi_term = "0"

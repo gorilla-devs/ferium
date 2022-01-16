@@ -1,5 +1,47 @@
 # Changelog for Ferium
 
+## [3.10.0] - 16.01.2022
+
+HUGE UPDATE
+
+### Project and Testing
+- Upgraded to Clap 3.0
+- Removed unit tests
+- Added every single sub(sub)command to the integration tests
+- The integration tests are now fully automatic because we can now pass options without the interactive UI
+
+### Main
+- Getting the config file no longer exits the program early when creating a new config file
+- A more helpful error message for when decoding the config file fails
+- The `profile create` subcommand now runs seperately before the current profile is read
+- Multiple new command have been created such as `list_profiles()`, and `delete()`
+- Many commands have been revamped to allow the arguments to be passed through the CLI rather than through a UI
+- The `profile configure` command's UI now has an option to change the profile's name
+
+### Arg Parsing
+- Removed `cli.yaml` and switched from the deprecated yaml parsing to #[derive] based arg parsing
+- Renamed `add`, `add-repo`, and `config` commands to `add-modrinth`, `add-github`, and `configure`
+- The `create` and `config` commands are now under a new subcommand `profile`
+- `profile delete` and `profile list` subsubcommands have been added
+- The following commands have had options added to them so now using the interactive UI is optional. This also allows for fully automatic tests
+  - Remove
+  - Switch
+  - Configure
+  - Create
+  - Delete
+
+### Error handling
+- There are now 2 errors for quitting
+  - The `Quit` error stores its error message as a tuple `&'static str` so that raw strings can be used
+  - The `QuitFormatted` error stores its error message as a tuple `String` so that `format!()` can be used for more informative error messages
+
+### Configuration (`json.rs`)
+- The `mod_loader` field in `Profile` is now an enum
+- The `Profile::new()` is now `Profile::create_ui()`
+- `create_ui()` now checks that the name provided does not already exist, if so it will ask for a new name
+- Getting the path to the config file has been extracted to `get_config_file_path()`
+- If `get_config_file()` does not find a config file, it now just creates an empty config, writes to it, and continues to return the config file
+
 ## [3.9.0] - 23.12.2021
 
 Merry Christmas and a Happy New Year!

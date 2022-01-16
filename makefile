@@ -37,18 +37,19 @@ build-linux:
 
 test:
 	cargo clippy -- \
-		-D clippy::all \
-		-D clippy::suspicious \
-		-D clippy::complexity \
-		-D clippy::style \
-		-D clippy::perf \
-		-D clippy::cargo \
-		-W clippy::pedantic \
+		-A clippy::let-underscore-drop \
+		-A clippy::multiple-crate-versions \
+		-A clippy::non-ascii-literal
 		-W clippy::nursery \
-		-A clippy::non-ascii-literal \
-		-A clippy::multiple-crate-versions
+		-W clippy::pedantic \
+		-D clippy::all \
+		-D clippy::cargo \
+		-D clippy::complexity \
+		-D clippy::perf \
+		-D clippy::style \
+		-D clippy::suspicious
 	python3 save_config.py
-	echo "Please remove both mods on the final 'remove' integration test (can't integration test user interaction. sad)"
+# Don't parallelise the tests
 	-cargo test -- --test-threads=1
 	python3 restore_config.py
 

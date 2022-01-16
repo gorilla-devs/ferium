@@ -22,22 +22,3 @@ pub fn run_command(args: Vec<&str>) -> std::io::Result<()> {
 		Err(err) => Err(err),
 	}
 }
-
-pub fn run_command_visible(args: Vec<&str>) -> std::io::Result<()> {
-	match Command::new(env!("CARGO_BIN_EXE_ferium"))
-		.args(args)
-		.status()
-	{
-		Ok(out) => {
-			if out.success() {
-				Ok(())
-			} else {
-				Err(std::io::Error::new(
-					std::io::ErrorKind::Other,
-					format!("Command returned with exit code {:?}", out.code(),),
-				))
-			}
-		}
-		Err(err) => Err(err),
-	}
-}

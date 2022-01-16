@@ -5,7 +5,9 @@ pub type FResult<T> = std::result::Result<T, FError>;
 #[derive(thiserror::Error, Debug)]
 pub enum FError {
 	/// The current profile does not contain mods or repos
-	#[error("Your current profile file is empty! Run `ferium help` to see how to add mods or repositories")]
+	#[error(
+		"Your current profile is empty! Run `ferium help` to see how to add mods or repositories"
+	)]
 	EmptyConfigFile,
 	/// An HTTP(S) request returned with an error
 	#[error("Failed to send/process an HTTP(S) request due to {}", .0)]
@@ -44,8 +46,11 @@ pub enum FError {
 	#[error("Invalid request parameter")]
 	FerinthBase62Error,
 	/// The application should print `message` and quit (gracefully)
-	#[error("{}", message)]
-	Quit { message: String },
+	#[error("{}", .0)]
+	Quit(&'static str),
+	/// The application should print `message` and quit (gracefully)
+	#[error("{}", .0)]
+	QuitFormatted(String),
 }
 
 impl From<octocrab::Error> for FError {

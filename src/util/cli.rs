@@ -1,80 +1,109 @@
 //! Contains convenience wrappers for argument parsing using Clap
+#![deny(missing_docs)] // All commands must have help/about statements
 
-use crate::ferium_error::{FError, FResult};
-use clap::{crate_version, load_yaml, App, AppSettings};
+use std::path::PathBuf;
 
-pub enum SubCommand {
-	/// Check and add `mod_id` to profile
-	Add {
-		/// ID of the mod to add
+use clap::{AppSettings, Parser, Subcommand};
+
+use super::json::ModLoaders;
+
+#[derive(Parser)]
+#[clap(author, version, about)]
+#[clap(global_setting(AppSettings::PropagateVersion))]
+#[clap(setting(AppSettings::SubcommandRequiredElseHelp))]
+pub struct Ferium {
+	#[clap(subcommand)]
+	pub subcommand: SubCommands,
+}
+
+#[derive(Subcommand)]
+pub enum SubCommands {
+	#[clap(about("Add a Modrinth mod to the profile"))]
+	AddModrinth {
+		#[clap(help("The mod ID is specified as '</> PROJECT ID' in the right sidebar of the mod's Modrith page\nYou can also use the mod slug for this"))]
 		mod_id: String,
 	},
-	/// Check and add `owner` and `name` to profile
-	AddRepo {
-		/// Username of the owner of the repository to add
+	#[clap(about("Add a GitHub repository to the profile"))]
+	AddGithub {
+		#[clap(help("The repository owner's username"))]
 		owner: String,
-		/// Name of the repository to add
+		#[clap(help("The name of the repository"))]
 		name: String,
 	},
-	/// Prompt user about which setting to configure, and let them change that setting
-	Config,
-	/// Create a new profile and add it to config
-	Create,
-	/// List mods and repos in the profile. Print more information if set to true (verbosity)
-	List(bool),
-	/// Remove one or more mods in the profile
-	Remove,
-	/// Switch to a different profile
-	Switch,
-	/// Download and install the latest version of mods and repos in the profile
+	#[clap(about("List all the mods in the profile with some their metadata"))]
+	List {
+		#[clap(short, long)]
+		#[clap(help("Print more data about mods. Increases loading time"))]
+		verbose: bool,
+	},
+	#[clap(setting(AppSettings::SubcommandRequiredElseHelp))]
+	#[clap(about("Create, configure, or remove the current profile"))]
+	Profile {
+		#[clap(subcommand)]
+		subcommand: ProfileSubCommands,
+	},
+	#[clap(about("Remove a mod or repository from the profile\nOptionally, provide a list of names of the mods to remove"))]
+	Remove {
+		#[clap(long)]
+		#[clap(name("mod-name"))]
+		#[clap(help("A case-insensitive name of a mod to remove\nYou can repeat this option to remove multiple mods\nIf one or more of the mod names provided does not exist, the program will error out without changing anything in the config"))]
+		mod_names: Option<Vec<String>>,
+	},
+	#[clap(about("Switch between different profiles\nOptionally, provide the name of the profile to switch to"))]
+	Switch {
+		#[clap(long)]
+		#[clap(help("The name of the profile to switch to"))]
+		profile_name: Option<String>,
+	},
+	#[clap(about("Download and install the latest version of the mods specified"))]
 	Upgrade,
 }
 
-/// Returns the subcommand (and its arguments) that needs to be executed
-pub fn get_subcommand() -> FResult<SubCommand> {
-	// Load command definition from yaml file
-	let yaml = load_yaml!("cli.yaml");
-	let app = App::from(yaml)
-		.setting(AppSettings::SubcommandRequiredElseHelp)
-		.version(crate_version!());
-	let matches = app.get_matches();
-
-	// Return enum according to subcommand issued
-	if let Some(sub_matches) = matches.subcommand_matches("list") {
-		Ok(SubCommand::List(sub_matches.is_present("verbose")))
-	} else if matches.subcommand_matches("upgrade").is_some() {
-		Ok(SubCommand::Upgrade)
-	} else if let Some(sub_matches) = matches.subcommand_matches("add") {
-		Ok(SubCommand::Add {
-			// Can 'unwrap' because argument is required
-			mod_id: sub_matches
-				.value_of("MOD_ID")
-				.ok_or(FError::OptionError)?
-				.into(),
-		})
-	} else if let Some(sub_matches) = matches.subcommand_matches("add-repo") {
-		Ok(SubCommand::AddRepo {
-			// Can unwrap because arguments are required
-			owner: sub_matches
-				.value_of("OWNER")
-				.ok_or(FError::OptionError)?
-				.into(),
-			name: sub_matches
-				.value_of("REPO")
-				.ok_or(FError::OptionError)?
-				.into(),
-		})
-	} else if matches.subcommand_matches("remove").is_some() {
-		Ok(SubCommand::Remove)
-	} else if matches.subcommand_matches("config").is_some() {
-		Ok(SubCommand::Config)
-	} else if matches.subcommand_matches("create").is_some() {
-		Ok(SubCommand::Create)
-	} else if matches.subcommand_matches("switch").is_some() {
-		Ok(SubCommand::Switch)
-	} else {
-		Err(FError::Quit {
-			message: "Unknown subcommand".into(),
-		})
-	}
+#[derive(Subcommand)]
+pub enum ProfileSubCommands {
+	#[clap(about(
+		"Configure the current profile's Minecraft version, mod loader, and output directory\nOptionally, provide setting(s) to change as option(s)"
+	))]
+	Configure {
+		#[clap(long)]
+		#[clap(help("The Minecraft version to check compatibility for"))]
+		game_version: Option<String>,
+		#[clap(long)]
+		#[clap(arg_enum)]
+		#[clap(help("The mod loader to check compatibility for"))]
+		mod_loader: Option<ModLoaders>,
+		#[clap(long)]
+		#[clap(help("The name of the profile"))]
+		name: Option<String>,
+		#[clap(long)]
+		#[clap(help("The directory to output mods to"))]
+		output_dir: Option<PathBuf>,
+	},
+	#[clap(about("Create a new profile\nOptionally, provide ALL the options to create the profile without the UI"))]
+	Create {
+		#[clap(long)]
+		#[clap(help("The Minecraft version to check compatibility for"))]
+		game_version: Option<String>,
+		#[clap(long)]
+		#[clap(help("Do not check whether the game version exists or not"))]
+		force_game_version: bool,
+		#[clap(long)]
+		#[clap(arg_enum)]
+		#[clap(help("The mod loader to check compatibility for"))]
+		mod_loader: Option<ModLoaders>,
+		#[clap(long)]
+		#[clap(help("The name of the profile"))]
+		name: Option<String>,
+		#[clap(long)]
+		#[clap(help("The directory to output mods to"))]
+		output_dir: Option<PathBuf>,
+	},
+	#[clap(about("Delete a profile\nOptionally, provide the name of the profile to delete\nAfter deletion, the first profile will be selected"))]
+	Delete {
+		#[clap(long)]
+		#[clap(help("The name of the profile to delete"))]
+		profile_name: Option<String>,
+	},
+	#[clap(about("List all the profiles with their data"))]
+	List,
 }
