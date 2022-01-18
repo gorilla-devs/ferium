@@ -873,10 +873,14 @@ async fn upgrade_modrinth(modrinth: &Ferinth, profile: &json::Profile) -> FResul
 			for game_version in &version.game_versions {
 				if game_version.contains(&game_version_to_check) {
 					compatible_game_version = true;
+					break;
 				}
 			}
 
-			if compatible_game_version && version.loaders.contains(&profile.mod_loader.to_string())
+			if compatible_game_version
+				&& version
+					.loaders
+					.contains(&profile.mod_loader.to_string().to_lowercase())
 			{
 				latest_compatible_version = Some(version);
 				break;

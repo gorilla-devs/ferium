@@ -1,5 +1,9 @@
 # Changelog for Ferium
 
+## [3.10.1] - 17.01.2022
+
+- Upgrading Modrinth mods now correctly check the mod loader by converting the mod loader name to lowercase 
+
 ## [3.10.0] - 16.01.2022
 
 HUGE UPDATE
