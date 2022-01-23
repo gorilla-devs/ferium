@@ -169,7 +169,10 @@ async fn actual_main() -> FResult<()> {
 
 /// Check if `profile` is empty, and if so return an error
 fn check_empty_profile(profile: &json::Profile) -> FResult<()> {
-	if profile.github_repos.is_empty() && profile.modrinth_mods.is_empty() {
+	if profile.github_repos.is_empty()
+		&& profile.modrinth_mods.is_empty()
+		&& profile.curse_projects.is_empty()
+	{
 		Err(FError::EmptyConfigFile)
 	} else {
 		Ok(())
@@ -1041,12 +1044,13 @@ async fn upgrade_modrinth(
 		for version in versions {
 			if no_patch_check {
 				// Search every version to see if it contains the game version specified without patch
-				if version.game_versions
+				if version
+					.game_versions
 					.iter()
 					.any(|game_version| game_version.contains(&game_version_to_check))
 					&& version
-					.loaders
-					.contains(&profile.mod_loader.to_string().to_lowercase())
+						.loaders
+						.contains(&profile.mod_loader.to_string().to_lowercase())
 				{
 					latest_compatible_version = Some(version);
 					break;
