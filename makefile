@@ -37,17 +37,19 @@ build-linux:
 
 test:
 	cargo clippy -- \
-		-A clippy::let-underscore-drop \
-		-A clippy::multiple-crate-versions \
-		-A clippy::non-ascii-literal
-		-W clippy::nursery \
-		-W clippy::pedantic \
 		-D clippy::all \
 		-D clippy::cargo \
 		-D clippy::complexity \
 		-D clippy::perf \
 		-D clippy::style \
-		-D clippy::suspicious
+		-D clippy::suspicious \
+		-W clippy::nursery \
+		-W clippy::pedantic \
+		-A clippy::let-underscore-drop \
+		-A clippy::multiple-crate-versions \
+		-A clippy::non-ascii-literal \
+		-A clippy::too-many-lines \
+		-A clippy::single-match-else
 	python3 save_config.py
 # Don't parallelise the tests
 	-cargo test -- --test-threads=1

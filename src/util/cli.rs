@@ -30,6 +30,11 @@ pub enum SubCommands {
 		#[clap(help("The name of the repository"))]
 		name: String,
 	},
+	#[clap(about("Add a CurseForge mod to the profile"))]
+	AddCurseforge {
+		#[clap(help("The project ID is specified as 'Project ID' in the 'About Project' sidebar of the mod's CurseForge page"))]
+		project_id: i32,
+	},
 	#[clap(about("List all the mods in the profile with some their metadata"))]
 	List {
 		#[clap(short, long)]
@@ -56,7 +61,18 @@ pub enum SubCommands {
 		profile_name: Option<String>,
 	},
 	#[clap(about("Download and install the latest version of the mods specified"))]
-	Upgrade,
+	Upgrade {
+		#[clap(long)]
+		#[clap(help(
+			"Do not show a picker when multiple compatible assets are found and pick the first one"
+		))]
+		no_picker: bool,
+		#[clap(long)]
+		#[clap(help(
+			"Do not check for the full game version, only check for the major and minor versions"
+		))]
+		no_patch_check: bool,
+	},
 }
 
 #[derive(Subcommand)]

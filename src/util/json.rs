@@ -21,10 +21,12 @@ pub struct Profile {
 	pub game_version: String,
 	/// Check if versions/releases are compatible with this mod loader
 	pub mod_loader: ModLoaders,
-	/// A list of mod slugs/IDs of Modrinth mods to download
-	pub mod_ids: Vec<String>,
+	/// A list of project IDs of CurseForge mods to download
+	pub curse_projects: Vec<i32>,
+	/// A list of mod IDs of Modrinth mods to download
+	pub modrinth_mods: Vec<String>,
 	/// A list GitHub repositories to download
-	pub repos: Vec<(String, String)>,
+	pub github_repos: Vec<(String, String)>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -54,10 +56,7 @@ impl Profile {
 	pub async fn create_ui(config: &Config) -> FResult<Self> {
 		// Let user pick mods directory
 		let mut selected_mods_dir = get_mods_dir()?;
-		println!(
-			"The default mods directory is {:?}",
-			selected_mods_dir
-		);
+		println!("The default mods directory is {:?}", selected_mods_dir);
 		if Confirm::with_theme(&ColorfulTheme::default())
 			.with_prompt("Would you like to specify a custom mods directory?")
 			.interact()?
@@ -109,8 +108,9 @@ impl Profile {
 		Ok(Self {
 			name,
 			output_dir: selected_mods_dir,
-			mod_ids: Vec::new(),
-			repos: Vec::new(),
+			curse_projects: Vec::new(),
+			modrinth_mods: Vec::new(),
+			github_repos: Vec::new(),
 			game_version: selected_version,
 			mod_loader: selected_loader,
 		})

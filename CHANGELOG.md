@@ -1,6 +1,24 @@
 # Changelog for Ferium
 
+## [3.11.0] - 23.01.2022
+
+### CURSEFORGE SUPPORT!
+
+- Renamed `mod_ids` and `repos` to `modrinth_mods` and `github_repos` in `Profile`
+- Added `curse_projects` to `Profile`
+- Added `add-curseforge` command
+- An API key is required to compile the application. Without this, the program will not compile. You can a provide blank value for this and the program will compile but anything using the CurseForge API will not work
+- Upgrading mods now uses the downloaded file's actual filename rather than the mod name
+- The remove command no long tries to remove the mod file (to be reintroduced later)
+- Added 2 flags to the upgrade command
+  - `no_picker` When upgrading GitHub mods, if multiple assets are compatible a picker is normally shown. This option disables this and uses the first one
+  - `no_patch_check` Normally, upgrading curse and modrinth mods will check for the full game version, but sometimes mods works between patch versions, so this option skips checking for the patch version. This doesn't affect upgrading GitHub mods
+- Made a test for the upgrade command. Will have to implement checking of the mods downloaded later
+- Some integration tests have been edited to test curse mods too
+- Upgrading GitHub mods now checks the releases' names for the game version too
+
 ## [3.10.1] - 17.01.2022
+> Unreleased
 
 - Upgrading Modrinth mods now correctly check the mod loader by converting the mod loader name to lowercase 
 

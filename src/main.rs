@@ -4,9 +4,10 @@ use ansi_term::Colour::{Green, White};
 use clap::StructOpt;
 use dialoguer::{theme::ColorfulTheme, Input, MultiSelect, Select};
 use ferinth::Ferinth;
+use furse::Furse;
 use octocrab::Octocrab;
 use std::{
-	fs::{create_dir_all, remove_file, OpenOptions},
+	fs::{create_dir_all, OpenOptions},
 	io::Write,
 	path::PathBuf,
 };
@@ -50,6 +51,10 @@ async fn actual_main() -> FResult<()> {
 
 	let github = octocrab::instance();
 	let modrinth = Ferinth::new("ferium");
+	let curseforge = Furse::new(env!(
+		"CURSEFORGE_API_KEY",
+		"A CurseForge API key is required to build. If you don't have one, you can bypass this by setting the variable to a blank string, however anything using the CurseForge API will not work."
+	));
 	// Ferium's config file
 	let config_file = json::get_config_file()?;
 	// Deserialise `config_file` to a config
@@ -98,32 +103,34 @@ async fn actual_main() -> FResult<()> {
 	}
 
 	// Get a mutable reference to the active profile
-	let profile = match config.profiles.get_mut(config.active_profile) {
-		Some(profile) => profile,
-		None => {
-			if config.profiles.is_empty() {
-				return Err(FError::Quit (
+	let profile = if let Some(profile) = config.profiles.get_mut(config.active_profile) {
+		profile
+	} else {
+		if config.profiles.is_empty() {
+			return Err(FError::Quit (
 				"There are no profiles configured. Add a profile to your config using `ferium profile create`"
 			));
-			}
-			// Default to first profile if index is set incorrectly
-			config.active_profile = 0;
-			json::write_to_config(config_file, &config)?;
-			return Err(FError::Quit(
-				"Active profile index points to a non existent profile. Switched to first profile",
-			));
-		},
+		}
+		// Default to first profile if index is set incorrectly
+		config.active_profile = 0;
+		json::write_to_config(config_file, &config)?;
+		return Err(FError::Quit(
+			"Active profile index points to a non existent profile. Switched to first profile",
+		));
 	};
 
 	// Run function(s) based on the sub(sub)command to be executed
 	match cli_app.subcommand {
 		SubCommands::AddModrinth { mod_id } => add_mod_modrinth(&modrinth, mod_id, profile).await?,
 		SubCommands::AddGithub { owner, name } => {
-			add_repo_github(&github, owner, name, profile).await?
+			add_repo_github(&github, owner, name, profile).await?;
+		},
+		SubCommands::AddCurseforge { project_id } => {
+			add_project_curseforge(&curseforge, project_id, profile).await?;
 		},
 		SubCommands::List { verbose } => {
 			check_empty_profile(profile)?;
-			list(&modrinth, &github, profile, verbose).await?;
+			list(&curseforge, &modrinth, &github, profile, verbose).await?;
 		},
 		SubCommands::Profile { subcommand } => match subcommand {
 			ProfileSubCommands::Configure {
@@ -135,18 +142,22 @@ async fn actual_main() -> FResult<()> {
 			// This must have been checked earlier before getting the profile
 			ProfileSubCommands::Create { .. } => unreachable!(),
 			ProfileSubCommands::Delete { profile_name } => delete(&mut config, profile_name)?,
-			ProfileSubCommands::List => list_profiles(&config)?,
+			ProfileSubCommands::List => list_profiles(&config),
 		},
 		SubCommands::Remove { mod_names } => {
 			check_empty_profile(profile)?;
-			remove(&modrinth, &github, profile, mod_names).await?;
+			remove(&curseforge, &modrinth, &github, profile, mod_names).await?;
 		},
 		SubCommands::Switch { profile_name } => switch(&mut config, profile_name)?,
-		SubCommands::Upgrade => {
+		SubCommands::Upgrade {
+			no_picker,
+			no_patch_check,
+		} => {
 			check_empty_profile(profile)?;
 			create_dir_all(&profile.output_dir)?;
-			upgrade_modrinth(&modrinth, profile).await?;
-			upgrade_github(&github, profile).await?;
+			upgrade_curseforge(&curseforge, profile, no_patch_check).await?;
+			upgrade_modrinth(&modrinth, profile, no_patch_check).await?;
+			upgrade_github(&github, profile, no_picker).await?;
 		},
 	};
 
@@ -156,41 +167,34 @@ async fn actual_main() -> FResult<()> {
 	Ok(())
 }
 
-/// Fetch a mod file's path based on a `name` and the `profile`'s output directory
-fn get_mod_file_path(profile: &json::Profile, name: &str) -> PathBuf {
-	let mut mod_file_path = profile.output_dir.join(name.to_string());
-	mod_file_path.set_extension("jar");
-	mod_file_path
-}
-
 /// Check if `profile` is empty, and if so return an error
 fn check_empty_profile(profile: &json::Profile) -> FResult<()> {
-	if profile.repos.is_empty() && profile.mod_ids.is_empty() {
+	if profile.github_repos.is_empty() && profile.modrinth_mods.is_empty() {
 		Err(FError::EmptyConfigFile)
 	} else {
 		Ok(())
 	}
 }
 
-fn list_profiles(config: &json::Config) -> FResult<()> {
+fn list_profiles(config: &json::Config) {
 	for profile in &config.profiles {
 		println!(
 			"{}
 		\r  Output directory:    {:?}
 		\r  Minecraft Version:   {}
 		\r  Mod Loader:          {}
-		\r  Modrinth Projects:   {}
+		\r  CurseForge Projects: {}
+		\r  Modrinth Mods:       {}
 		\r  GitHub Repositories: {}\n",
 			profile.name,
 			profile.output_dir,
 			profile.game_version,
 			profile.mod_loader,
-			profile.mod_ids.len(),
-			profile.repos.len(),
+			profile.curse_projects.len(),
+			profile.modrinth_mods.len(),
+			profile.github_repos.len(),
 		);
 	}
-
-	Ok(())
 }
 
 async fn create(
@@ -238,8 +242,9 @@ async fn create(
 				output_dir,
 				game_version,
 				mod_loader,
-				mod_ids: Vec::new(),
-				repos: Vec::new(),
+				curse_projects: Vec::new(),
+				modrinth_mods: Vec::new(),
+				github_repos: Vec::new(),
 			}); // Create profile
 		},
 		(None, None, None, None) => {
@@ -461,6 +466,7 @@ async fn configure(
 
 /// Display a list of mods and repos in the profile to select from and remove selected ones
 async fn remove(
+	curseforge: &Furse,
 	modrinth: &Ferinth,
 	github: &Octocrab,
 	profile: &mut json::Profile,
@@ -468,17 +474,21 @@ async fn remove(
 ) -> FResult<()> {
 	let mut names: Vec<String> = Vec::new();
 
-	eprint!("Gathering mod and repository information... ");
-	// Store the names of the mods
-	for mod_id in &profile.mod_ids {
+	// Get the names of the mods
+	eprint!("Gathering mod names... ");
+	for mod_id in &profile.modrinth_mods {
 		let mod_ = modrinth.get_mod(mod_id).await?;
 		names.push(mod_.title);
 	}
 
-	// Store the names of the repos
-	for repo_name in &profile.repos {
+	for repo_name in &profile.github_repos {
 		let repo = github.repos(&repo_name.0, &repo_name.1).get().await?;
 		names.push(repo.name);
+	}
+
+	for project_id in &profile.curse_projects {
+		let project = curseforge.get_mod(*project_id).await?;
+		names.push(project.name);
 	}
 	println!("✓");
 
@@ -494,9 +504,9 @@ async fn remove(
 			for mod_name in mod_names {
 				let mut found_mod = false;
 				// Search through all the mod names
-				for (i, item) in names.iter().enumerate() {
+				for (i, name) in names.iter().enumerate() {
 					// If a match is found, push the match's index to items_to_remove
-					if item.to_lowercase() == mod_name.to_lowercase() {
+					if name.to_lowercase().contains(&mod_name.to_lowercase()) {
 						found_mod = true;
 						items_to_remove.push(i);
 					}
@@ -530,21 +540,25 @@ async fn remove(
 
 	// For each mod to remove
 	for index in items_to_remove {
-		// Try to remove the mod from the output_dir
-		let name = &names[index];
-		let mod_file_path = get_mod_file_path(profile, name);
-		let _ = remove_file(mod_file_path);
+		// If index is larger than the length of the repos mod_ids, then the index is for curse projects
+		if index >= (profile.modrinth_mods.len() + profile.github_repos.len()) {
+			// Offset the index by the proper amount
+			let index = index - (profile.modrinth_mods.len() + profile.github_repos.len());
 
+			// Remove item from profile's curse projects
+			profile.curse_projects.swap_remove(index);
+		}
 		// If index is larger than the mod_ids' length, then the index is for repos
-		if index >= profile.mod_ids.len() {
-			// Offset the array by the proper amount
-			let index = index - profile.mod_ids.len();
+		else if index >= profile.modrinth_mods.len() {
+			// Offset the index by the proper amount
+			let index = index - profile.modrinth_mods.len();
 
 			// Remove item from profile's repos
-			profile.repos.remove(index);
+			profile.github_repos.swap_remove(index);
+		// Or else its for the mod_ids
 		} else {
 			// Remove item from profile' mod ids
-			profile.mod_ids.remove(index);
+			profile.modrinth_mods.swap_remove(index);
 		}
 	}
 
@@ -573,7 +587,7 @@ async fn add_repo_github(
 	let repo_name = (repo_name_split[0].into(), repo_name_split[1].into());
 
 	// Check if repo has already been added
-	if profile.repos.contains(&repo_name) {
+	if profile.github_repos.contains(&repo_name) {
 		return Err(FError::Quit("× Repository already added to profile!"));
 	}
 
@@ -593,7 +607,7 @@ async fn add_repo_github(
 
 	if contains_jar_asset {
 		// Append repo to profile
-		profile.repos.push(repo_name);
+		profile.github_repos.push(repo_name);
 		println!("✓");
 	} else {
 		return Err(FError::Quit("× Repository does not release mods!"));
@@ -608,17 +622,17 @@ async fn add_mod_modrinth(
 	mod_id: String,
 	profile: &mut json::Profile,
 ) -> FResult<()> {
-	eprint!("Adding Modrinth project... ");
+	eprint!("Adding Modrinth mod... ");
 
 	// Check if mod exists
 	match modrinth.get_mod(&mod_id).await {
 		Ok(mod_) => {
 			// Check if mod has already been added
-			if profile.mod_ids.contains(&mod_.id) {
+			if profile.modrinth_mods.contains(&mod_.id) {
 				return Err(FError::Quit("× Mod already added to profile!"));
 			}
 			// And if it hasn't, append mod to profile and write
-			profile.mod_ids.push(mod_.id);
+			profile.modrinth_mods.push(mod_.id);
 			println!("✓ ({})", mod_.title);
 
 			Ok(())
@@ -633,14 +647,80 @@ async fn add_mod_modrinth(
 	}
 }
 
+async fn add_project_curseforge(
+	curseforge: &Furse,
+	project_id: i32,
+	profile: &mut json::Profile,
+) -> FResult<()> {
+	eprint!("Adding CurseForge mod... ");
+
+	// Check if project exists
+	match curseforge.get_mod(project_id).await {
+		Ok(project) => {
+			if profile.curse_projects.contains(&project.id) {
+				Err(FError::Quit("× Project already added to profile!"))
+			} else {
+				profile.curse_projects.push(project.id);
+				println!("✓ ({})", project.name);
+				Ok(())
+			}
+		},
+		Err(err) => Err(FError::QuitFormatted(format!(
+			"× Project with ID `{}` does not exist! ({})",
+			project_id, err
+		))),
+	}
+}
+
 /// List all the mods in `profile` with some of their metadata
 async fn list(
+	curseforge: &Furse,
 	modrinth: &Ferinth,
 	github: &Octocrab,
 	profile: &json::Profile,
 	verbose: bool,
 ) -> FResult<()> {
-	for mod_id in &profile.mod_ids {
+	for project_id in &profile.curse_projects {
+		let project = curseforge.get_mod(*project_id).await?;
+		let mut authors = String::new();
+		for author in project.authors {
+			authors.push_str(&author.name);
+			authors.push_str(", ");
+		}
+		// Trim trailing ', '
+		authors.truncate(authors.len() - 2);
+
+		let mut categories = String::new();
+		for category in project.categories {
+			categories.push_str(&category.name);
+			categories.push_str(", ");
+		}
+		// Trim trailing ', '
+		categories.truncate(categories.len() - 2);
+
+		println!(
+			"{}
+			\r  {}\n
+			\r  Link:        {}
+			\r  Source:      CurseForge Project
+			\r  Open Source: {}
+			\r  Downloads:   {}
+			\r  Authors:     {}
+			\r  Category:    {}\n",
+			project.name,
+			project.summary,
+			project.links.website_url,
+			project
+				.links
+				.source_url
+				.map_or("No".into(), |url| format!("Yes ({})", url)),
+			project.download_count,
+			authors,
+			categories,
+		);
+	}
+
+	for mod_id in &profile.modrinth_mods {
 		// Get mod metadata
 		let mod_ = modrinth.get_mod(mod_id).await?;
 		if verbose {
@@ -660,7 +740,7 @@ async fn list(
 				"{}
             \r  {}\n
             \r  Link:           https://modrinth.com/mod/{}
-            \r  Source:         Modrinth Project
+            \r  Source:         Modrinth Mod
             \r  Open Source:    {}
             \r  Downloads:      {}
             \r  Developers:     {}
@@ -686,7 +766,7 @@ async fn list(
 				"{}
                 \r  {}\n
                 \r  Link:     https://modrinth.com/mod/{}
-                \r  Source:   Modrinth Project
+                \r  Source:   Modrinth Mod
                 \r  Code:     {}
                 \r  License:  {}\n",
 				mod_.title,
@@ -699,7 +779,7 @@ async fn list(
 		}
 	}
 
-	for repo_name in &profile.repos {
+	for repo_name in &profile.github_repos {
 		// Get repository metadata
 		let repo_handler = github.repos(&repo_name.0, &repo_name.1);
 		let repo = repo_handler.get().await?;
@@ -760,14 +840,95 @@ async fn list(
 	Ok(())
 }
 
+async fn upgrade_curseforge(
+	curseforge: &Furse,
+	profile: &json::Profile,
+	no_patch_check: bool,
+) -> FResult<()> {
+	for project_id in &profile.curse_projects {
+		let project = curseforge.get_mod(*project_id).await?;
+		println!("Downloading {}", project.name);
+		eprint!("  [1] Getting file information... ");
+
+		// Get the project's files
+		let mut files = curseforge.get_mod_files(*project_id).await?;
+		// Sorting in chronological order using file IDs
+		files.sort_by_key(|file| file.id);
+		// Reverse so that the newest files come first
+		files.reverse();
+
+		let mut latest_compatible_file = None;
+		let game_version_to_check = wrappers::remove_semver_patch(&profile.game_version)?;
+
+		for file in &files {
+			if no_patch_check {
+				// Search every version to see if it contains the game version specified without patch
+				if file
+					.game_versions
+					.iter()
+					.any(|game_version| game_version.contains(&game_version_to_check))
+					&& file.game_versions.contains(&profile.mod_loader.to_string())
+				{
+					latest_compatible_file = Some(file);
+					break;
+				}
+			} else {
+				// Or else just check if it contains the full version
+				if file.game_versions.contains(&profile.game_version)
+					&& file.game_versions.contains(&profile.mod_loader.to_string())
+				{
+					latest_compatible_file = Some(file);
+					break;
+				}
+			}
+		}
+
+		match latest_compatible_file {
+			Some(latest_compatible_file) => {
+				println!("✓");
+
+				eprint!(
+					"  [2] Downloading {}... ",
+					latest_compatible_file.display_name
+				);
+
+				let mut mod_file = OpenOptions::new()
+					.read(true)
+					.write(true)
+					.truncate(true)
+					.create(true)
+					.open(profile.output_dir.join(&latest_compatible_file.file_name))?;
+
+				let file_contents = curseforge
+					.download_mod_file_from_file(latest_compatible_file)
+					.await?;
+
+				mod_file.write_all(&file_contents)?;
+				println!("✓\n");
+			},
+			None => {
+				return Err(FError::QuitFormatted(format!(
+					"× No version of {} is compatible for {} {}",
+					project.name, profile.mod_loader, profile.game_version,
+				)));
+			},
+		}
+	}
+
+	Ok(())
+}
+
 /// Download and install all the GitHub mods in `profile`
-async fn upgrade_github(github: &Octocrab, profile: &json::Profile) -> FResult<()> {
-	for repo_name in &profile.repos {
+async fn upgrade_github(
+	github: &Octocrab,
+	profile: &json::Profile,
+	no_picker: bool,
+) -> FResult<()> {
+	for repo_name in &profile.github_repos {
 		println!("Downloading {}", repo_name.1);
 		eprint!("  [1] Getting release information... ");
 
 		let repo_handler = github.repos(&repo_name.0, &repo_name.1);
-		let repository = repo_handler.get().await?;
 		let releases = repo_handler.releases().list().send().await?;
 		let version_to_check = wrappers::remove_semver_patch(&profile.game_version)?;
 
@@ -789,13 +950,15 @@ async fn upgrade_github(github: &Octocrab, profile: &json::Profile) -> FResult<(
 				// If the mod loader is not specified then skip checking for the mod loader
 				if (!specifies_loader
 					// If it does specify, then check the mod loader
-					|| asset.name.to_lowercase().contains(&profile.mod_loader.to_string()))
+					|| asset.name.to_lowercase().contains(&profile.mod_loader.to_string().to_lowercase()))
                     // Check if the game version is compatible
                     && (
                         // Check the release body
                         release.body.as_ref().ok_or(FError::OptionError)?.contains(&version_to_check)
-                        // And the asset's name
-                        || asset.name.contains(&version_to_check))
+                        // the asset's name
+                        || asset.name.contains(&version_to_check)
+						// and even the release name
+                        || release.name.as_ref().ok_or(FError::OptionError)?.contains(&version_to_check))
                     // Check if its a JAR file
                     && asset.name.contains("jar")
 				{
@@ -817,15 +980,19 @@ async fn upgrade_github(github: &Octocrab, profile: &json::Profile) -> FResult<(
 		// If more than 1 was found, let the user select which one to use
 		} else {
 			println!("✓");
-			let mut asset_candidate_names = Vec::new();
-			for asset_candidate in &asset_candidates {
-				asset_candidate_names.push(&asset_candidate.name);
+			if no_picker {
+				asset_candidates[0]
+			} else {
+				let mut asset_candidate_names = Vec::new();
+				for asset_candidate in &asset_candidates {
+					asset_candidate_names.push(&asset_candidate.name);
+				}
+				let selection = Select::with_theme(&ColorfulTheme::default())
+					.with_prompt("Select the asset to download")
+					.items(&asset_candidate_names)
+					.interact()?;
+				asset_candidates[selection]
 			}
-			let selection = Select::with_theme(&ColorfulTheme::default())
-				.with_prompt("Select the asset to download")
-				.items(&asset_candidate_names)
-				.interact()?;
-			asset_candidates[selection]
 		};
 
 		eprint!("  [2] Downloading {}... ", asset_to_download.name);
@@ -842,7 +1009,7 @@ async fn upgrade_github(github: &Octocrab, profile: &json::Profile) -> FResult<(
 			.write(true)
 			.truncate(true)
 			.create(true)
-			.open(get_mod_file_path(profile, &repository.name))?;
+			.open(profile.output_dir.join(&asset_to_download.name))?;
 
 		// Write download to mod JAR file
 		mod_file.write_all(&contents)?;
@@ -853,8 +1020,12 @@ async fn upgrade_github(github: &Octocrab, profile: &json::Profile) -> FResult<(
 }
 
 /// Download and install all Modrinth mods in `profile`
-async fn upgrade_modrinth(modrinth: &Ferinth, profile: &json::Profile) -> FResult<()> {
-	for mod_id in &profile.mod_ids {
+async fn upgrade_modrinth(
+	modrinth: &Ferinth,
+	profile: &json::Profile,
+	no_patch_check: bool,
+) -> FResult<()> {
+	for mod_id in &profile.modrinth_mods {
 		// Get mod metadata
 		let mod_ = modrinth.get_mod(mod_id).await?;
 		println!("Downloading {}", mod_.title);
@@ -868,22 +1039,28 @@ async fn upgrade_modrinth(modrinth: &Ferinth, profile: &json::Profile) -> FResul
 
 		// Check if a version compatible with the game version and mod loader specified in the profile is available
 		for version in versions {
-			let mut compatible_game_version = false;
-
-			for game_version in &version.game_versions {
-				if game_version.contains(&game_version_to_check) {
-					compatible_game_version = true;
-					break;
-				}
-			}
-
-			if compatible_game_version
-				&& version
+			if no_patch_check {
+				// Search every version to see if it contains the game version specified without patch
+				if version.game_versions
+					.iter()
+					.any(|game_version| game_version.contains(&game_version_to_check))
+					&& version
 					.loaders
 					.contains(&profile.mod_loader.to_string().to_lowercase())
-			{
-				latest_compatible_version = Some(version);
-				break;
+				{
+					latest_compatible_version = Some(version);
+					break;
+				}
+			} else {
+				// Or else just check if it contains the full version
+				if version.game_versions.contains(&profile.game_version)
+					&& version
+						.loaders
+						.contains(&profile.mod_loader.to_string().to_lowercase())
+				{
+					latest_compatible_version = Some(version);
+					break;
+				}
 			}
 		}
 
@@ -902,9 +1079,6 @@ async fn upgrade_modrinth(modrinth: &Ferinth, profile: &json::Profile) -> FResul
 
 		eprint!("  [2] Downloading {}... ", latest_version.name);
 
-		// Compute output mod file's path
-		let mod_file_path = get_mod_file_path(profile, &mod_.title);
-
 		// Get file contents
 		let contents = modrinth
 			.download_version_file(&latest_version.files[0])
@@ -916,7 +1090,7 @@ async fn upgrade_modrinth(modrinth: &Ferinth, profile: &json::Profile) -> FResul
 			.write(true)
 			.truncate(true)
 			.create(true)
-			.open(mod_file_path)?;
+			.open(profile.output_dir.join(&latest_version.files[0].filename))?;
 
 		// Write contents to JAR file
 		mod_file.write_all(&contents)?;

@@ -30,13 +30,13 @@ fn b_create_profile() -> Result<()> {
 		"--mod-loader",
 		"fabric",
 		"--output-dir",
-		"/Users/username/mods",
+		&format!("{}/tests/mods/", env!("PWD")),
 	])
 }
 
 #[test]
 fn b_create_profile_non_existent_game_version() {
-	// This should fail due to the game version not being provided
+	// This should fail because '1.12.3' does not exist
 	assert!(run_command(vec![
 		"profile",
 		"create",
@@ -105,9 +105,19 @@ fn c_create_profile_name_already_exists() {
 #[test]
 fn d_add_modrinth() -> Result<()> {
 	// Add Sodium to config
-	run_command(vec!["add-modrinth", "sodium"])?;
+	run_command(vec!["add-modrinth", "starlight"])?;
 	// Check that trying to add the same mod again fails
-	assert!(run_command(vec!["add-modrinth", "SoDiUm"]).is_err());
+	assert!(run_command(vec!["add-modrinth", "StArLiGhT"]).is_err());
+
+	Ok(())
+}
+
+#[test]
+fn d_add_curseforge() -> Result<()> {
+	// Add Terralith to the config
+	run_command(vec!["add-curseforge", "513688"])?;
+	// Check that trying to add the same mod again fails
+	assert!(run_command(vec!["add-curseforge", "513688"]).is_err());
 
 	Ok(())
 }
@@ -140,10 +150,9 @@ fn e_profile_list() -> Result<()> {
 
 #[test]
 fn f_upgrade() -> Result<()> {
-	// TODO
-	// Download mods and check that they are present in the output_dir
-
-	Ok(())
+	// TODO: Check that downloaded mods are present in the output_dir
+	run_command(vec!["upgrade", "--no-picker"])?;
+	run_command(vec!["upgrade", "--no-picker", "--no-patch-check"])
 }
 
 #[test]
@@ -178,28 +187,45 @@ fn h_remove() -> Result<()> {
 	assert!(run_command(vec![
 		"remove",
 		"--mod-names",
-		"sodum",
+		"starlght", // Wrong
 		"--mod-names",
-		"sodium-fabric"
+		"terralith",
+		"--mod-names",
+		"sodium",
 	])
 	.is_err());
 	assert!(run_command(vec![
 		"remove",
 		"--mod-names",
-		"sodium",
+		"starlight",
 		"--mod-names",
-		"sodum-fabric"
+		"terrlith", // Wrong
+		"--mod-names",
+		"sodium",
 	])
 	.is_err());
-	// Remove both mods
+	assert!(run_command(vec![
+		"remove",
+		"--mod-names",
+		"starlight",
+		"--mod-names",
+		"terralith",
+		"--mod-names",
+		"sodum", // Wrong
+	])
+	.is_err());
+
+	// Remove all the mods
 	run_command(vec![
 		"remove",
 		"--mod-names",
-		"sodium",
+		"starlight",
+		"--mod-names",
+		"terralith",
 		"--mod-names",
 		"sodium-fabric",
 	])?;
-	// Check that listing mods gives an error
+	// Check that listing mods gives an error (because there are no mods)
 	assert!(run_command(vec!["list"]).is_err());
 
 	Ok(())

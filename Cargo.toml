@@ -1,9 +1,9 @@
 [package]
 name = "ferium"
-version = "3.10.1"
+version = "3.11.0"
 edition = "2021"
 authors = ["theRookieCoder <ileshkt@gmail.com>"]
-description = "Ferium is an easy to use CLI program for managing Minecraft mods on Modrinth and Github Releases"
+description = "Ferium is an easy to use CLI program for managing Minecraft mods from Modrinth, CurseForge, and Github Releases"
 repository = "https://github.com/theRookieCoder/ferium"
 readme = "README.md"
 license = "MPL-2.0"
@@ -24,5 +24,6 @@ thiserror = "1"
 ferinth = "1"
 online = "3"
 bytes = "1"
+furse = "1"
 onig = "6"
 rfd = "0"
