@@ -230,7 +230,7 @@ async fn create(
 			for profile in &config.profiles {
 				if profile.name == name {
 					return Err(FError::QuitFormatted(format!(
-						"A profile with name {name} already exists"
+						"A profile with name {} already exists", name.as_str()
 					)));
 				}
 			}
