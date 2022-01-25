@@ -1,6 +1,6 @@
 [package]
 name = "ferium"
-version = "3.11.0"
+version = "3.11.1"
 edition = "2021"
 authors = ["theRookieCoder <ileshkt@gmail.com>"]
 description = "Ferium is an easy to use CLI program for managing Minecraft mods from Modrinth, CurseForge, and Github Releases"
