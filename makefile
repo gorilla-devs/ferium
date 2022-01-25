@@ -1,4 +1,5 @@
 .SILENT: test
+.DEFAULT_GOAL := install-dev
 
 build-mac:
 	make test
