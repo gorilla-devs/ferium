@@ -9,7 +9,6 @@ repository = "https://github.com/theRookieCoder/ferium"
 categories = ["command-line-utilities"]
 readme = "README.md"
 license = "MPL-2.0"
-publish = false
 keywords = [
 	"minecraft",
 	"cli",
