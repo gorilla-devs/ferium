@@ -45,6 +45,8 @@ pub enum FError {
 	InvalidDeviceError,
 	#[error("Invalid request parameter")]
 	FerinthBase62Error,
+	#[error("Invalid SHA1 hash")]
+	FerinthNotSHA1Error,
 	/// The application should print `message` and quit (gracefully)
 	#[error("{}", .0)]
 	Quit(&'static str),
@@ -71,6 +73,7 @@ impl From<ferinth::Error> for FError {
 	fn from(err: ferinth::Error) -> Self {
 		match err {
 			ferinth::Error::NotBase62 => Self::FerinthBase62Error,
+			ferinth::Error::NotSHA1 => Self::FerinthNotSHA1Error,
 			ferinth::Error::ReqwestError(err) => Self::ReqwestError(err),
 		}
 	}

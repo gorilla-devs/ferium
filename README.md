@@ -8,11 +8,12 @@ Ferium is an easy to use CLI program for managing Minecraft mods from [Modrinth]
 
 ## Feature Requests
 
-If you would like to make a feature request, check the [project](https://github.com/theRookieCoder/ferium/projects/1) to see if the feature has already been added/planned. If not, you can [create a new issue](https://github.com/theRookieCoder/ferium/issues/new)
+If you would like to make a feature request, check the [issues](https://github.com/theRookieCoder/ferium/issues) and the [project](https://github.com/theRookieCoder/ferium/projects/1) to see if the feature has already been added/planned. If not, [create a new issue](https://github.com/theRookieCoder/ferium/issues/new)
 
-## Building or Working with Ferium
+## Building from Source or Working with Ferium
 
 Firstly you need the Rust toolchain (`cargo`, `rustup`, etc). You can install these from <https://rust-lang.org>.
-To build the project and install it to `~/bin`, clone the project then run `make install`. If you want to install for testing a developement version, use `make install-dev` <sup>(which is just `make install` but with `--debug`)</sup>.
+If you want to build Ferium without cloning the repo, set the CurseForge API key then run `cargo install ferium`.
+To build the project and install it to your Cargo bin directory, clone the project then run `make install`. If you want to install for testing a developement version, use just `make` or `make install-dev`.
 If you want to obtain executables for a specific OS, you can run `make build-<OS>` and replace `<OS>` with `mac`, `win`, or `linux`. The produced binaries will be zipped and moved to `out/`.
-You can run tests using `make test`. Don't use `cargo test` because that will interfere with your existing config, and the integration tests do not work when run in parallel. `make test` saves your config, forces tests to run sequentially, then restores your config (whether the tests failed or not).
+You can run the tests using `make test`. Don't use `cargo test` because that will interfere with your existing config, and the integration tests do not work when run in parallel. `make test` saves your config, forces tests to run sequentially, then restores your config (whether the tests failed or not).

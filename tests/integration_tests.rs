@@ -30,12 +30,12 @@ fn b_create_profile() -> Result<()> {
 		"--mod-loader",
 		"fabric",
 		"--output-dir",
-		&format!("{}/tests/mods/", env!("PWD")),
+		std::env::current_dir()?.join("tests").join("mods").to_str().unwrap()
 	])
 }
 
 #[test]
-fn b_create_profile_non_existent_game_version() {
+fn b_create_profile_non_existent_game_version() -> Result<()> {
 	// This should fail because '1.12.3' does not exist
 	assert!(run_command(vec![
 		"profile",
@@ -47,9 +47,11 @@ fn b_create_profile_non_existent_game_version() {
 		"--mod-loader",
 		"fabric",
 		"--output-dir",
-		"/Users/username/mods"
+		std::env::current_dir()?.join("tests").join("mods").to_str().unwrap()
 	])
 	.is_err());
+
+	Ok(())
 }
 
 #[test]
@@ -70,7 +72,7 @@ fn b_create_profile_output_dir_not_absolute() {
 	.is_err());
 }
 #[test]
-fn b_create_profile_missing_args() {
+fn b_create_profile_missing_args() -> Result<()> {
 	// This should fail due to missing arguments
 	assert!(run_command(vec![
 		"profile",
@@ -80,12 +82,14 @@ fn b_create_profile_missing_args() {
 		"--mod-loader",
 		"fabric",
 		"--output-dir",
-		"/Users/username/mods"
+		std::env::current_dir()?.join("tests").join("mods").to_str().unwrap()
 	])
 	.is_err());
+
+	Ok(())
 }
 #[test]
-fn c_create_profile_name_already_exists() {
+fn c_create_profile_name_already_exists() -> Result<()> {
 	// This should fail because a profile with the same name already exists
 	assert!(run_command(vec![
 		"profile",
@@ -97,9 +101,11 @@ fn c_create_profile_name_already_exists() {
 		"--mod-loader",
 		"fabric",
 		"--output-dir",
-		"/Users/username/mods",
+		std::env::current_dir()?.join("tests").join("mods").to_str().unwrap()
 	])
 	.is_err());
+
+	Ok(())
 }
 
 #[test]
@@ -168,7 +174,7 @@ fn g_switch() -> Result<()> {
 		"--mod-loader",
 		"forge",
 		"--output-dir",
-		"/Users/username/mods",
+		std::env::current_dir()?.join("tests").join("mods").to_str().unwrap()
 	])?;
 
 	// Check that listing mods gives an error (no mods/repos in new profile)

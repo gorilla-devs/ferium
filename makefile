@@ -1,6 +1,7 @@
 .SILENT: test
 .DEFAULT_GOAL := install-dev
 
+# This builds for macOS Intel and macOS Apple Silicon
 build-mac:
 	make test
 # Remove previous builds
@@ -10,31 +11,35 @@ build-mac:
 # Build for targets
 	cargo build --target=x86_64-apple-darwin --release
 	cargo build --target=aarch64-apple-darwin --release
-# Zip and move executable to out/
+# Zip and move executables to out/
 	zip -r out/ferium-macos-x64.zip -j target/x86_64-apple-darwin/release/ferium
 	zip -r out/ferium-macos-arm.zip -j target/aarch64-apple-darwin/release/ferium
 
+# This builds for Windows MSVC
 build-win:
+#	make test
+# Remove previous build if there is one
+	IF EXIST out\ferium-windows-msvc.zip DEL out\ferium-windows-msvc.zip
+# Make builds output directory if it doesn't exist
+	IF NOT EXIST out MKDIR out
+# Build for target
+	cargo build --target=x86_64-pc-windows-msvc --release
+# Zip and move executable to out/
+	PowerShell -Command Compress-Archive -Path "target\x86_64-pc-windows-msvc\release\ferium.exe" -DestinationPath "out\ferium-windows-msvc.zip"
+
+# This builds for GNU Linux and GNU Windows (e.g. cygwin)
+build-linux:
 	make test
 # Remove previous builds
-	rm -f out/ferium-windows-gnu.zip
+	rm -f out/ferium-linux-gnu.zip out/ferium-windows-gnu.zip
 # Make builds output directory if it doesn't exist
 	mkdir -p out
 # Build for targets
 	cargo build --target=x86_64-pc-windows-gnu --release
-# Zip and move executable to out/
-	zip -r out/ferium-windows-gnu.zip -j target/x86_64-pc-windows-gnu/release/ferium.exe
-
-build-linux:
-	make test
-# Remove previous builds
-	rm -f out/ferium-linux-gnu.zip
-# Make builds output directory if it doesn't exist
-	mkdir -p out
-# Build for targets
 	cargo build --target=x86_64-unknown-linux-gnu --release
-# Zip and move executable to out/
+# Zip and move executables to out/
 	zip -r out/ferium-linux-gnu.zip -j target/x86_64-unknown-linux-gnu/release/ferium
+	zip -r out/ferium-windows-gnu.zip -j target/x86_64-pc-windows-gnu/release/ferium.exe
 
 test:
 	cargo clippy -- \
@@ -51,13 +56,13 @@ test:
 		-A clippy::non-ascii-literal \
 		-A clippy::too-many-lines \
 		-A clippy::single-match-else
-	python3 save_config.py
+	python3 tests/scripts/save_config.py
 # Don't parallelise the tests
 	-cargo test -- --test-threads=1
-	python3 restore_config.py
+	python3 tests/scripts/restore_config.py
 
 install:
-	cargo install --force --path . --root ~
+	cargo install --force --path .
 
 install-dev:
-	cargo install --debug --force --path . --root ~ 
+	cargo install --debug --force --path .

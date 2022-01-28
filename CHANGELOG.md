@@ -1,5 +1,19 @@
 # Changelog for Ferium
 
+## [3.11.1] - 28.01.2022
+
+Windows MSVC support!
+
+- The makefile target `build-win` now builds for Windows MSVC
+- The makefile target `build-linux` now builds for GNU Linux and GNU Windows
+- The makefile targets `install` and `install-dev` now install to Cargo's `bin` directory
+- `install-dev` is now the default goal in the makefile
+- `save_config.py` and `restore_config.py` have been updated to use pathlib so that paths are cross platform and no long *NIX paths
+- Added handing for Ferinth's new error
+- The integration tests also don't use hardcoded *NIX paths anymore
+- `check_empty_config()` checks for curse_project now, this was a bug fixed by [SolidTux](https://github.com/SolidTux) in [PR #2](https://github.com/theRookieCoder/ferium/pull/2)
+- Move Python scripts for testing to `tests/scripts/`
+
 ## [3.11.0] - 23.01.2022
 
 ### CURSEFORGE SUPPORT!

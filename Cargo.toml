@@ -2,12 +2,21 @@
 name = "ferium"
 version = "3.11.1"
 edition = "2021"
-authors = ["theRookieCoder <ileshkt@gmail.com>"]
-description = "Ferium is an easy to use CLI program for managing Minecraft mods from Modrinth, CurseForge, and Github Releases"
+authors = ["theRookieCoder <ileshkt@gmail.com>", "Daniel Hauck (SolidTux)"]
+description = "Ferium is a CLI program for managing Minecraft mods from Modrinth, CurseForge, and Github Releases"
+exclude = ["tests"] # Don't need tests for installing using crates.io
 repository = "https://github.com/theRookieCoder/ferium"
+categories = ["command-line-utilities"]
 readme = "README.md"
 license = "MPL-2.0"
 publish = false
+keywords = [
+	"minecraft",
+	"cli",
+	"mod-manager",
+	"modrinth",
+	"curseforge"
+]
 
 [dependencies]
 # Use `rustls` rather than OpenSSL
