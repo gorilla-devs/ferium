@@ -5,8 +5,6 @@ use std::path::PathBuf;
 
 use clap::{AppSettings, Parser, Subcommand};
 
-use super::json::ModLoaders;
-
 #[derive(Parser)]
 #[clap(author, version, about)]
 #[clap(global_setting(AppSettings::PropagateVersion))]
@@ -87,7 +85,7 @@ pub enum ProfileSubCommands {
 		#[clap(long)]
 		#[clap(arg_enum)]
 		#[clap(help("The mod loader to check compatibility for"))]
-		mod_loader: Option<ModLoaders>,
+		mod_loader: Option<libium::config::structs::ModLoaders>,
 		#[clap(long)]
 		#[clap(help("The name of the profile"))]
 		name: Option<String>,
@@ -106,7 +104,7 @@ pub enum ProfileSubCommands {
 		#[clap(long)]
 		#[clap(arg_enum)]
 		#[clap(help("The mod loader to check compatibility for"))]
-		mod_loader: Option<ModLoaders>,
+		mod_loader: Option<libium::config::structs::ModLoaders>,
 		#[clap(long)]
 		#[clap(help("The name of the profile"))]
 		name: Option<String>,

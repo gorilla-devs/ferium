@@ -22,16 +22,13 @@ keywords = [
 reqwest = { version = "0", default-features = false, features = ["rustls-tls"] }
 octocrab = { version = "0", default-features = false, features = ["rustls"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
-serde = { version = "1", features = ["derive"] }
 clap = { version = "3", features = ["derive"] }
-shellexpand = "2"
+libium = { path = "../libium" }
 serde_json = "1"
 ansi_term = "0"
 dialoguer = "0"
 thiserror = "1"
 ferinth = "1"
 online = "3"
-bytes = "1"
+semver = "1"
 furse = "1"
-onig = "6"
-rfd = "0"

@@ -1,22 +1,20 @@
-mod util;
+mod error;
+mod cli;
 
 use ansi_term::Colour::{Green, White};
 use clap::StructOpt;
-use dialoguer::{theme::ColorfulTheme, Input, MultiSelect, Select};
+use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select};
+use error::{Error, Result};
 use ferinth::Ferinth;
 use furse::Furse;
+use libium::{config, launchermeta, misc};
 use octocrab::Octocrab;
 use std::{
 	fs::{create_dir_all, OpenOptions},
 	io::Write,
 	path::PathBuf,
 };
-use util::{
-	cli::{Ferium, ProfileSubCommands, SubCommands},
-	ferium_error,
-	ferium_error::{FError, FResult},
-	json, launchermeta, wrappers,
-};
+use cli::{Ferium, ProfileSubCommands, SubCommands};
 
 #[tokio::main]
 async fn main() {
@@ -28,9 +26,9 @@ async fn main() {
 	}
 }
 
-async fn actual_main() -> FResult<()> {
+async fn actual_main() -> Result<()> {
 	// Get the command to execute from Clap
-	// This also displays help page or version
+	// This also displays the help page or version
 	let cli_app = Ferium::parse();
 
 	// Check for an internet connection
@@ -42,7 +40,7 @@ async fn actual_main() -> FResult<()> {
 		match online::check(Some(4)).await {
 			Ok(_) => println!("✓"),
 			Err(_) => {
-				return Err(FError::Quit(
+				return Err(Error::Quit(
 					"× Ferium requires an internet connection to work",
 				))
 			},
@@ -56,17 +54,17 @@ async fn actual_main() -> FResult<()> {
 		"A CurseForge API key is required to build. If you don't have one, you can bypass this by setting the variable to a blank string, however anything using the CurseForge API will not work."
 	));
 	// Ferium's config file
-	let config_file = json::get_config_file()?;
+	let config_file = config::get_config_file(config::config_file_path())?;
 	// Deserialise `config_file` to a config
-	let mut config: json::Config = match serde_json::from_reader(&config_file) {
+	let mut config: config::structs::Config = match serde_json::from_reader(&config_file) {
 		Ok(config) => config,
 		Err(err) => {
-			return Err(FError::QuitFormatted(format!(
+			return Err(Error::QuitFormatted(format!(
 				"Error decoding configuration file, {} at {:?} {}:{}",
 				// Error name
-				FError::JSONError(err.classify()),
+				Error::JSONError(err.classify()),
 				// File path so that users can find it
-				json::get_config_file_path(),
+				config::config_file_path(),
 				// Location within config file
 				err.line(),
 				err.column()
@@ -97,7 +95,7 @@ async fn actual_main() -> FResult<()> {
 		.await?;
 
 		// Update config file with new values
-		json::write_to_config(config_file, &config)?;
+		config::write_config(&config_file, &config)?;
 
 		return Ok(());
 	}
@@ -107,14 +105,14 @@ async fn actual_main() -> FResult<()> {
 		profile
 	} else {
 		if config.profiles.is_empty() {
-			return Err(FError::Quit (
+			return Err(Error::Quit (
 				"There are no profiles configured. Add a profile to your config using `ferium profile create`"
 			));
 		}
 		// Default to first profile if index is set incorrectly
 		config.active_profile = 0;
-		json::write_to_config(config_file, &config)?;
-		return Err(FError::Quit(
+		config::write_config(&config_file, &config)?;
+		return Err(Error::Quit(
 			"Active profile index points to a non existent profile. Switched to first profile",
 		));
 	};
@@ -162,24 +160,24 @@ async fn actual_main() -> FResult<()> {
 	};
 
 	// Update config file with new values
-	json::write_to_config(config_file, &config)?;
+	config::write_config(&config_file, &config)?;
 
 	Ok(())
 }
 
 /// Check if `profile` is empty, and if so return an error
-fn check_empty_profile(profile: &json::Profile) -> FResult<()> {
+fn check_empty_profile(profile: &config::structs::Profile) -> Result<()> {
 	if profile.github_repos.is_empty()
 		&& profile.modrinth_mods.is_empty()
 		&& profile.curse_projects.is_empty()
 	{
-		Err(FError::EmptyConfigFile)
+		Err(Error::EmptyConfigFile)
 	} else {
 		Ok(())
 	}
 }
 
-fn list_profiles(config: &json::Config) {
+fn list_profiles(config: &config::structs::Config) {
 	for profile in &config.profiles {
 		println!(
 			"{}
@@ -201,13 +199,13 @@ fn list_profiles(config: &json::Config) {
 }
 
 async fn create(
-	config: &mut json::Config,
+	config: &mut config::structs::Config,
 	game_version: Option<String>,
 	force_game_version: bool,
-	mod_loader: Option<json::ModLoaders>,
+	mod_loader: Option<config::structs::ModLoaders>,
 	name: Option<String>,
 	output_dir: Option<PathBuf>,
-) -> FResult<()> {
+) -> Result<()> {
 	match (game_version, mod_loader, name, output_dir) {
 		(Some(game_version), Some(mod_loader), Some(name), Some(output_dir)) => {
 			// If force game version is false
@@ -220,7 +218,7 @@ async fn create(
 					.any(|version| version.id == game_version)
 				{
 					// Then error out
-					return Err(FError::QuitFormatted(format!(
+					return Err(Error::QuitFormatted(format!(
 						"The game version {} does not exist",
 						game_version
 					)));
@@ -229,7 +227,7 @@ async fn create(
 			// Check that there isn't already a profile with the same name
 			for profile in &config.profiles {
 				if profile.name == name {
-					return Err(FError::QuitFormatted(format!(
+					return Err(Error::QuitFormatted(format!(
 						"A profile with name {} already exists",
 						name
 					)));
@@ -237,11 +235,11 @@ async fn create(
 			}
 			// Check that the output_dir isn't relative
 			if !output_dir.is_absolute() {
-				return Err(FError::Quit(
+				return Err(Error::Quit(
 					"The provided output directory is not absolute, i.e. it is a relative path",
 				));
 			}
-			config.profiles.push(json::Profile {
+			config.profiles.push(config::structs::Profile {
 				name,
 				output_dir,
 				game_version,
@@ -252,16 +250,73 @@ async fn create(
 			}); // Create profile
 		},
 		(None, None, None, None) => {
+			// Create profile using a UI
 			println!("Please enter the details for the new profile");
-			// Create profile using the UI
-			config
-				.profiles
-				.push(json::Profile::create_ui(config).await?);
+
+			// Let user pick mods directory
+			let mut selected_mods_dir = misc::get_mods_dir();
+			println!("The default mods directory is {:?}", selected_mods_dir);
+			if Confirm::with_theme(&ColorfulTheme::default())
+				.with_prompt("Would you like to specify a custom mods directory?")
+				.interact()?
+			{
+				if let Some(dir) = misc::pick_folder(&selected_mods_dir).await {
+					selected_mods_dir = dir;
+				};
+			}
+
+			let mut name = String::new();
+			let mut prompt = true;
+			while prompt {
+				name = Input::with_theme(&ColorfulTheme::default())
+					.with_prompt("What should this profile be called? ")
+					.interact_text()?;
+
+				prompt = false;
+				for profile in &config.profiles {
+					if profile.name == name {
+						println!("A profile with name {} already exists!", name);
+						prompt = true;
+					}
+				}
+			}
+
+			// Let user pick Minecraft version
+			let mut latest_versions: Vec<String> =
+				misc::get_latest_mc_versions(10, launchermeta::get_version_manifest().await?)?;
+			println!();
+			let selected_version = Select::with_theme(&ColorfulTheme::default())
+				.with_prompt("Which version of Minecraft do you play?")
+				.items(&latest_versions)
+				.default(0)
+				.interact()?;
+			let selected_version = latest_versions.swap_remove(selected_version);
+
+			// Let user pick mod loader
+			let mod_loaders = ["Fabric", "Forge"];
+			let selected_loader = if Select::with_theme(&ColorfulTheme::default())
+				.with_prompt("Which mod loader do you use?")
+				.items(&mod_loaders)
+				.interact()? == 0
+			{
+				config::structs::ModLoaders::Fabric
+			} else {
+				config::structs::ModLoaders::Forge
+			};
+			config.profiles.push(config::structs::Profile {
+				name,
+				output_dir: selected_mods_dir,
+				curse_projects: Vec::new(),
+				modrinth_mods: Vec::new(),
+				github_repos: Vec::new(),
+				game_version: selected_version,
+				mod_loader: selected_loader,
+			});
 		},
 		// Either all or none of these options should exist
 		// TODO: make this into a group in the Clap app
 		_ => {
-			return Err(FError::Quit(
+			return Err(Error::Quit(
 				"Provide all four arguments to create a profile using options",
 			))
 		},
@@ -271,7 +326,7 @@ async fn create(
 	Ok(())
 }
 
-fn delete(config: &mut json::Config, profile_name: Option<String>) -> FResult<()> {
+fn delete(config: &mut config::structs::Config, profile_name: Option<String>) -> Result<()> {
 	let selection = match profile_name {
 		// If the profile name has been provided as an option
 		Some(profile_name) => {
@@ -287,7 +342,7 @@ fn delete(config: &mut json::Config, profile_name: Option<String>) -> FResult<()
 				// If the profile is found, return its index
 				Ok(selection) => selection,
 				// Else return an error
-				Err(_) => return Err(FError::Quit("The profile name provided does not exist")),
+				Err(_) => return Err(Error::Quit("The profile name provided does not exist")),
 			}
 		},
 		None => {
@@ -320,9 +375,9 @@ fn delete(config: &mut json::Config, profile_name: Option<String>) -> FResult<()
 	Ok(())
 }
 
-fn switch(config: &mut json::Config, profile_name: Option<String>) -> FResult<()> {
+fn switch(config: &mut config::structs::Config, profile_name: Option<String>) -> Result<()> {
 	if config.profiles.len() < 2 {
-		Err(FError::Quit("There is less than 2 profiles in your config"))
+		Err(Error::Quit("There is less than 2 profiles in your config"))
 	} else if let Some(profile_name) = profile_name {
 		// Sort profiles by name
 		config
@@ -337,7 +392,7 @@ fn switch(config: &mut json::Config, profile_name: Option<String>) -> FResult<()
 				config.active_profile = selection;
 				Ok(())
 			},
-			Err(_) => Err(FError::Quit("The profile provided does not exist")),
+			Err(_) => Err(Error::Quit("The profile provided does not exist")),
 		}
 	} else {
 		let profile_names = config
@@ -357,12 +412,12 @@ fn switch(config: &mut json::Config, profile_name: Option<String>) -> FResult<()
 }
 
 async fn configure(
-	profile: &mut json::Profile,
+	profile: &mut config::structs::Profile,
 	game_version: Option<String>,
-	mod_loader: Option<json::ModLoaders>,
+	mod_loader: Option<config::structs::ModLoaders>,
 	name: Option<String>,
 	output_dir: Option<PathBuf>,
-) -> FResult<()> {
+) -> Result<()> {
 	let mut interactive = true;
 
 	if let Some(game_version) = game_version {
@@ -411,17 +466,20 @@ async fn configure(
 							White.bold().paint("Pick a mod output directory   "),
 						);
 						// Let user pick output directory
-						if let Some(dir) = wrappers::pick_folder(&profile.output_dir).await {
+						if let Some(dir) = misc::pick_folder(&profile.output_dir).await {
 							profile.output_dir = dir;
 						}
 						println!(
 							"{}",
-							Green.paint(profile.output_dir.to_str().ok_or(FError::OptionError)?)
+							Green.paint(profile.output_dir.to_str().ok_or(Error::OptionError)?)
 						);
 					},
 					1 => {
 						// Let user pick mc version from latest 10 versions
-						let mut versions = wrappers::get_latest_mc_versions(10).await?;
+						let mut versions = misc::get_latest_mc_versions(
+							10,
+							launchermeta::get_version_manifest().await?,
+						)?;
 						let index = Select::with_theme(&ColorfulTheme::default())
 							.with_prompt("Select a Minecraft version")
 							.items(&versions)
@@ -438,14 +496,14 @@ async fn configure(
 							.with_prompt("Pick a mod loader")
 							.items(&mod_loaders)
 							.default(match profile.mod_loader {
-								json::ModLoaders::Fabric => 0,
-								json::ModLoaders::Forge => 1,
+								config::structs::ModLoaders::Fabric => 0,
+								config::structs::ModLoaders::Forge => 1,
 							})
 							.interact_opt()?;
 						if index == Some(0) {
-							profile.mod_loader = json::ModLoaders::Fabric;
+							profile.mod_loader = config::structs::ModLoaders::Fabric;
 						} else if index == Some(1) {
-							profile.mod_loader = json::ModLoaders::Forge;
+							profile.mod_loader = config::structs::ModLoaders::Forge;
 						}
 					},
 					3 => {
@@ -473,9 +531,9 @@ async fn remove(
 	curseforge: &Furse,
 	modrinth: &Ferinth,
 	github: &Octocrab,
-	profile: &mut json::Profile,
+	profile: &mut config::structs::Profile,
 	mod_names: Option<Vec<String>>,
-) -> FResult<()> {
+) -> Result<()> {
 	let mut names: Vec<String> = Vec::new();
 
 	// Get the names of the mods
@@ -518,7 +576,7 @@ async fn remove(
 
 				// If a mod is not found, throw an error
 				if !found_mod {
-					return Err(FError::QuitFormatted(format!(
+					return Err(Error::QuitFormatted(format!(
 						"A mod called {} is not present in this profile",
 						mod_name
 					)));
@@ -574,8 +632,8 @@ async fn add_repo_github(
 	github: &Octocrab,
 	owner: String,
 	repo_name: String,
-	profile: &mut json::Profile,
-) -> FResult<()> {
+	profile: &mut config::structs::Profile,
+) -> Result<()> {
 	eprint!("Adding GitHub repository... ");
 
 	// Get repository and releases data
@@ -585,14 +643,14 @@ async fn add_repo_github(
 	let repo_name_split = repo
 		.full_name
 		.as_ref()
-		.ok_or(FError::OptionError)?
+		.ok_or(Error::OptionError)?
 		.split('/')
 		.collect::<Vec<_>>();
 	let repo_name = (repo_name_split[0].into(), repo_name_split[1].into());
 
 	// Check if repo has already been added
 	if profile.github_repos.contains(&repo_name) {
-		return Err(FError::Quit("× Repository already added to profile!"));
+		return Err(Error::Quit("× Repository already added to profile!"));
 	}
 
 	let releases = repo_handler.releases().list().send().await?;
@@ -614,7 +672,7 @@ async fn add_repo_github(
 		profile.github_repos.push(repo_name);
 		println!("✓");
 	} else {
-		return Err(FError::Quit("× Repository does not release mods!"));
+		return Err(Error::Quit("× Repository does not release mods!"));
 	}
 
 	Ok(())
@@ -624,8 +682,8 @@ async fn add_repo_github(
 async fn add_mod_modrinth(
 	modrinth: &Ferinth,
 	mod_id: String,
-	profile: &mut json::Profile,
-) -> FResult<()> {
+	profile: &mut config::structs::Profile,
+) -> Result<()> {
 	eprint!("Adding Modrinth mod... ");
 
 	// Check if mod exists
@@ -633,7 +691,7 @@ async fn add_mod_modrinth(
 		Ok(mod_) => {
 			// Check if mod has already been added
 			if profile.modrinth_mods.contains(&mod_.id) {
-				return Err(FError::Quit("× Mod already added to profile!"));
+				return Err(Error::Quit("× Mod already added to profile!"));
 			}
 			// And if it hasn't, append mod to profile and write
 			profile.modrinth_mods.push(mod_.id);
@@ -643,7 +701,7 @@ async fn add_mod_modrinth(
 		},
 		Err(_) => {
 			// Else return an error
-			Err(FError::QuitFormatted(format!(
+			Err(Error::QuitFormatted(format!(
 				"× Mod with ID `{}` does not exist!",
 				mod_id
 			)))
@@ -654,22 +712,22 @@ async fn add_mod_modrinth(
 async fn add_project_curseforge(
 	curseforge: &Furse,
 	project_id: i32,
-	profile: &mut json::Profile,
-) -> FResult<()> {
+	profile: &mut config::structs::Profile,
+) -> Result<()> {
 	eprint!("Adding CurseForge mod... ");
 
 	// Check if project exists
 	match curseforge.get_mod(project_id).await {
 		Ok(project) => {
 			if profile.curse_projects.contains(&project.id) {
-				Err(FError::Quit("× Project already added to profile!"))
+				Err(Error::Quit("× Project already added to profile!"))
 			} else {
 				profile.curse_projects.push(project.id);
 				println!("✓ ({})", project.name);
 				Ok(())
 			}
 		},
-		Err(err) => Err(FError::QuitFormatted(format!(
+		Err(err) => Err(Error::QuitFormatted(format!(
 			"× Project with ID `{}` does not exist! ({})",
 			project_id, err
 		))),
@@ -681,9 +739,9 @@ async fn list(
 	curseforge: &Furse,
 	modrinth: &Ferinth,
 	github: &Octocrab,
-	profile: &json::Profile,
+	profile: &config::structs::Profile,
 	verbose: bool,
-) -> FResult<()> {
+) -> Result<()> {
 	for project_id in &profile.curse_projects {
 		let project = curseforge.get_mod(*project_id).await?;
 		let mut authors = String::new();
@@ -808,9 +866,9 @@ async fn list(
 				repo.name,
 				repo.description
 					.map_or("".into(), |description| { format!("\n  {}", description) }),
-				repo.html_url.ok_or(FError::OptionError)?,
+				repo.html_url.ok_or(Error::OptionError)?,
 				downloads,
-				repo.owner.ok_or(FError::OptionError)?.login,
+				repo.owner.ok_or(Error::OptionError)?.login,
 				if let Some(license) = repo.license {
 					format!(
 						"\n  License:        {}{}",
@@ -831,7 +889,7 @@ async fn list(
 				repo.name,
 				repo.description
 					.map_or("".into(), |description| { format!("\n  {}", description) }),
-				repo.html_url.ok_or(FError::OptionError)?,
+				repo.html_url.ok_or(Error::OptionError)?,
 				if let Some(license) = repo.license {
 					format!("\n  License:  {}", license.name)
 				} else {
@@ -846,9 +904,9 @@ async fn list(
 
 async fn upgrade_curseforge(
 	curseforge: &Furse,
-	profile: &json::Profile,
+	profile: &config::structs::Profile,
 	no_patch_check: bool,
-) -> FResult<()> {
+) -> Result<()> {
 	for project_id in &profile.curse_projects {
 		let project = curseforge.get_mod(*project_id).await?;
 		println!("Downloading {}", project.name);
@@ -862,7 +920,7 @@ async fn upgrade_curseforge(
 		files.reverse();
 
 		let mut latest_compatible_file = None;
-		let game_version_to_check = wrappers::remove_semver_patch(&profile.game_version)?;
+		let game_version_to_check = misc::remove_semver_patch(&profile.game_version)?;
 
 		for file in &files {
 			if no_patch_check {
@@ -911,7 +969,7 @@ async fn upgrade_curseforge(
 				println!("✓\n");
 			},
 			None => {
-				return Err(FError::QuitFormatted(format!(
+				return Err(Error::QuitFormatted(format!(
 					"× No version of {} is compatible for {} {}",
 					project.name, profile.mod_loader, profile.game_version,
 				)));
@@ -925,16 +983,16 @@ async fn upgrade_curseforge(
 /// Download and install all the GitHub mods in `profile`
 async fn upgrade_github(
 	github: &Octocrab,
-	profile: &json::Profile,
+	profile: &config::structs::Profile,
 	no_picker: bool,
-) -> FResult<()> {
+) -> Result<()> {
 	for repo_name in &profile.github_repos {
 		println!("Downloading {}", repo_name.1);
 		eprint!("  [1] Getting release information... ");
 
 		let repo_handler = github.repos(&repo_name.0, &repo_name.1);
 		let releases = repo_handler.releases().list().send().await?;
-		let version_to_check = wrappers::remove_semver_patch(&profile.game_version)?;
+		let version_to_check = misc::remove_semver_patch(&profile.game_version)?;
 
 		// A vector of assets that are compatible with the game version and mod loader
 		let mut asset_candidates = Vec::new();
@@ -958,11 +1016,11 @@ async fn upgrade_github(
                     // Check if the game version is compatible
                     && (
                         // Check the release body
-                        release.body.as_ref().ok_or(FError::OptionError)?.contains(&version_to_check)
+                        release.body.as_ref().ok_or(Error::OptionError)?.contains(&version_to_check)
                         // the asset's name
                         || asset.name.contains(&version_to_check)
 						// and even the release name
-                        || release.name.as_ref().ok_or(FError::OptionError)?.contains(&version_to_check))
+                        || release.name.as_ref().ok_or(Error::OptionError)?.contains(&version_to_check))
                     // Check if its a JAR file
                     && asset.name.contains("jar")
 				{
@@ -978,7 +1036,7 @@ async fn upgrade_github(
 			asset_candidates[0]
 		// If none were found, error out
 		} else if asset_candidates.is_empty() {
-			return Err(FError::Quit(
+			return Err(Error::Quit(
 				"× Could not find a compatible asset to download",
 			));
 		// If more than 1 was found, let the user select which one to use
@@ -1026,9 +1084,9 @@ async fn upgrade_github(
 /// Download and install all Modrinth mods in `profile`
 async fn upgrade_modrinth(
 	modrinth: &Ferinth,
-	profile: &json::Profile,
+	profile: &config::structs::Profile,
 	no_patch_check: bool,
-) -> FResult<()> {
+) -> Result<()> {
 	for mod_id in &profile.modrinth_mods {
 		// Get mod metadata
 		let mod_ = modrinth.get_mod(mod_id).await?;
@@ -1037,7 +1095,7 @@ async fn upgrade_modrinth(
 		eprint!("  [1] Getting version information... ");
 		// Get the versions of the mod
 		let versions = modrinth.list_versions(&mod_.id).await?;
-		let game_version_to_check = wrappers::remove_semver_patch(&profile.game_version)?;
+		let game_version_to_check = misc::remove_semver_patch(&profile.game_version)?;
 
 		let mut latest_compatible_version = None;
 
@@ -1073,7 +1131,7 @@ async fn upgrade_modrinth(
 			Some(version) => version,
 			// If version compatible with game version does not exist, throw an error
 			None => {
-				return Err(FError::QuitFormatted(format!(
+				return Err(Error::QuitFormatted(format!(
 					"× No version of {} is compatible for {} {}",
 					mod_.title, profile.mod_loader, profile.game_version,
 				)));
