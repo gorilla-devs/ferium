@@ -1,9 +1,8 @@
 //! Contains convenience wrappers for argument parsing using Clap
 #![deny(missing_docs)] // All commands must have help/about statements
 
-use std::path::PathBuf;
-
 use clap::{AppSettings, Parser, Subcommand};
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[clap(author, version, about)]

@@ -54,6 +54,7 @@ test:
 		-A clippy::let-underscore-drop \
 		-A clippy::multiple-crate-versions \
 		-A clippy::non-ascii-literal \
+		-A clippy::enum-variant-names \
 		-A clippy::too-many-lines \
 		-A clippy::single-match-else
 	python3 tests/scripts/save_config.py
@@ -66,3 +67,8 @@ install:
 
 install-dev:
 	cargo install --debug --force --path .
+
+clean:
+	cargo clean
+	rm -r out
+	rm -r tests/mods

@@ -1,20 +1,20 @@
-mod error;
 mod cli;
+mod error;
 
 use ansi_term::Colour::{Green, White};
 use clap::StructOpt;
+use cli::{Ferium, ProfileSubCommands, SubCommands};
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select};
 use error::{Error, Result};
 use ferinth::Ferinth;
 use furse::Furse;
 use libium::{config, launchermeta, misc};
 use octocrab::Octocrab;
-use std::{
+use std::path::PathBuf;
+use tokio::{
 	fs::{create_dir_all, OpenOptions},
-	io::Write,
-	path::PathBuf,
+	io::{AsyncReadExt, AsyncWriteExt},
 };
-use cli::{Ferium, ProfileSubCommands, SubCommands};
 
 #[tokio::main]
 async fn main() {
@@ -35,7 +35,7 @@ async fn actual_main() -> Result<()> {
 	if online::check(Some(1)).await.is_err() {
 		// If it takes more than 1 second
 		// show that we're checking the internet connection
-		// and wait for 4 more seconds
+		// and check for 4 more seconds
 		eprint!("Checking internet connection... ");
 		match online::check(Some(4)).await {
 			Ok(_) => println!("✓"),
@@ -54,9 +54,13 @@ async fn actual_main() -> Result<()> {
 		"A CurseForge API key is required to build. If you don't have one, you can bypass this by setting the variable to a blank string, however anything using the CurseForge API will not work."
 	));
 	// Ferium's config file
-	let config_file = config::get_config_file(config::config_file_path())?;
+	let mut config_file = config::get_config_file(config::config_file_path()).await?;
+	let mut config_file_contents = String::new();
+	config_file
+		.read_to_string(&mut config_file_contents)
+		.await?;
 	// Deserialise `config_file` to a config
-	let mut config: config::structs::Config = match serde_json::from_reader(&config_file) {
+	let mut config: config::structs::Config = match serde_json::from_str(&config_file_contents) {
 		Ok(config) => config,
 		Err(err) => {
 			return Err(Error::QuitFormatted(format!(
@@ -94,9 +98,8 @@ async fn actual_main() -> Result<()> {
 		)
 		.await?;
 
-		// Update config file with new values
-		config::write_config(&config_file, &config)?;
-
+		// Update config file with new values and quit
+		config::write_config(&mut config_file, &config).await?;
 		return Ok(());
 	}
 
@@ -111,7 +114,7 @@ async fn actual_main() -> Result<()> {
 		}
 		// Default to first profile if index is set incorrectly
 		config.active_profile = 0;
-		config::write_config(&config_file, &config)?;
+		config::write_config(&mut config_file, &config).await?;
 		return Err(Error::Quit(
 			"Active profile index points to a non existent profile. Switched to first profile",
 		));
@@ -152,7 +155,7 @@ async fn actual_main() -> Result<()> {
 			no_patch_check,
 		} => {
 			check_empty_profile(profile)?;
-			create_dir_all(&profile.output_dir)?;
+			create_dir_all(&profile.output_dir).await?;
 			upgrade_curseforge(&curseforge, profile, no_patch_check).await?;
 			upgrade_modrinth(&modrinth, profile, no_patch_check).await?;
 			upgrade_github(&github, profile, no_picker).await?;
@@ -160,7 +163,7 @@ async fn actual_main() -> Result<()> {
 	};
 
 	// Update config file with new values
-	config::write_config(&config_file, &config)?;
+	config::write_config(&mut config_file, &config).await?;
 
 	Ok(())
 }
@@ -269,7 +272,7 @@ async fn create(
 			let mut prompt = true;
 			while prompt {
 				name = Input::with_theme(&ColorfulTheme::default())
-					.with_prompt("What should this profile be called? ")
+					.with_prompt("What should this profile be called?")
 					.interact_text()?;
 
 				prompt = false;
@@ -539,7 +542,7 @@ async fn remove(
 	// Get the names of the mods
 	eprint!("Gathering mod names... ");
 	for mod_id in &profile.modrinth_mods {
-		let mod_ = modrinth.get_mod(mod_id).await?;
+		let mod_ = modrinth.get_project(mod_id).await?;
 		names.push(mod_.title);
 	}
 
@@ -687,7 +690,7 @@ async fn add_mod_modrinth(
 	eprint!("Adding Modrinth mod... ");
 
 	// Check if mod exists
-	match modrinth.get_mod(&mod_id).await {
+	match modrinth.get_project(&mod_id).await {
 		Ok(mod_) => {
 			// Check if mod has already been added
 			if profile.modrinth_mods.contains(&mod_.id) {
@@ -784,15 +787,14 @@ async fn list(
 
 	for mod_id in &profile.modrinth_mods {
 		// Get mod metadata
-		let mod_ = modrinth.get_mod(mod_id).await?;
+		let mod_ = modrinth.get_project(mod_id).await?;
 		if verbose {
 			let team_members = modrinth.list_team_members(&mod_.team).await?;
 
 			// Get the usernames of all the developers
 			let mut developers = String::new();
 			for member in team_members {
-				let user = modrinth.get_user(&member.user_id).await?;
-				developers.push_str(&user.username);
+				developers.push_str(&member.user.username);
 				developers.push_str(", ");
 			}
 			// Trim trailing ', '
@@ -806,8 +808,8 @@ async fn list(
             \r  Open Source:    {}
             \r  Downloads:      {}
             \r  Developers:     {}
-            \r  Client side:    {}
-            \r  Server side:    {}
+            \r  Client side:    {:?}
+            \r  Server side:    {:?}
             \r  License:        {}{}\n",
 				mod_.title,
 				mod_.description,
@@ -959,13 +961,14 @@ async fn upgrade_curseforge(
 					.write(true)
 					.truncate(true)
 					.create(true)
-					.open(profile.output_dir.join(&latest_compatible_file.file_name))?;
+					.open(profile.output_dir.join(&latest_compatible_file.file_name))
+					.await?;
 
 				let file_contents = curseforge
 					.download_mod_file_from_file(latest_compatible_file)
 					.await?;
 
-				mod_file.write_all(&file_contents)?;
+				mod_file.write_all(&file_contents).await?;
 				println!("✓\n");
 			},
 			None => {
@@ -1071,10 +1074,11 @@ async fn upgrade_github(
 			.write(true)
 			.truncate(true)
 			.create(true)
-			.open(profile.output_dir.join(&asset_to_download.name))?;
+			.open(profile.output_dir.join(&asset_to_download.name))
+			.await?;
 
 		// Write download to mod JAR file
-		mod_file.write_all(&contents)?;
+		mod_file.write_all(&contents).await?;
 		println!("✓\n");
 	}
 
@@ -1089,7 +1093,7 @@ async fn upgrade_modrinth(
 ) -> Result<()> {
 	for mod_id in &profile.modrinth_mods {
 		// Get mod metadata
-		let mod_ = modrinth.get_mod(mod_id).await?;
+		let mod_ = modrinth.get_project(mod_id).await?;
 		println!("Downloading {}", mod_.title);
 
 		eprint!("  [1] Getting version information... ");
@@ -1153,10 +1157,11 @@ async fn upgrade_modrinth(
 			.write(true)
 			.truncate(true)
 			.create(true)
-			.open(profile.output_dir.join(&latest_version.files[0].filename))?;
+			.open(profile.output_dir.join(&latest_version.files[0].filename))
+			.await?;
 
 		// Write contents to JAR file
-		mod_file.write_all(&contents)?;
+		mod_file.write_all(&contents).await?;
 		println!("✓\n");
 	}
 

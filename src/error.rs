@@ -41,6 +41,8 @@ pub enum Error {
 	FerinthNotSHA1Error,
 	#[error("Could not parse a semver version, {}", .0)]
 	SemverError(#[from] semver::Error),
+	#[error("Could not parse url, {}", .0)]
+	URLParseError(url::ParseError),
 	/// The application should print `message` and quit (gracefully)
 	#[error("{}", .0)]
 	Quit(&'static str),
@@ -57,7 +59,7 @@ impl From<octocrab::Error> for Error {
 			octocrab::Error::Json { source, .. } => Self::JSONError(source.inner().classify()),
 			octocrab::Error::Other { source, .. } => Self::OctocrabError(source.to_string()),
 			octocrab::Error::Serde { source, .. } => Self::JSONError(source.classify()),
-			octocrab::Error::Url { source, .. } => Self::OctocrabError(source.to_string()),
+			octocrab::Error::Url { source, .. } => Self::URLParseError(source),
 			octocrab::Error::JWT { source, .. } => Self::OctocrabError(source.to_string()),
 		}
 	}
@@ -69,6 +71,7 @@ impl From<ferinth::Error> for Error {
 			ferinth::Error::NotBase62 => Self::FerinthBase62Error,
 			ferinth::Error::NotSHA1 => Self::FerinthNotSHA1Error,
 			ferinth::Error::ReqwestError(err) => Self::ReqwestError(err),
+    		ferinth::Error::URLParseError(err) => Self::URLParseError(err),
 		}
 	}
 }
