@@ -1,9 +1,9 @@
 //! Contains error handling helpers
 
-pub type FResult<T> = std::result::Result<T, FError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(thiserror::Error, Debug)]
-pub enum FError {
+pub enum Error {
 	/// The current profile does not contain mods or repos
 	#[error(
 		"Your current profile is empty! Run `ferium help` to see how to add mods or repositories"
@@ -18,10 +18,6 @@ pub enum FError {
 	/// Failure to unwrap an Option, akin to `NullPointerError`s
 	#[error("Could not access an expected value")]
 	OptionError,
-	/// Failed to parse a regular expression
-	#[error("Failed to parse a regular expression due to {}", .0)]
-	RegexError(#[from] onig::Error),
-	/// A JSON error occured
 	#[error("{}", match .0 {
         serde_json::error::Category::Syntax => {
             "Syntax error encountered in JSON file"
@@ -37,16 +33,16 @@ pub enum FError {
         },
     })]
 	JSONError(serde_json::error::Category),
-	/// An I/O error occured
 	#[error("Encountered an input/output error, {}", .0.to_string())]
 	IOError(#[from] std::io::Error),
-	/// The program is running on an unsupported device
-	#[error("The device you are currently running on is unsupported by Ferium")]
-	InvalidDeviceError,
 	#[error("Invalid request parameter")]
 	FerinthBase62Error,
 	#[error("Invalid SHA1 hash")]
 	FerinthNotSHA1Error,
+	#[error("Could not parse a semver version, {}", .0)]
+	SemverError(#[from] semver::Error),
+	#[error("Could not parse url, {}", .0)]
+	URLParseError(url::ParseError),
 	/// The application should print `message` and quit (gracefully)
 	#[error("{}", .0)]
 	Quit(&'static str),
@@ -55,7 +51,7 @@ pub enum FError {
 	QuitFormatted(String),
 }
 
-impl From<octocrab::Error> for FError {
+impl From<octocrab::Error> for Error {
 	fn from(err: octocrab::Error) -> Self {
 		match err {
 			octocrab::Error::GitHub { source, .. } => Self::OctocrabError(source.message),
@@ -63,23 +59,24 @@ impl From<octocrab::Error> for FError {
 			octocrab::Error::Json { source, .. } => Self::JSONError(source.inner().classify()),
 			octocrab::Error::Other { source, .. } => Self::OctocrabError(source.to_string()),
 			octocrab::Error::Serde { source, .. } => Self::JSONError(source.classify()),
-			octocrab::Error::Url { source, .. } => Self::OctocrabError(source.to_string()),
+			octocrab::Error::Url { source, .. } => Self::URLParseError(source),
 			octocrab::Error::JWT { source, .. } => Self::OctocrabError(source.to_string()),
 		}
 	}
 }
 
-impl From<ferinth::Error> for FError {
+impl From<ferinth::Error> for Error {
 	fn from(err: ferinth::Error) -> Self {
 		match err {
 			ferinth::Error::NotBase62 => Self::FerinthBase62Error,
 			ferinth::Error::NotSHA1 => Self::FerinthNotSHA1Error,
 			ferinth::Error::ReqwestError(err) => Self::ReqwestError(err),
+    		ferinth::Error::URLParseError(err) => Self::URLParseError(err),
 		}
 	}
 }
 
-impl From<serde_json::error::Error> for FError {
+impl From<serde_json::error::Error> for Error {
 	fn from(err: serde_json::error::Error) -> Self {
 		Self::JSONError(err.classify())
 	}

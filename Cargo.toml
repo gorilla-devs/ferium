@@ -1,6 +1,6 @@
 [package]
 name = "ferium"
-version = "3.11.1"
+version = "3.12.0"
 edition = "2021"
 authors = ["theRookieCoder <ileshkt@gmail.com>", "Daniel Hauck (SolidTux)"]
 description = "Ferium is a CLI program for managing Minecraft mods from Modrinth, CurseForge, and Github Releases"
@@ -19,19 +19,17 @@ keywords = [
 
 [dependencies]
 # Use `rustls` rather than OpenSSL
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros"] }
 reqwest = { version = "0", default-features = false, features = ["rustls-tls"] }
 octocrab = { version = "0", default-features = false, features = ["rustls"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
-serde = { version = "1", features = ["derive"] }
 clap = { version = "3", features = ["derive"] }
-shellexpand = "2"
 serde_json = "1"
 ansi_term = "0"
 dialoguer = "0"
 thiserror = "1"
-ferinth = "1"
+ferinth = "2"
+libium = "1"
 online = "3"
-bytes = "1"
+semver = "1"
 furse = "1"
-onig = "6"
-rfd = "0"
+url = "2"

@@ -1,11 +1,8 @@
 //! Contains convenience wrappers for argument parsing using Clap
 #![deny(missing_docs)] // All commands must have help/about statements
 
-use std::path::PathBuf;
-
 use clap::{AppSettings, Parser, Subcommand};
-
-use super::json::ModLoaders;
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[clap(author, version, about)]
@@ -36,11 +33,7 @@ pub enum SubCommands {
 		project_id: i32,
 	},
 	#[clap(about("List all the mods in the profile with some their metadata"))]
-	List {
-		#[clap(short, long)]
-		#[clap(help("Print more data about mods. Increases loading time"))]
-		verbose: bool,
-	},
+	List,
 	#[clap(setting(AppSettings::SubcommandRequiredElseHelp))]
 	#[clap(about("Create, configure, or remove the current profile"))]
 	Profile {
@@ -87,7 +80,7 @@ pub enum ProfileSubCommands {
 		#[clap(long)]
 		#[clap(arg_enum)]
 		#[clap(help("The mod loader to check compatibility for"))]
-		mod_loader: Option<ModLoaders>,
+		mod_loader: Option<libium::config::structs::ModLoaders>,
 		#[clap(long)]
 		#[clap(help("The name of the profile"))]
 		name: Option<String>,
@@ -106,7 +99,7 @@ pub enum ProfileSubCommands {
 		#[clap(long)]
 		#[clap(arg_enum)]
 		#[clap(help("The mod loader to check compatibility for"))]
-		mod_loader: Option<ModLoaders>,
+		mod_loader: Option<libium::config::structs::ModLoaders>,
 		#[clap(long)]
 		#[clap(help("The name of the profile"))]
 		name: Option<String>,

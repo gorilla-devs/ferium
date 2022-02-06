@@ -1,5 +1,27 @@
 # Changelog for Ferium
 
+## [3.12.0] - 06.02.2022
+
+Migrated to [Libium](https://crates.io/crates/libium)!
+
+- Removed unneeded dependencies
+- Removed the following which were replaced by libium:
+  - `json.rs`
+  - `launchermeta.rs`
+  - `wrappers.rs`
+  - `src/util`
+- Moved `util/cli.rs` and `util/ferium_error.rs` to `src/cli.rs` and `src/error.rs`
+- Changed errors to the more typical style, `Error` and  `Result` in a `src/error.rs`
+- Removed `InvalidDeviceError`, libium just panics instead as it should've never been compiled on an incompatible platform
+- Move the `Profile::create_ui()` function to the `main.rs` file
+- Upgrade to Ferinth v2
+- Add `clean` target to makefile
+- Add `URLParseError` from Ferinth
+- Switch to an asynchronous std using tokio
+- Removed verbose flag for list
+- Simplify switch profile
+- Use libium from crates.io
+
 ## [3.11.1] - 28.01.2022
 
 Windows MSVC support!
