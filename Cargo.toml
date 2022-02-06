@@ -23,12 +23,12 @@ tokio = { version = "1", default-features = false, features = ["rt-multi-thread"
 reqwest = { version = "0", default-features = false, features = ["rustls-tls"] }
 octocrab = { version = "0", default-features = false, features = ["rustls"] }
 clap = { version = "3", features = ["derive"] }
-libium = { path = "../libium" }
 serde_json = "1"
 ansi_term = "0"
 dialoguer = "0"
 thiserror = "1"
 ferinth = "2"
+libium = "1"
 online = "3"
 semver = "1"
 furse = "1"

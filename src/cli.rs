@@ -33,11 +33,7 @@ pub enum SubCommands {
 		project_id: i32,
 	},
 	#[clap(about("List all the mods in the profile with some their metadata"))]
-	List {
-		#[clap(short, long)]
-		#[clap(help("Print more data about mods. Increases loading time"))]
-		verbose: bool,
-	},
+	List,
 	#[clap(setting(AppSettings::SubcommandRequiredElseHelp))]
 	#[clap(about("Create, configure, or remove the current profile"))]
 	Profile {

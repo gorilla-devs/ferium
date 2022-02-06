@@ -129,9 +129,9 @@ async fn actual_main() -> Result<()> {
 		SubCommands::AddCurseforge { project_id } => {
 			add_project_curseforge(&curseforge, project_id, profile).await?;
 		},
-		SubCommands::List { verbose } => {
+		SubCommands::List => {
 			check_empty_profile(profile)?;
-			list(&curseforge, &modrinth, &github, profile, verbose).await?;
+			list(&curseforge, &modrinth, &github, profile).await?;
 		},
 		SubCommands::Profile { subcommand } => match subcommand {
 			ProfileSubCommands::Configure {
@@ -382,20 +382,16 @@ fn switch(config: &mut config::structs::Config, profile_name: Option<String>) ->
 	if config.profiles.len() < 2 {
 		Err(Error::Quit("There is less than 2 profiles in your config"))
 	} else if let Some(profile_name) = profile_name {
-		// Sort profiles by name
-		config
-			.profiles
-			.sort_unstable_by_key(|profile| profile.name.clone());
-		// Binary search the profile
 		match config
 			.profiles
-			.binary_search_by_key(&&profile_name, |profile| &profile.name)
+			.iter()
+			.position(|profile| profile.name == profile_name)
 		{
-			Ok(selection) => {
+			Some(selection) => {
 				config.active_profile = selection;
 				Ok(())
 			},
-			Err(_) => Err(Error::Quit("The profile provided does not exist")),
+			None => Err(Error::Quit("The profile provided does not exist")),
 		}
 	} else {
 		let profile_names = config
@@ -743,7 +739,6 @@ async fn list(
 	modrinth: &Ferinth,
 	github: &Octocrab,
 	profile: &config::structs::Profile,
-	verbose: bool,
 ) -> Result<()> {
 	for project_id in &profile.curse_projects {
 		let project = curseforge.get_mod(*project_id).await?;
@@ -788,20 +783,19 @@ async fn list(
 	for mod_id in &profile.modrinth_mods {
 		// Get mod metadata
 		let mod_ = modrinth.get_project(mod_id).await?;
-		if verbose {
-			let team_members = modrinth.list_team_members(&mod_.team).await?;
+		let team_members = modrinth.list_team_members(&mod_.team).await?;
 
-			// Get the usernames of all the developers
-			let mut developers = String::new();
-			for member in team_members {
-				developers.push_str(&member.user.username);
-				developers.push_str(", ");
-			}
-			// Trim trailing ', '
-			developers.truncate(developers.len() - 2);
+		// Get the usernames of all the developers
+		let mut developers = String::new();
+		for member in team_members {
+			developers.push_str(&member.user.username);
+			developers.push_str(", ");
+		}
+		// Trim trailing ', '
+		developers.truncate(developers.len() - 2);
 
-			println!(
-				"{}
+		println!(
+			"{}
             \r  {}\n
             \r  Link:           https://modrinth.com/mod/{}
             \r  Source:         Modrinth Mod
@@ -811,94 +805,61 @@ async fn list(
             \r  Client side:    {:?}
             \r  Server side:    {:?}
             \r  License:        {}{}\n",
-				mod_.title,
-				mod_.description,
-				mod_.slug,
-				mod_.source_url
-					.map_or("No".into(), |url| { format!("Yes ({})", url) }),
-				mod_.downloads,
-				developers,
-				mod_.client_side,
-				mod_.server_side,
-				mod_.license.name,
-				mod_.license
-					.url
-					.map_or("".into(), |url| { format!(" ({})", url) }),
-			);
-		} else {
-			println!(
-				"{}
-                \r  {}\n
-                \r  Link:     https://modrinth.com/mod/{}
-                \r  Source:   Modrinth Mod
-                \r  Code:     {}
-                \r  License:  {}\n",
-				mod_.title,
-				mod_.description,
-				mod_.slug,
-				mod_.source_url
-					.map_or("Closed source".into(), |url| { url }),
-				mod_.license.name
-			);
-		}
+			mod_.title,
+			mod_.description,
+			mod_.slug,
+			mod_.source_url
+				.map_or("No".into(), |url| { format!("Yes ({})", url) }),
+			mod_.downloads,
+			developers,
+			mod_.client_side,
+			mod_.server_side,
+			mod_.license.name,
+			mod_.license
+				.url
+				.map_or("".into(), |url| { format!(" ({})", url) }),
+		);
 	}
 
 	for repo_name in &profile.github_repos {
 		// Get repository metadata
 		let repo_handler = github.repos(&repo_name.0, &repo_name.1);
 		let repo = repo_handler.get().await?;
-		if verbose {
-			let releases = repo_handler.releases().list().send().await?;
-			let mut downloads = 0;
+		let releases = repo_handler.releases().list().send().await?;
+		let mut downloads = 0;
 
-			// Calculate number of downloads
-			for release in releases {
-				for asset in release.assets {
-					downloads += asset.download_count;
-				}
+		// Calculate number of downloads
+		for release in releases {
+			for asset in release.assets {
+				downloads += asset.download_count;
 			}
+		}
 
-			// Print repository data formatted
-			println!(
-				"{}{}\n
+		// Print repository data formatted
+		println!(
+			"{}{}\n
             \r  Link:           {}
             \r  Source:         GitHub Repository
             \r  Downloads:      {}
             \r  Developer:      {}{}\n",
-				repo.name,
-				repo.description
-					.map_or("".into(), |description| { format!("\n  {}", description) }),
-				repo.html_url.ok_or(Error::OptionError)?,
-				downloads,
-				repo.owner.ok_or(Error::OptionError)?.login,
-				if let Some(license) = repo.license {
-					format!(
-						"\n  License:        {}{}",
-						license.name,
-						license
-							.html_url
-							.map_or("".into(), |url| { format!(" ({})", url) })
-					)
-				} else {
-					"".into()
-				},
-			);
-		} else {
-			println!(
-				"{}{}\n
-                \r  Link:     {}
-                \r  Source:   GitHub Repository{}\n",
-				repo.name,
-				repo.description
-					.map_or("".into(), |description| { format!("\n  {}", description) }),
-				repo.html_url.ok_or(Error::OptionError)?,
-				if let Some(license) = repo.license {
-					format!("\n  License:  {}", license.name)
-				} else {
-					"".into()
-				},
-			);
-		}
+			repo.name,
+			repo.description
+				.map_or("".into(), |description| { format!("\n  {}", description) }),
+			repo.html_url.ok_or(Error::OptionError)?,
+			downloads,
+			repo.owner.ok_or(Error::OptionError)?.login,
+			if let Some(license) = repo.license {
+				format!(
+					"\n  License:        {}{}",
+					license.name,
+					license
+						.html_url
+						.map_or("".into(), |url| { format!(" ({})", url) })
+				)
+			} else {
+				"".into()
+			},
+		);
 	}
 
 	Ok(())

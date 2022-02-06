@@ -30,7 +30,11 @@ fn b_create_profile() -> Result<()> {
 		"--mod-loader",
 		"fabric",
 		"--output-dir",
-		std::env::current_dir()?.join("tests").join("mods").to_str().unwrap()
+		std::env::current_dir()?
+			.join("tests")
+			.join("mods")
+			.to_str()
+			.unwrap(),
 	])
 }
 
@@ -47,7 +51,11 @@ fn b_create_profile_non_existent_game_version() -> Result<()> {
 		"--mod-loader",
 		"fabric",
 		"--output-dir",
-		std::env::current_dir()?.join("tests").join("mods").to_str().unwrap()
+		std::env::current_dir()?
+			.join("tests")
+			.join("mods")
+			.to_str()
+			.unwrap()
 	])
 	.is_err());
 
@@ -82,7 +90,11 @@ fn b_create_profile_missing_args() -> Result<()> {
 		"--mod-loader",
 		"fabric",
 		"--output-dir",
-		std::env::current_dir()?.join("tests").join("mods").to_str().unwrap()
+		std::env::current_dir()?
+			.join("tests")
+			.join("mods")
+			.to_str()
+			.unwrap()
 	])
 	.is_err());
 
@@ -101,7 +113,11 @@ fn c_create_profile_name_already_exists() -> Result<()> {
 		"--mod-loader",
 		"fabric",
 		"--output-dir",
-		std::env::current_dir()?.join("tests").join("mods").to_str().unwrap()
+		std::env::current_dir()?
+			.join("tests")
+			.join("mods")
+			.to_str()
+			.unwrap()
 	])
 	.is_err());
 
@@ -144,12 +160,6 @@ fn e_list() -> Result<()> {
 }
 
 #[test]
-fn e_list_verbose() -> Result<()> {
-	run_command(vec!["list", "--verbose"])?;
-	run_command(vec!["list", "-v"])
-}
-
-#[test]
 fn e_profile_list() -> Result<()> {
 	run_command(vec!["profile", "list"])
 }
@@ -174,7 +184,11 @@ fn g_switch() -> Result<()> {
 		"--mod-loader",
 		"forge",
 		"--output-dir",
-		std::env::current_dir()?.join("tests").join("mods").to_str().unwrap()
+		std::env::current_dir()?
+			.join("tests")
+			.join("mods")
+			.to_str()
+			.unwrap(),
 	])?;
 
 	// Check that listing mods gives an error (no mods/repos in new profile)
