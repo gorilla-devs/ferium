@@ -17,8 +17,8 @@ pub struct Ferium {
 pub enum SubCommands {
 	#[clap(about("Add a Modrinth mod to the profile"))]
 	AddModrinth {
-		#[clap(help("The mod ID is specified as '</> PROJECT ID' in the right sidebar of the mod's Modrith page\nYou can also use the mod slug for this"))]
-		mod_id: String,
+		#[clap(help("The project ID is specified as '</> PROJECT ID' in the right sidebar of the mod's Modrith page\nYou can also use the project slug for this"))]
+		project_id: String,
 	},
 	#[clap(about("Add a GitHub repository to the profile"))]
 	AddGithub {

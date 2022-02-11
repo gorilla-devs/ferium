@@ -122,7 +122,7 @@ async fn actual_main() -> Result<()> {
 
 	// Run function(s) based on the sub(sub)command to be executed
 	match cli_app.subcommand {
-		SubCommands::AddModrinth { mod_id } => add_mod_modrinth(&modrinth, mod_id, profile).await?,
+		SubCommands::AddModrinth { project_id } => add_mod_modrinth(&modrinth, project_id, profile).await?,
 		SubCommands::AddGithub { owner, name } => {
 			add_repo_github(&github, owner, name, profile).await?;
 		},
@@ -537,9 +537,9 @@ async fn remove(
 
 	// Get the names of the mods
 	eprint!("Gathering mod names... ");
-	for mod_id in &profile.modrinth_mods {
-		let mod_ = modrinth.get_project(mod_id).await?;
-		names.push(mod_.title);
+	for project_id in &profile.modrinth_mods {
+		let project = modrinth.get_project(project_id).await?;
+		names.push(project.title);
 	}
 
 	for repo_name in &profile.github_repos {
@@ -601,7 +601,7 @@ async fn remove(
 
 	// For each mod to remove
 	for index in items_to_remove {
-		// If index is larger than the length of the repos mod_ids, then the index is for curse projects
+		// If index is larger than the length of the repos and modrinth project_ids, then the index is for curse projects
 		if index >= (profile.modrinth_mods.len() + profile.github_repos.len()) {
 			// Offset the index by the proper amount
 			let index = index - (profile.modrinth_mods.len() + profile.github_repos.len());
@@ -616,7 +616,7 @@ async fn remove(
 
 			// Remove item from profile's repos
 			profile.github_repos.swap_remove(index);
-		// Or else its for the mod_ids
+		// Or else its for the modrinth project_ids
 		} else {
 			// Remove item from profile' mod ids
 			profile.modrinth_mods.swap_remove(index);
@@ -680,21 +680,21 @@ async fn add_repo_github(
 /// Check if mod with ID `mod_id` exists, if so add that mod to `profile`
 async fn add_mod_modrinth(
 	modrinth: &Ferinth,
-	mod_id: String,
+	project_id: String,
 	profile: &mut config::structs::Profile,
 ) -> Result<()> {
 	eprint!("Adding Modrinth mod... ");
 
 	// Check if mod exists
-	match modrinth.get_project(&mod_id).await {
-		Ok(mod_) => {
+	match modrinth.get_project(&project_id).await {
+		Ok(project) => {
 			// Check if mod has already been added
-			if profile.modrinth_mods.contains(&mod_.id) {
+			if profile.modrinth_mods.contains(&project.id) {
 				return Err(Error::Quit("× Mod already added to profile!"));
 			}
 			// And if it hasn't, append mod to profile and write
-			profile.modrinth_mods.push(mod_.id);
-			println!("✓ ({})", mod_.title);
+			profile.modrinth_mods.push(project.id);
+			println!("✓ ({})", project.title);
 
 			Ok(())
 		},
@@ -702,7 +702,7 @@ async fn add_mod_modrinth(
 			// Else return an error
 			Err(Error::QuitFormatted(format!(
 				"× Mod with ID `{}` does not exist!",
-				mod_id
+				project_id
 			)))
 		},
 	}
@@ -780,10 +780,10 @@ async fn list(
 		);
 	}
 
-	for mod_id in &profile.modrinth_mods {
-		// Get mod metadata
-		let mod_ = modrinth.get_project(mod_id).await?;
-		let team_members = modrinth.list_team_members(&mod_.team).await?;
+	for project_id in &profile.modrinth_mods {
+		// Get project metadata
+		let project = modrinth.get_project(project_id).await?;
+		let team_members = modrinth.list_team_members(&project.team).await?;
 
 		// Get the usernames of all the developers
 		let mut developers = String::new();
@@ -805,17 +805,17 @@ async fn list(
             \r  Client side:    {:?}
             \r  Server side:    {:?}
             \r  License:        {}{}\n",
-			mod_.title,
-			mod_.description,
-			mod_.slug,
-			mod_.source_url
+			project.title,
+			project.description,
+			project.slug,
+			project.source_url
 				.map_or("No".into(), |url| { format!("Yes ({})", url) }),
-			mod_.downloads,
+			project.downloads,
 			developers,
-			mod_.client_side,
-			mod_.server_side,
-			mod_.license.name,
-			mod_.license
+			project.client_side,
+			project.server_side,
+			project.license.name,
+			project.license
 				.url
 				.map_or("".into(), |url| { format!(" ({})", url) }),
 		);
@@ -1052,14 +1052,14 @@ async fn upgrade_modrinth(
 	profile: &config::structs::Profile,
 	no_patch_check: bool,
 ) -> Result<()> {
-	for mod_id in &profile.modrinth_mods {
+	for project_id in &profile.modrinth_mods {
 		// Get mod metadata
-		let mod_ = modrinth.get_project(mod_id).await?;
-		println!("Downloading {}", mod_.title);
+		let project = modrinth.get_project(project_id).await?;
+		println!("Downloading {}", project.title);
 
 		eprint!("  [1] Getting version information... ");
 		// Get the versions of the mod
-		let versions = modrinth.list_versions(&mod_.id).await?;
+		let versions = modrinth.list_versions(&project.id).await?;
 		let game_version_to_check = misc::remove_semver_patch(&profile.game_version)?;
 
 		let mut latest_compatible_version = None;
@@ -1098,7 +1098,7 @@ async fn upgrade_modrinth(
 			None => {
 				return Err(Error::QuitFormatted(format!(
 					"× No version of {} is compatible for {} {}",
-					mod_.title, profile.mod_loader, profile.game_version,
+					project.title, profile.mod_loader, profile.game_version,
 				)));
 			},
 		};

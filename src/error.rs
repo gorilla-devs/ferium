@@ -4,9 +4,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-	/// The current profile does not contain mods or repos
+	/// The current profile does not contain any mods
 	#[error(
-		"Your current profile is empty! Run `ferium help` to see how to add mods or repositories"
+		"Your current profile is empty! Run `ferium help` to see how to add mods"
 	)]
 	EmptyConfigFile,
 	/// An HTTP(S) request returned with an error
