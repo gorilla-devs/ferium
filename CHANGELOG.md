@@ -1,5 +1,10 @@
 # Changelog for Ferium
 
+
+## [3.12.1] - 11.02.2022
+
+Refactor 'mod' to 'project'
+
 ## [3.12.0] - 06.02.2022
 
 Migrated to [Libium](https://crates.io/crates/libium)!
