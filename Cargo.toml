@@ -17,6 +17,10 @@ keywords = [
 	"curseforge"
 ]
 
+[features]
+default = ["gui"]
+gui = ["libium/gui"]
+
 [dependencies]
 # Use `rustls` rather than OpenSSL
 tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros"] }
