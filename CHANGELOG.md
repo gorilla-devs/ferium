@@ -1,5 +1,9 @@
 # Changelog for Ferium
 
+## [3.13.0] - 02.03.2022
+
+- Moved all the subcommand functions in `main.rs` to seperate files
+- Updated the settings in `cli.rs`
 
 ## [3.12.1] - 11.02.2022
 

@@ -1,13 +1,13 @@
 //! Contains convenience wrappers for argument parsing using Clap
 #![deny(missing_docs)] // All commands must have help/about statements
 
-use clap::{AppSettings, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Parser)]
 #[clap(author, version, about)]
-#[clap(global_setting(AppSettings::PropagateVersion))]
-#[clap(setting(AppSettings::SubcommandRequiredElseHelp))]
+#[clap(propagate_version = true)]
+#[clap(subcommand_required = true)]
 pub struct Ferium {
 	#[clap(subcommand)]
 	pub subcommand: SubCommands,
@@ -34,7 +34,7 @@ pub enum SubCommands {
 	},
 	#[clap(about("List all the mods in the profile with some their metadata"))]
 	List,
-	#[clap(setting(AppSettings::SubcommandRequiredElseHelp))]
+	#[clap(subcommand_required = true)]
 	#[clap(about("Create, configure, or remove the current profile"))]
 	Profile {
 		#[clap(subcommand)]
