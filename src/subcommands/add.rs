@@ -1,21 +1,26 @@
 use crate::error::{Error, Result};
-use ferinth::Ferinth;
-use furse::Furse;
+use ferinth::{
+	structures::{project_structs::Project, ProjectType},
+	Ferinth,
+};
+use furse::{structures::mod_structs::Mod, Furse};
 use libium::config;
-use octocrab::Octocrab;
+use octocrab::{models::Repository, repos::RepoHandler};
 
-/// Check if repo `owner`/`repo_name` exists and releases mods, and if so add repo to `profile`
+/// Check if repo of `repo_handler` exists and releases mods, and if so add the repo to `profile`
 pub async fn github(
-	github: &Octocrab,
-	owner: String,
-	repo_name: String,
+	repo_handler: RepoHandler<'_>,
 	profile: &mut config::structs::Profile,
-) -> Result<()> {
-	eprint!("Adding GitHub repository... ");
-
-	// Get repository and releases data
-	let repo_handler = github.repos(owner, repo_name);
-	let repo = repo_handler.get().await?;
+) -> Result<Repository> {
+	let repo = match repo_handler.get().await {
+		Ok(repo) => repo,
+		Err(err) => {
+			return Err(Error::QuitFormatted(format!(
+				"Repository does not exist ({})",
+				err
+			)))
+		},
+	};
 	// Get the name of the repository as a tuple
 	let repo_name_split = repo
 		.full_name
@@ -27,7 +32,7 @@ pub async fn github(
 
 	// Check if repo has already been added
 	if profile.github_repos.contains(&repo_name) {
-		return Err(Error::Quit("× Repository already added to profile!"));
+		return Err(Error::Quit("Repository already added to profile"));
 	}
 
 	let releases = repo_handler.releases().list().send().await?;
@@ -45,68 +50,60 @@ pub async fn github(
 	}
 
 	if contains_jar_asset {
-		// Append repo to profile
 		profile.github_repos.push(repo_name);
-		println!("✓");
+		Ok(repo)
 	} else {
-		return Err(Error::Quit("× Repository does not release mods!"));
+		Err(Error::Quit("Repository does not release mods"))
 	}
-
-	Ok(())
 }
 
-/// Check if mod with ID `mod_id` exists, if so add that mod to `profile`
+/// Check if `project_id` exists and is a mod, if so add that project ID to `profile`
+/// Returns the project struct
 pub async fn modrinth(
 	modrinth: &Ferinth,
 	project_id: String,
 	profile: &mut config::structs::Profile,
-) -> Result<()> {
-	eprint!("Adding Modrinth mod... ");
-
-	// Check if mod exists
+) -> Result<Project> {
 	match modrinth.get_project(&project_id).await {
 		Ok(project) => {
-			// Check if mod has already been added
+			// Check if project has already been added
 			if profile.modrinth_mods.contains(&project.id) {
-				return Err(Error::Quit("× Mod already added to profile!"));
+				Err(Error::Quit("Mod already added to profile"))
+			// Check that the project is a mod
+			} else if project.project_type != ProjectType::Mod {
+				Err(Error::Quit("Project is not a mod"))
+			} else {
+				profile.modrinth_mods.push(project.id.clone());
+				Ok(project)
 			}
-			// And if it hasn't, append mod to profile and write
-			profile.modrinth_mods.push(project.id);
-			println!("✓ ({})", project.title);
-
-			Ok(())
 		},
-		Err(_) => {
-			// Else return an error
-			Err(Error::QuitFormatted(format!(
-				"× Mod with ID `{}` does not exist!",
-				project_id
-			)))
-		},
+		Err(err) => Err(Error::QuitFormatted(format!(
+			"Project does not exist ({})",
+			err
+		))),
 	}
 }
 
+/// Check if `project_id` exists, if so add that mod to `profile`
+/// Returns the mod struct
 pub async fn curseforge(
 	curseforge: &Furse,
 	project_id: i32,
 	profile: &mut config::structs::Profile,
-) -> Result<()> {
-	eprint!("Adding CurseForge mod... ");
-
-	// Check if project exists
+) -> Result<Mod> {
 	match curseforge.get_mod(project_id).await {
-		Ok(project) => {
-			if profile.curse_projects.contains(&project.id) {
-				Err(Error::Quit("× Project already added to profile!"))
+		Ok(mod_) => {
+			// Check if project has already been added
+			if profile.curse_projects.contains(&mod_.id) {
+				Err(Error::Quit("Project already added to profile"))
 			} else {
-				profile.curse_projects.push(project.id);
-				println!("✓ ({})", project.name);
-				Ok(())
+				profile.curse_projects.push(mod_.id);
+				Ok(mod_)
 			}
 		},
 		Err(err) => Err(Error::QuitFormatted(format!(
-			"× Project with ID `{}` does not exist! ({})",
-			project_id, err
+			"Project does not exist or is not a mod ({})",
+			err
 		))),
 	}
 }

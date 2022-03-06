@@ -57,12 +57,9 @@ pub enum SubCommands {
 	Upgrade {
 		#[clap(long)]
 		#[clap(help(
-			"Do not show a picker when multiple compatible assets are found and pick the first one"
-		))]
-		no_picker: bool,
-		#[clap(long)]
-		#[clap(help(
-			"Do not check for the full game version, only check for the major and minor versions"
+			"Do not check for the full game version, only check for the major and minor versions
+			\rSome Minecraft versions (e.g. 1.18 & 1.18.1) are compatible with each other,
+			\rthis option allows you to use older, but still compatible, versions of a mod that might not have yet updated to the latest version"
 		))]
 		no_patch_check: bool,
 	},

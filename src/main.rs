@@ -8,7 +8,10 @@ use error::{Error, Result};
 use ferinth::Ferinth;
 use furse::Furse;
 use libium::config;
-use tokio::{fs::create_dir_all, io::AsyncReadExt};
+use tokio::{
+	fs::{create_dir_all, remove_dir_all},
+	io::AsyncReadExt,
+};
 
 #[tokio::main]
 async fn main() {
@@ -117,13 +120,16 @@ async fn actual_main() -> Result<()> {
 	// Run function(s) based on the sub(sub)command to be executed
 	match cli_app.subcommand {
 		SubCommands::AddModrinth { project_id } => {
-			subcommands::add::modrinth(&modrinth, project_id, profile).await?
+			let project = subcommands::add::modrinth(&modrinth, project_id, profile).await?;
+			println!("Added {}", project.title);
 		},
 		SubCommands::AddGithub { owner, name } => {
-			subcommands::add::github(&github, owner, name, profile).await?;
+			let repo = subcommands::add::github(github.repos(owner, name), profile).await?;
+			println!("Added {}", repo.name);
 		},
 		SubCommands::AddCurseforge { project_id } => {
-			subcommands::add::curseforge(&curseforge, project_id, profile).await?;
+			let project = subcommands::add::curseforge(&curseforge, project_id, profile).await?;
+			println!("Added {}", project.name);
 		},
 		SubCommands::List => {
 			check_empty_profile(profile)?;
@@ -143,12 +149,12 @@ async fn actual_main() -> Result<()> {
 					name,
 					output_dir,
 				)
-				.await?
+				.await?;
 			},
 			// This must have been checked earlier before getting the profile
 			ProfileSubCommands::Create { .. } => unreachable!(),
 			ProfileSubCommands::Delete { profile_name } => {
-				subcommands::profile::delete::delete(&mut config, profile_name)?
+				subcommands::profile::delete::delete(&mut config, profile_name)?;
 			},
 			ProfileSubCommands::List => subcommands::profile::list::list(&config),
 		},
@@ -158,17 +164,40 @@ async fn actual_main() -> Result<()> {
 				.await?;
 		},
 		SubCommands::Switch { profile_name } => {
-			subcommands::switch::switch(&mut config, profile_name)?
+			subcommands::switch::switch(&mut config, profile_name)?;
 		},
-		SubCommands::Upgrade {
-			no_picker,
-			no_patch_check,
-		} => {
+		SubCommands::Upgrade { no_patch_check } => {
 			check_empty_profile(profile)?;
+			// Empty the mods directory
+			let _ = remove_dir_all(&profile.output_dir).await;
 			create_dir_all(&profile.output_dir).await?;
-			subcommands::upgrade::curseforge(&curseforge, profile, no_patch_check).await?;
-			subcommands::upgrade::modrinth(&modrinth, profile, no_patch_check).await?;
-			subcommands::upgrade::github(&github, profile, no_picker).await?;
+			for project_id in &profile.curse_projects {
+				if let Err(err) = subcommands::upgrade::curseforge(
+					&curseforge,
+					profile,
+					*project_id,
+					no_patch_check,
+				)
+				.await
+				{
+					println!("Could not download {} due to {}", project_id, err);
+				}
+			}
+			for project_id in &profile.modrinth_mods {
+				if let Err(err) =
+					subcommands::upgrade::modrinth(&modrinth, profile, project_id, no_patch_check)
+						.await
+				{
+					println!("Could not download {} due to {}", project_id, err);
+				}
+			}
+			for repo in &profile.github_repos {
+				if let Err(err) =
+					subcommands::upgrade::github(&github.repos(&repo.0, &repo.1), profile).await
+				{
+					println!("Could not download {}/{} due to {}", repo.0, repo.1, err);
+				}
+			}
 		},
 	};
 

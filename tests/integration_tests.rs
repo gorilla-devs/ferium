@@ -167,8 +167,8 @@ fn e_profile_list() -> Result<()> {
 #[test]
 fn f_upgrade() -> Result<()> {
 	// TODO: Check that downloaded mods are present in the output_dir
-	run_command(vec!["upgrade", "--no-picker"])?;
-	run_command(vec!["upgrade", "--no-picker", "--no-patch-check"])
+	run_command(vec!["upgrade"])?;
+	run_command(vec!["upgrade", "--no-patch-check"])
 }
 
 #[test]

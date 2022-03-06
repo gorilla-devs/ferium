@@ -1,9 +1,22 @@
 # Changelog for Ferium
 
+## [3.14.0] - 06.03.2022
+
+- All print statements in add and upgrade functions have been removed, this means
+- Errors now only have the error and no formatting
+- Add GitHub repo function now accepts a `RepoHandler` rather than the repo name
+- All add functions now return the added item
+- Adding Modrinth mods now checks if the project is a mod
+- Writing to mod files has been extracted to `write_mod_file()`
+- All upgrade commands only download a single mod
+- Downloading GitHub mods no longer picks from multiple mods
+- The output directory is now emptied before mods are downloaded
+
 ## [3.13.0] - 02.03.2022
 
 - Moved all the subcommand functions in `main.rs` to seperate files
 - Updated the settings in `cli.rs`
+Functionality should not have been changed
 
 ## [3.12.1] - 11.02.2022
 
