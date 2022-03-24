@@ -49,9 +49,7 @@ pub async fn create(
 				output_dir,
 				game_version,
 				mod_loader,
-				curse_projects: Vec::new(),
-				modrinth_mods: Vec::new(),
-				github_repos: Vec::new(),
+				mods: Vec::new(),
 			}); // Create profile
 		},
 		(None, None, None, None) => {
@@ -111,9 +109,7 @@ pub async fn create(
 			config.profiles.push(config::structs::Profile {
 				name,
 				output_dir: selected_mods_dir,
-				curse_projects: Vec::new(),
-				modrinth_mods: Vec::new(),
-				github_repos: Vec::new(),
+				mods: Vec::new(),
 				game_version: selected_version,
 				mod_loader: selected_loader,
 			});

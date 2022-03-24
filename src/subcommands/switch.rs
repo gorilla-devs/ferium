@@ -4,7 +4,7 @@ use libium::config;
 
 pub fn switch(config: &mut config::structs::Config, profile_name: Option<String>) -> Result<()> {
 	if config.profiles.len() < 2 {
-		Err(Error::Quit("There is less than 2 profiles in your config"))
+		Err(Error::Quit("There is only 1 profile in your config"))
 	} else if let Some(profile_name) = profile_name {
 		match config
 			.profiles

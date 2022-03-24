@@ -156,7 +156,8 @@ fn d_add_github() -> Result<()> {
 
 #[test]
 fn e_list() -> Result<()> {
-	run_command(vec!["list"])
+	run_command(vec!["list"])?;
+	run_command(vec!["list", "--verbose"])
 }
 
 #[test]
@@ -217,7 +218,7 @@ fn h_remove() -> Result<()> {
 	assert!(run_command(vec![
 		"remove",
 		"--mod-names",
-		"starlight",
+		"starlight (fabric)",
 		"--mod-names",
 		"terrlith", // Wrong
 		"--mod-names",
@@ -227,7 +228,7 @@ fn h_remove() -> Result<()> {
 	assert!(run_command(vec![
 		"remove",
 		"--mod-names",
-		"starlight",
+		"starlight (fabric)",
 		"--mod-names",
 		"terralith",
 		"--mod-names",
@@ -239,7 +240,7 @@ fn h_remove() -> Result<()> {
 	run_command(vec![
 		"remove",
 		"--mod-names",
-		"starlight",
+		"starlight (fabric)",
 		"--mod-names",
 		"terralith",
 		"--mod-names",

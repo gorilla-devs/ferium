@@ -1,22 +1,19 @@
 use libium::config;
 
 pub fn list(config: &config::structs::Config) {
-	for profile in &config.profiles {
+	for (i, profile) in config.profiles.iter().enumerate() {
 		println!(
-			"{}
-		\r  Output directory:    {:?}
-		\r  Minecraft Version:   {}
-		\r  Mod Loader:          {}
-		\r  CurseForge Projects: {}
-		\r  Modrinth Mods:       {}
-		\r  GitHub Repositories: {}\n",
+			"{}{}
+		\r  Output directory:   {:?}
+		\r  Minecraft Version:  {}
+		\r  Mod Loader:         {}
+		\r  Mods:               {}\n",
+			if i == config.active_profile { "* " } else { "" },
 			profile.name,
 			profile.output_dir,
 			profile.game_version,
 			profile.mod_loader,
-			profile.curse_projects.len(),
-			profile.modrinth_mods.len(),
-			profile.github_repos.len(),
+			profile.mods.len(),
 		);
 	}
 }

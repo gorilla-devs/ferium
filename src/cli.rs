@@ -32,8 +32,12 @@ pub enum SubCommands {
 		#[clap(help("The project ID is specified as 'Project ID' in the 'About Project' sidebar of the mod's CurseForge page"))]
 		project_id: i32,
 	},
-	#[clap(about("List all the mods in the profile with some their metadata"))]
-	List,
+	#[clap(about("List all the mods in the profile, and with some their metadata if verbose"))]
+	List {
+		#[clap(long, short)]
+		#[clap(help("Show information about the mod"))]
+		verbose: bool,
+	},
 	#[clap(subcommand_required = true)]
 	#[clap(about("Create, configure, or remove the current profile"))]
 	Profile {

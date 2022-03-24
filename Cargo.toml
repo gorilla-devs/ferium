@@ -1,8 +1,8 @@
 [package]
 name = "ferium"
-version = "3.14.0"
+version = "3.15.0"
 edition = "2021"
-authors = ["theRookieCoder <ileshkt@gmail.com>", "Daniel Hauck (SolidTux)"]
+authors = ["Ilesh Thiada (theRookieCoder) <ileshkt@gmail.com>", "Daniel Hauck (SolidTux)"]
 description = "Ferium is a CLI program for managing Minecraft mods from Modrinth, CurseForge, and Github Releases"
 exclude = ["tests"] # Don't need tests for installing using crates.io
 repository = "https://github.com/theRookieCoder/ferium"
@@ -11,10 +11,10 @@ readme = "README.md"
 license = "MPL-2.0"
 keywords = [
 	"minecraft",
-	"cli",
 	"mod-manager",
 	"modrinth",
-	"curseforge"
+	"curseforge",
+	"github"
 ]
 
 [dependencies]
@@ -25,6 +25,7 @@ clap = { version = "3", features = ["derive"] }
 serde_json = "1"
 ansi_term = "0"
 dialoguer = "0"
+itertools = "0"
 thiserror = "1"
 ferinth = "2"
 libium = "1"

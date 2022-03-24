@@ -3,8 +3,8 @@ use ferinth::{
 	structures::{project_structs::Project, ProjectType},
 	Ferinth,
 };
-use furse::{structures::mod_structs::Mod, Furse};
-use libium::config;
+use furse::Furse;
+use libium::{config, config::structs::Mod};
 use octocrab::{models::Repository, repos::RepoHandler};
 
 /// Check if repo of `repo_handler` exists and releases mods, and if so add the repo to `profile`
@@ -31,8 +31,12 @@ pub async fn github(
 	let repo_name = (repo_name_split[0].into(), repo_name_split[1].into());
 
 	// Check if repo has already been added
-	if profile.github_repos.contains(&repo_name) {
-		return Err(Error::Quit("Repository already added to profile"));
+	for mod_ in &profile.mods {
+		if let Mod::GitHubRepository { full_name, .. } = mod_ {
+			if full_name == &repo_name {
+				return Err(Error::Quit("Repository already added to profile"));
+			}
+		}
 	}
 
 	let releases = repo_handler.releases().list().send().await?;
@@ -50,7 +54,10 @@ pub async fn github(
 	}
 
 	if contains_jar_asset {
-		profile.github_repos.push(repo_name);
+		profile.mods.push(Mod::GitHubRepository {
+			name: repo.name.clone(),
+			full_name: repo_name,
+		});
 		Ok(repo)
 	} else {
 		Err(Error::Quit("Repository does not release mods"))
@@ -67,13 +74,22 @@ pub async fn modrinth(
 	match modrinth.get_project(&project_id).await {
 		Ok(project) => {
 			// Check if project has already been added
-			if profile.modrinth_mods.contains(&project.id) {
+			if profile.mods.iter().any(|mod_| {
+				if let Mod::ModrinthProject { project_id, .. } = mod_ {
+					project_id == &project.id
+				} else {
+					false
+				}
+			}) {
 				Err(Error::Quit("Mod already added to profile"))
 			// Check that the project is a mod
 			} else if project.project_type != ProjectType::Mod {
 				Err(Error::Quit("Project is not a mod"))
 			} else {
-				profile.modrinth_mods.push(project.id.clone());
+				profile.mods.push(Mod::ModrinthProject {
+					name: project.title.clone(),
+					project_id: project.id.clone(),
+				});
 				Ok(project)
 			}
 		},
@@ -90,15 +106,24 @@ pub async fn curseforge(
 	curseforge: &Furse,
 	project_id: i32,
 	profile: &mut config::structs::Profile,
-) -> Result<Mod> {
+) -> Result<furse::structures::mod_structs::Mod> {
 	match curseforge.get_mod(project_id).await {
-		Ok(mod_) => {
+		Ok(project) => {
 			// Check if project has already been added
-			if profile.curse_projects.contains(&mod_.id) {
+			if profile.mods.iter().any(|mod_| {
+				if let Mod::CurseForgeProject { project_id, .. } = mod_ {
+					*project_id == project.id
+				} else {
+					false
+				}
+			}) {
 				Err(Error::Quit("Project already added to profile"))
 			} else {
-				profile.curse_projects.push(mod_.id);
-				Ok(mod_)
+				profile.mods.push(Mod::CurseForgeProject {
+					name: project.name.clone(),
+					project_id: project.id,
+				});
+				Ok(project)
 			}
 		},
 		Err(err) => Err(Error::QuitFormatted(format!(

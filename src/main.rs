@@ -131,9 +131,25 @@ async fn actual_main() -> Result<()> {
 			let project = subcommands::add::curseforge(&curseforge, project_id, profile).await?;
 			println!("Added {}", project.name);
 		},
-		SubCommands::List => {
+		SubCommands::List { verbose } => {
 			check_empty_profile(profile)?;
-			subcommands::list::list(&curseforge, &modrinth, &github, profile).await?;
+			for mod_ in &profile.mods {
+				if verbose {
+					match mod_ {
+						config::structs::Mod::CurseForgeProject { project_id, .. } => {
+							subcommands::list::curseforge(&curseforge, *project_id).await
+						},
+						config::structs::Mod::ModrinthProject { project_id, .. } => {
+							subcommands::list::modrinth(&modrinth, project_id).await
+						},
+						config::structs::Mod::GitHubRepository { full_name, .. } => {
+							subcommands::list::github(&github, full_name).await
+						},
+					}?;
+				} else {
+					println!("{}", mod_.name());
+				}
+			}
 		},
 		SubCommands::Profile { subcommand } => match subcommand {
 			ProfileSubCommands::Configure {
@@ -160,8 +176,7 @@ async fn actual_main() -> Result<()> {
 		},
 		SubCommands::Remove { mod_names } => {
 			check_empty_profile(profile)?;
-			subcommands::remove::remove(&curseforge, &modrinth, &github, profile, mod_names)
-				.await?;
+			subcommands::remove::remove(profile, mod_names)?;
 		},
 		SubCommands::Switch { profile_name } => {
 			subcommands::switch::switch(&mut config, profile_name)?;
@@ -171,31 +186,39 @@ async fn actual_main() -> Result<()> {
 			// Empty the mods directory
 			let _ = remove_dir_all(&profile.output_dir).await;
 			create_dir_all(&profile.output_dir).await?;
-			for project_id in &profile.curse_projects {
-				if let Err(err) = subcommands::upgrade::curseforge(
-					&curseforge,
-					profile,
-					*project_id,
-					no_patch_check,
-				)
-				.await
-				{
-					println!("Could not download {} due to {}", project_id, err);
-				}
-			}
-			for project_id in &profile.modrinth_mods {
-				if let Err(err) =
-					subcommands::upgrade::modrinth(&modrinth, profile, project_id, no_patch_check)
-						.await
-				{
-					println!("Could not download {} due to {}", project_id, err);
-				}
-			}
-			for repo in &profile.github_repos {
-				if let Err(err) =
-					subcommands::upgrade::github(&github.repos(&repo.0, &repo.1), profile).await
-				{
-					println!("Could not download {}/{} due to {}", repo.0, repo.1, err);
+			for mod_ in &profile.mods {
+				use libium::config::structs::Mod;
+				if let (Err(err), name) = match mod_ {
+					Mod::CurseForgeProject { name, project_id } => (
+						subcommands::upgrade::curseforge(
+							&curseforge,
+							profile,
+							*project_id,
+							no_patch_check,
+						)
+						.await,
+						name,
+					),
+					Mod::ModrinthProject { name, project_id } => (
+						subcommands::upgrade::modrinth(
+							&modrinth,
+							profile,
+							project_id,
+							no_patch_check,
+						)
+						.await,
+						name,
+					),
+					Mod::GitHubRepository { name, full_name } => (
+						subcommands::upgrade::github(
+							&github.repos(&full_name.0, &full_name.1),
+							profile,
+						)
+						.await,
+						name,
+					),
+				} {
+					println!("Could not download {} due to {}", name, err);
 				}
 			}
 		},
@@ -209,10 +232,7 @@ async fn actual_main() -> Result<()> {
 
 /// Check if `profile` is empty, and if so return an error
 fn check_empty_profile(profile: &config::structs::Profile) -> Result<()> {
-	if profile.github_repos.is_empty()
-		&& profile.modrinth_mods.is_empty()
-		&& profile.curse_projects.is_empty()
-	{
+	if profile.mods.is_empty() {
 		Err(Error::EmptyConfigFile)
 	} else {
 		Ok(())

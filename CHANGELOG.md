@@ -1,5 +1,18 @@
 # Changelog for Ferium
 
+## [3.15.0] - 08.03.2022
+
+Switched from make to [just](https://github.com/casey/just)
+
+- Added back the verbose flag to the list command. The verbose version is the same as before, and the non-verbose version lists out all mod names only
+- Small edits to the add command to support the new config format
+- The list command now uses a more concise method to display lists of developers/categories (hence the new dependency `itertools`)
+- Many commands have been converted to work on one project at a time so there are less loops in functions and more in main.rs
+- The remove command has been significantly improved and is now much faster due to the new name storing format
+- The remove command now also requires argument provided names to be exactly the same
+- Simplified delete profile command
+- 
+
 ## [3.14.0] - 06.03.2022
 
 - All print statements in add and upgrade functions have been removed, this means
