@@ -11,7 +11,6 @@ Switched from make to [just](https://github.com/casey/just)
 - The remove command has been significantly improved and is now much faster due to the new name storing format
 - The remove command now also requires argument provided names to be exactly the same
 - Simplified delete profile command
-- 
 
 ## [3.14.0] - 06.03.2022
 
