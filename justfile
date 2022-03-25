@@ -1,4 +1,5 @@
 default: install-dev
+set windows-powershell := true
 
 # Build for macOS Intel and macOS Apple Silicon
 build-mac:
@@ -11,10 +12,10 @@ build-mac:
 
 # Build for Windows MSVC
 build-win:
-	IF EXIST out\ferium-windows-msvc.zip DEL out\ferium-windows-msvc.zip
-	IF NOT EXIST out MKDIR out
+	if (Test-Path -Path ".\out\ferium-windows-msvc.zip") { Remove-Item -Path ".\out\ferium-windows-msvc.zip" }
+	if (-Not (Test-Path -Path ".\out")) { New-Item -Name "out" -ItemType Directory }
 	cargo build --target=x86_64-pc-windows-msvc --release
-	PowerShell -Command Compress-Archive -Path "target\x86_64-pc-windows-msvc\release\ferium.exe" -DestinationPath "out\ferium-windows-msvc.zip"
+	Compress-Archive -Path "target\x86_64-pc-windows-msvc\release\ferium.exe" -DestinationPath "out\ferium-windows-msvc.zip"
 
 # Build for GNU Linux and GNU Windows (e.g. cygwin)
 build-linux:
