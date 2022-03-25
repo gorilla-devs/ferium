@@ -50,8 +50,9 @@ async fn actual_main() -> Result<()> {
 		"CURSEFORGE_API_KEY",
 		"A CurseForge API key is required to build. If you don't have one, you can bypass this by setting the variable to a blank string, however anything using the CurseForge API will not work."
 	));
-	// Ferium's config file
-	let mut config_file = config::get_config_file(config::config_file_path()).await?;
+	let mut config_file =
+		config::get_config_file(cli_app.config_file.unwrap_or_else(config::config_file_path))
+			.await?;
 	let mut config_file_contents = String::new();
 	config_file
 		.read_to_string(&mut config_file_contents)

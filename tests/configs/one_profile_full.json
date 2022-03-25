@@ -1,0 +1,34 @@
+{
+	"active_profile": 0,
+	"profiles": [
+		{
+			"name": "Default Modded",
+			"output_dir": "./tests/mods",
+			"game_version": "1.18.2",
+			"mod_loader": "Fabric",
+			"mods": [
+				{
+					"ModrinthProject": {
+						"name": "Starlight (Fabric)",
+						"project_id": "H8CaAYZC"
+					}
+				},
+				{
+					"CurseForgeProject": {
+						"name": "Terralith",
+						"project_id": 513688
+					}
+				},
+				{
+					"GitHubRepository": {
+						"name": "sodium-fabric",
+						"full_name": [
+							"CaffeineMC",
+							"sodium-fabric"
+						]
+					}
+				}
+			]
+		}
+	]
+}

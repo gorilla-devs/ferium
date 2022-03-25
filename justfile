@@ -28,7 +28,7 @@ build-linux:
 
 # Save config file and run integration tests
 test:
-	@cargo clippy -- \
+	cargo clippy -- \
 		-D clippy::all \
 		-D clippy::cargo \
 		-D clippy::complexity \
@@ -43,9 +43,7 @@ test:
 		-A clippy::enum-variant-names \
 		-A clippy::too-many-lines \
 		-A clippy::single-match-else
-	@python3 tests/scripts/save_config.py
-	@-cargo test -- --test-threads=1
-	@python3 tests/scripts/restore_config.py
+	cargo test
 
 # Install Ferium to cargo's binary folder
 install:
@@ -57,5 +55,6 @@ install-dev:
 
 clean:
 	cargo clean
-	rm -r out
-	rm -r tests/mods
+	rm -rf out
+	rm -rf tests/mods
+	rm -rf tests/configs/running

@@ -1,4 +1,6 @@
 /target
 /out
+/tests/configs/.json
+/tests/configs/running
 /tests/mods
 .DS_Store

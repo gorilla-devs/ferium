@@ -1,6 +1,11 @@
 # Changelog for Ferium
 
-## [3.15.0] - 08.03.2022
+## [3.15.1] - 25.03.2022
+
+- Added hidden `config-file` argument
+- Massively improved integration tests. They are now independant from each other and can run in parallel
+
+## [3.15.0] - 24.03.2022
 
 Switched from make to [just](https://github.com/casey/just)
 

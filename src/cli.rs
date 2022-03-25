@@ -11,6 +11,10 @@ use std::path::PathBuf;
 pub struct Ferium {
 	#[clap(subcommand)]
 	pub subcommand: SubCommands,
+	#[clap(long)]
+	#[clap(hide = true)]
+	#[clap(help("Nur zum testen"))]
+	pub config_file: Option<PathBuf>,
 }
 
 #[derive(Subcommand)]

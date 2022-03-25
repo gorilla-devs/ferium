@@ -1,0 +1,12 @@
+{
+	"active_profile": 0,
+	"profiles": [
+		{
+			"name": "Test profile",
+			"output_dir": "./tests/mods",
+			"game_version": "1.18.2",
+			"mod_loader": "Fabric",
+			"mods": []
+		}
+	]
+}

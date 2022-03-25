@@ -21,6 +21,4 @@ Firstly you need the Rust toolchain (`cargo`, `rustup`, etc), you can install th
 If you want to build Ferium without cloning the repo, set the CurseForge API key then run `cargo install ferium`.
 
 To build the project and install it to your Cargo binary directory, clone the project then run `just install`. If you want to install for testing a developement version, run `just` or `just install-dev`.
-If you want to obtain executables for a specific OS, you can run `just build-<OS>` and replace `<OS>` with `mac`, `win`, or `linux`. The produced binaries will be zipped and moved to `out/`.
-
-You can run integration tests using `just test`. Don't use `cargo test` because that will interfere with your existing config, and the integration tests do not work when run in parallel. `just test` saves your config, forces tests to run sequentially, then restores your config whether the tests failed or not. Yes this is a terrible way to design integration tests and I will be fixing this soon
+If you want to obtain executables for a specific OS, you can run `just build-<OS>` and replace `<OS>` with `mac`, `win`, or `linux`. The produced binaries will be zipped and moved to `out/`. You can run clippy linters and integration tests using `just test`.
