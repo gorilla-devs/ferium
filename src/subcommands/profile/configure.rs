@@ -1,5 +1,4 @@
-use crate::error::{Error, Result};
-use ansi_term::Colour::{Green, White};
+use crate::error::{Result};
 use dialoguer::{theme::ColorfulTheme, Input, Select};
 use libium::{config, launchermeta, misc};
 use std::path::PathBuf;
@@ -53,19 +52,9 @@ pub async fn configure(
 			if let Some(index) = selection {
 				match index {
 					0 => {
-						eprint!(
-							"{} {}",
-							Green.paint("✔"),
-							White.bold().paint("Pick a mod output directory   "),
-						);
-						// Let user pick output directory
 						if let Some(dir) = misc::pick_folder(&profile.output_dir).await {
 							profile.output_dir = dir;
 						}
-						println!(
-							"{}",
-							Green.paint(profile.output_dir.to_str().ok_or(Error::OptionError)?)
-						);
 					},
 					1 => {
 						// Let user pick mc version from latest 10 versions
