@@ -1,9 +1,11 @@
 use crate::error::{Error, Result};
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
-use libium::{config, launchermeta, misc};
+use ferinth::Ferinth;
+use libium::{config, misc};
 use std::path::PathBuf;
 
 pub async fn create(
+	modrinth: &Ferinth,
 	config: &mut config::structs::Config,
 	game_version: Option<String>,
 	force_game_version: bool,
@@ -16,11 +18,11 @@ pub async fn create(
 			// If force game version is false
 			if !force_game_version {
 				// And if the game_version provided does not exist
-				if !launchermeta::get_version_manifest()
+				if !modrinth
+					.list_game_versions()
 					.await?
-					.versions
 					.iter()
-					.any(|version| version.id == game_version)
+					.any(|version| version.version == game_version)
 				{
 					// Then error out
 					return Err(Error::QuitFormatted(format!(
@@ -85,8 +87,7 @@ pub async fn create(
 			}
 
 			// Let user pick Minecraft version
-			let mut latest_versions: Vec<String> =
-				misc::get_latest_mc_versions(10, launchermeta::get_version_manifest().await?)?;
+			let mut latest_versions: Vec<String> = misc::get_latest_mc_versions(10).await?;
 			println!();
 			let selected_version = Select::with_theme(&ColorfulTheme::default())
 				.with_prompt("Which version of Minecraft do you play?")

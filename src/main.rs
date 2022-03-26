@@ -45,7 +45,7 @@ async fn actual_main() -> Result<()> {
 	};
 
 	let github = octocrab::instance();
-	let modrinth = Ferinth::new("ferium");
+	let modrinth = Ferinth::new();
 	let curseforge = Furse::new(env!(
 		"CURSEFORGE_API_KEY",
 		"A CurseForge API key is required to build. If you don't have one, you can bypass this by setting the variable to a blank string, however anything using the CurseForge API will not work."
@@ -87,6 +87,7 @@ async fn actual_main() -> Result<()> {
 	} = cli_app.subcommand
 	{
 		subcommands::profile::create::create(
+			&modrinth,
 			&mut config,
 			game_version,
 			force_game_version,

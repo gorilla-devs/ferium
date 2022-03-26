@@ -1,6 +1,6 @@
-use crate::error::{Result};
+use crate::error::Result;
 use dialoguer::{theme::ColorfulTheme, Input, Select};
-use libium::{config, launchermeta, misc};
+use libium::{config, misc};
 use std::path::PathBuf;
 
 pub async fn configure(
@@ -58,10 +58,7 @@ pub async fn configure(
 					},
 					1 => {
 						// Let user pick mc version from latest 10 versions
-						let mut versions = misc::get_latest_mc_versions(
-							10,
-							launchermeta::get_version_manifest().await?,
-						)?;
+						let mut versions = misc::get_latest_mc_versions(10).await?;
 						let index = Select::with_theme(&ColorfulTheme::default())
 							.with_prompt("Select a Minecraft version")
 							.items(&versions)

@@ -1,6 +1,6 @@
 use crate::error::{Error, Result};
 use ferinth::{
-	structures::{project_structs::Project, ProjectType},
+	structures::project_structs::{Project, ProjectType},
 	Ferinth,
 };
 use furse::Furse;

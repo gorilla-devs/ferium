@@ -457,9 +457,9 @@ dependencies = [
 
 [[package]]
 name = "ferinth"
-version = "2.0.1"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b94b6b8deaf9ddb7bfab09cbacff03d91b06347adfd07d6c16c5862c5e35a4d"
+checksum = "dc0f13e3bcc217d9c66b30963872fc69289ccf4575012ad502925191f59c12f7"
 dependencies = [
  "bytes",
  "chrono",
@@ -473,7 +473,7 @@ dependencies = [
 
 [[package]]
 name = "ferium"
-version = "3.15.2"
+version = "3.15.3"
 dependencies = [
  "bytes",
  "clap",
@@ -964,12 +964,13 @@ checksum = "efaa7b300f3b5fe8eb6bf21ce3895e1751d9665086af2d64b42f19701015ff4f"
 
 [[package]]
 name = "libium"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2cafa95d798616638c33dc42627ea5ab1893372791bc550063d751b9ff80c77"
+checksum = "9989141f828d11e8a6226eeaeea15c36f0af382534f14bc134fea904b807af43"
 dependencies = [
  "clap",
  "dialoguer",
+ "ferinth",
  "home",
  "lazy_static",
  "reqwest",
