@@ -17,6 +17,10 @@ keywords = [
 	"github"
 ]
 
+[features]
+default = ["gui"]
+gui = ["libium/gui"]
+
 [dependencies]
 tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "macros"] }
 reqwest = { version = "0", default-features = false, features = ["rustls-tls"] }
