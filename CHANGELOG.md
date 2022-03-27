@@ -1,5 +1,14 @@
 # Changelog for Ferium
 
+## [3.15.3] - 26.03.2022
+
+Small tweaks to accomodate the changes in `ferinth` and `libium`
+
+## [3.15.2] - 26.03.2022
+
+- Added `gui` feature. This changes the file dialogue from a text input to a gui file dialogue
+- Tweaked formatting of profile list command
+
 ## [3.15.1] - 25.03.2022
 
 - Added hidden `config-file` argument
