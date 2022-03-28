@@ -1,7 +1,7 @@
-use crate::error::{Error, Result};
+use anyhow::{bail, Result};
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use ferinth::Ferinth;
-use libium::{config, misc, file_picker};
+use libium::{config, file_picker, misc};
 use std::path::PathBuf;
 
 pub async fn create(
@@ -25,26 +25,18 @@ pub async fn create(
 					.any(|version| version.version == game_version)
 				{
 					// Then error out
-					return Err(Error::QuitFormatted(format!(
-						"The game version {} does not exist",
-						game_version
-					)));
+					bail!("The game version {} does not exist", game_version);
 				}
 			}
 			// Check that there isn't already a profile with the same name
 			for profile in &config.profiles {
 				if profile.name == name {
-					return Err(Error::QuitFormatted(format!(
-						"A profile with name {} already exists",
-						name
-					)));
+					bail!("A profile with name {} already exists", name);
 				}
 			}
 			// Check that the output_dir isn't relative
 			if !output_dir.is_absolute() {
-				return Err(Error::Quit(
-					"The provided output directory is not absolute, i.e. it is a relative path",
-				));
+				bail!("The provided output directory is not absolute, i.e. it is a relative path")
 			}
 			config.profiles.push(config::structs::Profile {
 				name,
@@ -118,9 +110,7 @@ pub async fn create(
 		// Either all or none of these options should exist
 		// TODO: make this into a group in the Clap app
 		_ => {
-			return Err(Error::Quit(
-				"Provide all four arguments to create a profile using options",
-			))
+			bail!("Provide all four arguments to create a profile using options",)
 		},
 	}
 

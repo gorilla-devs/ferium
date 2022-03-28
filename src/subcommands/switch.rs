@@ -1,10 +1,10 @@
-use crate::error::{Error, Result};
+use anyhow::{anyhow, Result};
 use dialoguer::{theme::ColorfulTheme, Select};
 use libium::config;
 
 pub fn switch(config: &mut config::structs::Config, profile_name: Option<String>) -> Result<()> {
 	if config.profiles.len() < 2 {
-		Err(Error::Quit("There is only 1 profile in your config"))
+		Err(anyhow!("There is only 1 profile in your config"))
 	} else if let Some(profile_name) = profile_name {
 		match config
 			.profiles
@@ -15,7 +15,7 @@ pub fn switch(config: &mut config::structs::Config, profile_name: Option<String>
 				config.active_profile = selection;
 				Ok(())
 			},
-			None => Err(Error::Quit("The profile provided does not exist")),
+			None => Err(anyhow!("The profile provided does not exist")),
 		}
 	} else {
 		let profile_names = config

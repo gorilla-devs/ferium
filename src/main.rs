@@ -1,10 +1,9 @@
 mod cli;
-mod error;
 mod subcommands;
 
+use anyhow::{bail, Result};
 use clap::StructOpt;
 use cli::{Ferium, ProfileSubCommands, SubCommands};
-use error::{Error, Result};
 use ferinth::Ferinth;
 use furse::Furse;
 use libium::{add, config};
@@ -16,16 +15,13 @@ use tokio::{
 #[tokio::main]
 async fn main() {
 	if let Err(err) = actual_main().await {
-		// If an error occures, print the error message
 		println!("{}", err);
-		// And exit with an exit code
 		std::process::exit(1);
 	}
 }
 
 async fn actual_main() -> Result<()> {
-	// Get the command to execute from Clap
-	// This also displays the help page or version
+	// This also displays the help page or version automatically
 	let cli_app = Ferium::parse();
 
 	// Check for an internet connection
@@ -36,11 +32,7 @@ async fn actual_main() -> Result<()> {
 		eprint!("Checking internet connection... ");
 		match online::check(Some(4)).await {
 			Ok(_) => println!("✓"),
-			Err(_) => {
-				return Err(Error::Quit(
-					"× Ferium requires an internet connection to work",
-				))
-			},
+			Err(_) => bail!("× Ferium requires an internet connection to work"),
 		}
 	};
 
@@ -57,7 +49,6 @@ async fn actual_main() -> Result<()> {
 	config_file
 		.read_to_string(&mut config_file_contents)
 		.await?;
-	// Deserialise `config_file` to a config
 	let mut config: config::structs::Config = serde_json::from_str(&config_file_contents)?;
 
 	// The create command must run before getting the profile so that configs without profiles can have profiles added to them
@@ -93,16 +84,12 @@ async fn actual_main() -> Result<()> {
 		profile
 	} else {
 		if config.profiles.is_empty() {
-			return Err(Error::Quit (
-				"There are no profiles configured. Add a profile to your config using `ferium profile create`"
-			));
+			bail!("There are no profiles configured. Add a profile to your config using `ferium profile create`")
 		}
 		// Default to first profile if index is set incorrectly
 		config.active_profile = 0;
 		config::write_config(&mut config_file, &config).await?;
-		return Err(Error::Quit(
-			"Active profile index points to a non existent profile. Switched to first profile",
-		));
+		bail!("Active profile index points to a non existent profile. Switched to first profile",)
 	};
 
 	// Run function(s) based on the sub(sub)command to be executed
@@ -174,6 +161,7 @@ async fn actual_main() -> Result<()> {
 			// Empty the mods directory
 			let _ = remove_dir_all(&profile.output_dir).await;
 			create_dir_all(&profile.output_dir).await?;
+			let mut error = false;
 			for mod_ in &profile.mods {
 				use libium::config::structs::Mod;
 				if let (Err(err), name) = match mod_ {
@@ -206,8 +194,12 @@ async fn actual_main() -> Result<()> {
 						name,
 					),
 				} {
-					println!("Could not download {} due to {}", name, err);
+					println!("Could not download {}; {}", name, err);
+					error = true;
 				}
+			}
+			if error {
+				bail!("Some mods were not successfully downloaded")
 			}
 		},
 	};
@@ -221,8 +213,7 @@ async fn actual_main() -> Result<()> {
 /// Check if `profile` is empty, and if so return an error
 fn check_empty_profile(profile: &config::structs::Profile) -> Result<()> {
 	if profile.mods.is_empty() {
-		Err(Error::EmptyConfigFile)
-	} else {
-		Ok(())
+		bail!("Your currently selected profile is empty! Run `ferium help` to see how to add mods");
 	}
+	Ok(())
 }

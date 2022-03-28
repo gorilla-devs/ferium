@@ -1,4 +1,4 @@
-use crate::error::Result;
+use anyhow::Result;
 use dialoguer::{theme::ColorfulTheme, Input, Select};
 use libium::{config, misc, file_picker};
 use std::path::PathBuf;

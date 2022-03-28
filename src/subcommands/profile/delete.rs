@@ -1,7 +1,5 @@
-use crate::{
-	error::{Error, Result},
-	subcommands::switch::switch,
-};
+use crate::subcommands::switch::switch;
+use anyhow::{bail, Result};
 use dialoguer::{theme::ColorfulTheme, Select};
 use libium::config;
 
@@ -15,7 +13,7 @@ pub fn delete(config: &mut config::structs::Config, profile_name: Option<String>
 				.position(|profile| profile.name == profile_name)
 			{
 				Some(selection) => selection,
-				None => return Err(Error::Quit("The profile name provided does not exist")),
+				None => bail!("The profile name provided does not exist"),
 			}
 		},
 		None => {

@@ -18,7 +18,7 @@ If you would like to make a feature request, check the [issues](https://github.c
 
 Firstly you need the Rust toolchain (`cargo`, `rustup`, etc), you can install these from <https://rust-lang.org>. You'll also need the [Just](https://github.com/casey/just) command runner, its like `make` but better.
 
-If you want to build Ferium without cloning the repo, set the CurseForge API key then run `cargo install ferium`.
+If you want to build Ferium without cloning the repo, set the CurseForge API key environment variable then run `cargo install ferium`.
 
 To build the project and install it to your Cargo binary directory, clone the project then run `just install`. If you want to install for testing a developement version, run `just` or `just install-dev`.
-If you want to obtain executables for a specific OS, you can run `just build-<OS>` and replace `<OS>` with `mac`, `win`, or `linux`. The produced binaries will be zipped and moved to `out/`. You can run clippy linters and integration tests using `just test`.
+If you want to obtain executables for a specific OS, you can run `just build-<OS>` and replace `<OS>` with `mac`, `win`, or `linux`. The produced binaries will be zipped and moved to `out/`. You can run clippy linters using `just lint`, and integration tests using `cargo test`.

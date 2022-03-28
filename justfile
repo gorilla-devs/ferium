@@ -26,24 +26,22 @@ build-linux:
 	zip -r out/ferium-linux-gnu.zip -j target/x86_64-unknown-linux-gnu/release/ferium
 	zip -r out/ferium-windows-gnu.zip -j target/x86_64-pc-windows-gnu/release/ferium.exe
 
-# Save config file and run integration tests
-test:
+# Run clippy lints
+lint:
 	cargo clippy -- \
 		-D clippy::all \
-		-D clippy::cargo \
-		-D clippy::complexity \
 		-D clippy::perf \
 		-D clippy::style \
+		-D clippy::cargo \
 		-D clippy::suspicious \
+		-D clippy::complexity \
 		-W clippy::nursery \
 		-W clippy::pedantic \
-		-A clippy::let-underscore-drop \
-		-A clippy::multiple-crate-versions \
-		-A clippy::non-ascii-literal \
-		-A clippy::enum-variant-names \
 		-A clippy::too-many-lines \
-		-A clippy::single-match-else
-	cargo test
+		-A clippy::non-ascii-literal \
+		-A clippy::single-match-else \
+		-A clippy::let-underscore-drop \
+		-A clippy::multiple-crate-versions
 
 # Install Ferium to cargo's binary folder
 install:

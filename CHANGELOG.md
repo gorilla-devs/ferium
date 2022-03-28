@@ -1,5 +1,14 @@
 # Changelog for Ferium
 
+## [3.17.0] - 28.03.2022
+
+Removed error handling
+
+- Removed `error.rs`
+- Replaced `thiserror` with `anyhow`
+- `return Err(Error::Quit("Error message))` has been replaced with `bail!("Error message)` from anyhow
+- Made upgrade command return an erraneous exit code if downloading failed
+
 ## [3.16.0] - 28.03.2022
 
 - Moved `add.rs` to libium

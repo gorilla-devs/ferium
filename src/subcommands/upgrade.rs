@@ -1,4 +1,4 @@
-use crate::error::{Error, Result};
+use anyhow::{anyhow, Result};
 use ferinth::Ferinth;
 use furse::Furse;
 use libium::{config, misc};
@@ -70,7 +70,7 @@ pub async fn curseforge(
 		write_mod_file(profile, contents, &file.file_name).await?;
 		Ok(())
 	} else {
-		Err(Error::Quit("Could not find a compatible file to download"))
+		Err(anyhow!("Could not find a compatible file to download"))
 	}
 }
 
@@ -124,7 +124,7 @@ pub async fn github(
 		write_mod_file(profile, contents, &asset_to_download.name).await?;
 		Ok(())
 	} else {
-		Err(Error::Quit("Could not find a compatible asset to download"))
+		Err(anyhow!("Could not find a compatible asset to download"))
 	}
 }
 
@@ -176,6 +176,6 @@ pub async fn modrinth(
 		write_mod_file(profile, contents, &version.files[0].filename).await?;
 		Ok(())
 	} else {
-		Err(Error::Quit("Could not find a compatible file to download"))
+		Err(anyhow!("Could not find a compatible file to download"))
 	}
 }

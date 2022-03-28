@@ -1,4 +1,4 @@
-use crate::error::{Error, Result};
+use anyhow::{bail, Result};
 use dialoguer::{theme::ColorfulTheme, MultiSelect};
 use libium::config::{self, structs::Mod};
 
@@ -19,10 +19,7 @@ pub fn remove(
 				{
 					items_to_remove.push(index);
 				} else {
-					return Err(Error::QuitFormatted(format!(
-						"A mod called {} is not present in this profile",
-						mod_name
-					)));
+					bail!("A mod called {} is not present in this profile", mod_name);
 				}
 			}
 		},

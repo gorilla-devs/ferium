@@ -1,4 +1,4 @@
-use crate::error::Result;
+use anyhow::Result;
 use ferinth::Ferinth;
 use furse::Furse;
 use itertools::Itertools;
