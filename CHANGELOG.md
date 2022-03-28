@@ -1,5 +1,11 @@
 # Changelog for Ferium
 
+## [3.16.0] - 28.03.2022
+
+- Moved `add.rs` to libium
+- Small edits to accomodate changes in libium 1.4
+- Massively simplified error handling, planning to replace with `anyhow` soon as it useless
+
 ## [3.15.3] - 26.03.2022
 
 Small tweaks to accomodate the changes in `ferinth` and `libium`

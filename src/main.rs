@@ -7,7 +7,7 @@ use cli::{Ferium, ProfileSubCommands, SubCommands};
 use error::{Error, Result};
 use ferinth::Ferinth;
 use furse::Furse;
-use libium::config;
+use libium::{add, config};
 use tokio::{
 	fs::{create_dir_all, remove_dir_all},
 	io::AsyncReadExt,
@@ -58,21 +58,7 @@ async fn actual_main() -> Result<()> {
 		.read_to_string(&mut config_file_contents)
 		.await?;
 	// Deserialise `config_file` to a config
-	let mut config: config::structs::Config = match serde_json::from_str(&config_file_contents) {
-		Ok(config) => config,
-		Err(err) => {
-			return Err(Error::QuitFormatted(format!(
-				"Error decoding configuration file, {} at {:?} {}:{}",
-				// Error name
-				Error::JSONError(err.classify()),
-				// File path so that users can find it
-				config::config_file_path(),
-				// Location within config file
-				err.line(),
-				err.column()
-			)));
-		},
-	};
+	let mut config: config::structs::Config = serde_json::from_str(&config_file_contents)?;
 
 	// The create command must run before getting the profile so that configs without profiles can have profiles added to them
 	if let SubCommands::Profile {
@@ -122,15 +108,15 @@ async fn actual_main() -> Result<()> {
 	// Run function(s) based on the sub(sub)command to be executed
 	match cli_app.subcommand {
 		SubCommands::AddModrinth { project_id } => {
-			let project = subcommands::add::modrinth(&modrinth, project_id, profile).await?;
+			let project = add::modrinth(&modrinth, project_id, profile).await?;
 			println!("Added {}", project.title);
 		},
 		SubCommands::AddGithub { owner, name } => {
-			let repo = subcommands::add::github(github.repos(owner, name), profile).await?;
+			let repo = add::github(github.repos(owner, name), profile).await?;
 			println!("Added {}", repo.name);
 		},
 		SubCommands::AddCurseforge { project_id } => {
-			let project = subcommands::add::curseforge(&curseforge, project_id, profile).await?;
+			let project = add::curseforge(&curseforge, project_id, profile).await?;
 			println!("Added {}", project.name);
 		},
 		SubCommands::List { verbose } => {

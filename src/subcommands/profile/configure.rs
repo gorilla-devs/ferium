@@ -1,6 +1,6 @@
 use crate::error::Result;
 use dialoguer::{theme::ColorfulTheme, Input, Select};
-use libium::{config, misc};
+use libium::{config, misc, file_picker};
 use std::path::PathBuf;
 
 pub async fn configure(
@@ -52,13 +52,13 @@ pub async fn configure(
 			if let Some(index) = selection {
 				match index {
 					0 => {
-						if let Some(dir) = misc::pick_folder(&profile.output_dir).await {
+						if let Some(dir) = file_picker::pick_folder(&profile.output_dir).await {
 							profile.output_dir = dir;
 						}
 					},
 					1 => {
 						// Let user pick mc version from latest 10 versions
-						let mut versions = misc::get_latest_mc_versions(10).await?;
+						let mut versions = misc::get_major_mc_versions(10).await?;
 						let index = Select::with_theme(&ColorfulTheme::default())
 							.with_prompt("Select a Minecraft version")
 							.items(&versions)

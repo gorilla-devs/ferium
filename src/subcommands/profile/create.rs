@@ -1,7 +1,7 @@
 use crate::error::{Error, Result};
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use ferinth::Ferinth;
-use libium::{config, misc};
+use libium::{config, misc, file_picker};
 use std::path::PathBuf;
 
 pub async fn create(
@@ -65,7 +65,7 @@ pub async fn create(
 				.with_prompt("Would you like to specify a custom mods directory?")
 				.interact()?
 			{
-				if let Some(dir) = misc::pick_folder(&selected_mods_dir).await {
+				if let Some(dir) = file_picker::pick_folder(&selected_mods_dir).await {
 					selected_mods_dir = dir;
 				};
 			}
@@ -87,7 +87,7 @@ pub async fn create(
 			}
 
 			// Let user pick Minecraft version
-			let mut latest_versions: Vec<String> = misc::get_latest_mc_versions(10).await?;
+			let mut latest_versions: Vec<String> = misc::get_major_mc_versions(10).await?;
 			println!();
 			let selected_version = Select::with_theme(&ColorfulTheme::default())
 				.with_prompt("Which version of Minecraft do you play?")

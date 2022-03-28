@@ -105,7 +105,7 @@ pub async fn github(
                         // Check the asset's name
                         asset.name.contains(&version_to_check)
 						// and the release name
-                        || release.name.as_ref().ok_or(Error::OptionError)?.contains(&version_to_check))
+                        || release.name.as_ref().unwrap().contains(&version_to_check))
                     // Check if its a JAR file
                     && asset.name.contains("jar")
 			{

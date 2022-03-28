@@ -1,4 +1,4 @@
-use crate::error::{Error, Result};
+use crate::error::Result;
 use ferinth::Ferinth;
 use furse::Furse;
 use itertools::Itertools;
@@ -106,9 +106,9 @@ pub async fn github(github: &Octocrab, full_name: &(String, String)) -> Result<(
 		repo.name,
 		repo.description
 			.map_or("".into(), |description| { format!("\n  {}", description) }),
-		repo.html_url.ok_or(Error::OptionError)?,
+		repo.html_url.unwrap(),
 		downloads,
-		repo.owner.ok_or(Error::OptionError)?.login,
+		repo.owner.unwrap().login,
 		if let Some(license) = repo.license {
 			format!(
 				"\n  License:        {}{}",
