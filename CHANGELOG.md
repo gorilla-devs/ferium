@@ -1,5 +1,9 @@
 # Changelog for Ferium
 
+## [3.18.1] - 30.03.2022
+
+Update to libium `1.5.1` to remove OpenSSL
+
 ## [3.18.0] - 30.03.2022
 
 - Removed `upgrade.rs` and used `libium::upgrade`
