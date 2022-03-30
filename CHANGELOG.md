@@ -1,5 +1,12 @@
 # Changelog for Ferium
 
+## [3.18.0] - 30.03.2022
+
+- Removed `upgrade.rs` and used `libium::upgrade`
+- Made errors print out red and bold
+- Made ticks green using a const
+- Significantly improved the output during upgrades
+
 ## [3.17.0] - 28.03.2022
 
 Removed error handling

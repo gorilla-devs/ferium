@@ -4,18 +4,24 @@ mod subcommands;
 use anyhow::{bail, Result};
 use clap::StructOpt;
 use cli::{Ferium, ProfileSubCommands, SubCommands};
+use colored::{ColoredString, Colorize};
 use ferinth::Ferinth;
 use furse::Furse;
+use lazy_static::lazy_static;
 use libium::{add, config};
 use tokio::{
 	fs::{create_dir_all, remove_dir_all},
 	io::AsyncReadExt,
 };
 
+lazy_static! {
+	pub static ref TICK: ColoredString = "✓".green();
+}
+
 #[tokio::main]
 async fn main() {
 	if let Err(err) = actual_main().await {
-		println!("{}", err);
+		eprintln!("{}", err.to_string().red().bold());
 		std::process::exit(1);
 	}
 }
@@ -31,7 +37,7 @@ async fn actual_main() -> Result<()> {
 		// and check for 4 more seconds
 		eprint!("Checking internet connection... ");
 		match online::check(Some(4)).await {
-			Ok(_) => println!("✓"),
+			Ok(_) => println!("{}", *TICK),
 			Err(_) => bail!("× Ferium requires an internet connection to work"),
 		}
 	};
@@ -164,42 +170,65 @@ async fn actual_main() -> Result<()> {
 			let mut error = false;
 			for mod_ in &profile.mods {
 				use libium::config::structs::Mod;
-				if let (Err(err), name) = match mod_ {
+				let result = match mod_ {
 					Mod::CurseForgeProject { name, project_id } => (
-						subcommands::upgrade::curseforge(
+						name,
+						match libium::upgrade::curseforge(
 							&curseforge,
 							profile,
 							*project_id,
 							no_patch_check,
 						)
-						.await,
-						name,
+						.await
+						{
+							Ok(file) => Ok(file.file_name),
+							Err(err) => Err(err),
+						},
 					),
 					Mod::ModrinthProject { name, project_id } => (
-						subcommands::upgrade::modrinth(
+						name,
+						match libium::upgrade::modrinth(
 							&modrinth,
 							profile,
 							project_id,
 							no_patch_check,
 						)
-						.await,
-						name,
+						.await
+						{
+							Ok(version) => Ok(version.files[0].filename.clone()),
+							Err(err) => Err(err),
+						},
 					),
 					Mod::GitHubRepository { name, full_name } => (
-						subcommands::upgrade::github(
+						name,
+						match libium::upgrade::github(
 							&github.repos(&full_name.0, &full_name.1),
 							profile,
 						)
-						.await,
-						name,
+						.await
+						{
+							Ok(asset) => Ok(asset.name),
+							Err(err) => Err(err),
+						},
 					),
-				} {
-					println!("Could not download {}; {}", name, err);
-					error = true;
+				};
+				match result {
+					(name, Ok(file_name)) => {
+						println!(
+							"{} {:40}{}",
+							*TICK,
+							name,
+							format!("({})", file_name).dimmed()
+						)
+					},
+					(name, Err(err)) => {
+						eprintln!("{}", format!("× {:40}{}", name, err).red());
+						error = true;
+					},
 				}
 			}
 			if error {
-				bail!("Some mods were not successfully downloaded")
+				bail!("\nSome mods were not successfully downloaded")
 			}
 		},
 	};
