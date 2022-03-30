@@ -219,7 +219,7 @@ async fn actual_main() -> Result<()> {
 							*TICK,
 							name,
 							format!("({})", file_name).dimmed()
-						)
+						);
 					},
 					(name, Err(err)) => {
 						eprintln!("{}", format!("× {:40}{}", name, err).red());
