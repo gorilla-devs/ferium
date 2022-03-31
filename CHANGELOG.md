@@ -1,5 +1,10 @@
 # Changelog for Ferium
 
+## [3.18.2] - 31.03.2022
+
+- Improved readme
+- Made commands `ferium` and `ferium profile` show the help page when not given any subcommands
+
 ## [3.18.1] - 30.03.2022
 
 Update to libium `1.5.1` to remove OpenSSL

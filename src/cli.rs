@@ -7,7 +7,7 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[clap(author, version, about)]
 #[clap(propagate_version = true)]
-#[clap(subcommand_required = true)]
+#[clap(arg_required_else_help = true)]
 pub struct Ferium {
 	#[clap(subcommand)]
 	pub subcommand: SubCommands,
@@ -42,7 +42,7 @@ pub enum SubCommands {
 		#[clap(help("Show information about the mod"))]
 		verbose: bool,
 	},
-	#[clap(subcommand_required = true)]
+	#[clap(arg_required_else_help = true)]
 	#[clap(about("Create, configure, or remove the current profile"))]
 	Profile {
 		#[clap(subcommand)]
