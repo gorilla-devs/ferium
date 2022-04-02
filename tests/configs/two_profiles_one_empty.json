@@ -8,21 +8,21 @@
 			"mod_loader": "Fabric",
 			"mods": [
 				{
-					"ModrinthProject": {
-						"name": "Starlight (Fabric)",
-						"project_id": "H8CaAYZC"
+					"name": "Starlight (Fabric)",
+					"identifier": {
+						"ModrinthProject": "H8CaAYZC"
 					}
 				},
 				{
-					"CurseForgeProject": {
-						"name": "Terralith",
-						"project_id": 513688
+					"name": "Terralith",
+					"identifier": {
+						"CurseForgeProject": 513688
 					}
 				},
 				{
-					"GitHubRepository": {
-						"name": "sodium-fabric",
-						"full_name": [
+					"name": "sodium-fabric",
+					"identifier": {
+						"GitHubRepository": [
 							"CaffeineMC",
 							"sodium-fabric"
 						]

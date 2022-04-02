@@ -1,13 +1,17 @@
 use anyhow::{bail, Result};
 use dialoguer::{theme::ColorfulTheme, MultiSelect};
-use libium::config::{self, structs::Mod};
+use libium::config;
 
 /// Display a list of mods and repos in the profile to select from and remove selected ones
 pub fn remove(
 	profile: &mut config::structs::Profile,
 	mod_names: Option<Vec<String>>,
 ) -> Result<()> {
-	let names: Vec<&str> = profile.mods.iter().map(Mod::name).collect();
+	let names = profile
+		.mods
+		.iter()
+		.map(|mod_| &mod_.name)
+		.collect::<Vec<_>>();
 	let mut items_to_remove = Vec::new();
 
 	match mod_names {

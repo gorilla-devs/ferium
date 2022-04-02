@@ -1,5 +1,17 @@
 # Changelog for Ferium
 
+## [3.19.0] - 02.04.2022
+
+> WARNING!
+> 
+> The config format has changed, your previous (pre-3.19) configs will not work!
+> Use [Frigate](https://github.com/theRookieCoder/frigate) to update your old config to the new format
+
+- Updated to Libium 1.6
+- Improved the upgrading code in `main.rs`, taking advantage of the improved config format
+- Updated `remove.rs` to support the new libium version
+- Updated the test configs to the new format
+
 ## [3.18.2] - 31.03.2022
 
 - Improved readme

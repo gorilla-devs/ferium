@@ -8,7 +8,7 @@ use colored::{ColoredString, Colorize};
 use ferinth::Ferinth;
 use furse::Furse;
 use lazy_static::lazy_static;
-use libium::{add, config};
+use libium::{add, config, upgrade};
 use tokio::{
 	fs::{create_dir_all, remove_dir_all},
 	io::AsyncReadExt,
@@ -116,19 +116,20 @@ async fn actual_main() -> Result<()> {
 			check_empty_profile(profile)?;
 			for mod_ in &profile.mods {
 				if verbose {
-					match mod_ {
-						config::structs::Mod::CurseForgeProject { project_id, .. } => {
+					use config::structs::ModIdentifier;
+					match &mod_.identifier {
+						ModIdentifier::CurseForgeProject(project_id) => {
 							subcommands::list::curseforge(&curseforge, *project_id).await
 						},
-						config::structs::Mod::ModrinthProject { project_id, .. } => {
+						ModIdentifier::ModrinthProject(project_id) => {
 							subcommands::list::modrinth(&modrinth, project_id).await
 						},
-						config::structs::Mod::GitHubRepository { full_name, .. } => {
+						ModIdentifier::GitHubRepository(full_name) => {
 							subcommands::list::github(&github, full_name).await
 						},
 					}?;
 				} else {
-					println!("{}", mod_.name());
+					println!("{}", mod_.name);
 				}
 			}
 		},
@@ -169,60 +170,44 @@ async fn actual_main() -> Result<()> {
 			create_dir_all(&profile.output_dir).await?;
 			let mut error = false;
 			for mod_ in &profile.mods {
-				use libium::config::structs::Mod;
-				let result = match mod_ {
-					Mod::CurseForgeProject { name, project_id } => (
-						name,
-						match libium::upgrade::curseforge(
-							&curseforge,
-							profile,
-							*project_id,
-							no_patch_check,
-						)
-						.await
+				use libium::config::structs::ModIdentifier;
+				let result = match &mod_.identifier {
+					ModIdentifier::CurseForgeProject(project_id) => {
+						match upgrade::curseforge(&curseforge, profile, *project_id, no_patch_check)
+							.await
 						{
 							Ok(file) => Ok(file.file_name),
 							Err(err) => Err(err),
-						},
-					),
-					Mod::ModrinthProject { name, project_id } => (
-						name,
-						match libium::upgrade::modrinth(
-							&modrinth,
-							profile,
-							project_id,
-							no_patch_check,
-						)
-						.await
+						}
+					},
+					ModIdentifier::ModrinthProject(project_id) => {
+						match upgrade::modrinth(&modrinth, profile, project_id, no_patch_check)
+							.await
 						{
 							Ok(version) => Ok(version.files[0].filename.clone()),
 							Err(err) => Err(err),
-						},
-					),
-					Mod::GitHubRepository { name, full_name } => (
-						name,
-						match libium::upgrade::github(
-							&github.repos(&full_name.0, &full_name.1),
-							profile,
-						)
-						.await
+						}
+					},
+					ModIdentifier::GitHubRepository(full_name) => {
+						match upgrade::github(&github.repos(&full_name.0, &full_name.1), profile)
+							.await
 						{
 							Ok(asset) => Ok(asset.name),
 							Err(err) => Err(err),
-						},
-					),
+						}
+					},
 				};
 				match result {
-					(name, Ok(file_name)) => {
+					Ok(file_name) => {
 						println!(
 							"{} {:40}{}",
 							*TICK,
-							name,
+							mod_.name,
 							format!("({})", file_name).dimmed()
 						);
 					},
-					(name, Err(err)) => {
-						eprintln!("{}", format!("× {:40}{}", name, err).red());
+					Err(err) => {
+						eprintln!("{}", format!("× {:40}{}", mod_.name, err).red());
 						error = true;
 					},
 				}
