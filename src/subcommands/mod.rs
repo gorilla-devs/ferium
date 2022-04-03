@@ -1,4 +1,6 @@
 pub mod list;
 pub mod profile;
-pub mod remove;
-pub mod switch;
+mod remove;
+mod switch;
+pub use remove::remove;
+pub use switch::switch;

@@ -69,7 +69,7 @@ async fn actual_main() -> Result<()> {
 			},
 	} = cli_app.subcommand
 	{
-		subcommands::profile::create::create(
+		subcommands::profile::create(
 			&modrinth,
 			&mut config,
 			game_version,
@@ -80,7 +80,7 @@ async fn actual_main() -> Result<()> {
 		)
 		.await?;
 
-		// Update config file with new values and quit
+		// Update config file and quit
 		config::write_config(&mut config_file, &config).await?;
 		return Ok(());
 	}
@@ -95,22 +95,25 @@ async fn actual_main() -> Result<()> {
 		// Default to first profile if index is set incorrectly
 		config.active_profile = 0;
 		config::write_config(&mut config_file, &config).await?;
-		bail!("Active profile index points to a non existent profile. Switched to first profile",)
+		bail!("Active profile specified incorrectly. Switched to first profile",)
 	};
 
 	// Run function(s) based on the sub(sub)command to be executed
 	match cli_app.subcommand {
 		SubCommands::AddModrinth { project_id } => {
+			eprint!("Adding mod... ");
 			let project = add::modrinth(&modrinth, project_id, profile).await?;
-			println!("Added {}", project.title);
+			println!("{} ({})", *TICK, project.title);
 		},
 		SubCommands::AddGithub { owner, name } => {
+			eprint!("Adding mod... ");
 			let repo = add::github(github.repos(owner, name), profile).await?;
-			println!("Added {}", repo.name);
+			println!("{} ({})", *TICK, repo.name);
 		},
 		SubCommands::AddCurseforge { project_id } => {
+			eprint!("Adding mod... ");
 			let project = add::curseforge(&curseforge, project_id, profile).await?;
-			println!("Added {}", project.name);
+			println!("{} ({})", *TICK, project.name);
 		},
 		SubCommands::List { verbose } => {
 			check_empty_profile(profile)?;
@@ -140,7 +143,7 @@ async fn actual_main() -> Result<()> {
 				name,
 				output_dir,
 			} => {
-				subcommands::profile::configure::configure(
+				subcommands::profile::configure(
 					profile,
 					game_version,
 					mod_loader,
@@ -149,20 +152,21 @@ async fn actual_main() -> Result<()> {
 				)
 				.await?;
 			},
-			// This must have been checked earlier before getting the profile
+			// This must have ran earlier before getting the profile
 			ProfileSubCommands::Create { .. } => unreachable!(),
 			ProfileSubCommands::Delete { profile_name } => {
-				subcommands::profile::delete::delete(&mut config, profile_name)?;
+				subcommands::profile::delete(&mut config, profile_name)?;
 			},
-			ProfileSubCommands::List => subcommands::profile::list::list(&config),
+			ProfileSubCommands::List => subcommands::profile::list(&config),
 		},
 		SubCommands::Remove { mod_names } => {
 			check_empty_profile(profile)?;
-			subcommands::remove::remove(profile, mod_names)?;
+			subcommands::remove(profile, mod_names)?;
 		},
 		SubCommands::Switch { profile_name } => {
-			subcommands::switch::switch(&mut config, profile_name)?;
+			subcommands::switch(&mut config, profile_name)?;
 		},
+		SubCommands::Sort => profile.mods.sort_by_cached_key(|mod_| mod_.name.clone()),
 		SubCommands::Upgrade { no_patch_check } => {
 			check_empty_profile(profile)?;
 			// Empty the mods directory

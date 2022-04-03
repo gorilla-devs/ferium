@@ -1,5 +1,12 @@
 # Changelog for Ferium
 
+## [3.19.1] - 03.04.2022
+
+- Added a sort command that sorts mods in alphabetical order
+- Edited the `mod.rs` files to make accessing functions better
+- Updated some user facing output such as command help pages, and errors
+- Reverted to the old output style in the add command
+
 ## [3.19.0] - 02.04.2022
 
 > WARNING!

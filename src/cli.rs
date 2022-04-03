@@ -1,4 +1,3 @@
-//! Contains convenience wrappers for argument parsing using Clap
 #![deny(missing_docs)] // All commands must have help/about statements
 
 use clap::{Parser, Subcommand};
@@ -21,7 +20,7 @@ pub struct Ferium {
 pub enum SubCommands {
 	#[clap(about("Add a Modrinth mod to the profile"))]
 	AddModrinth {
-		#[clap(help("The project ID is specified as '</> PROJECT ID' in the right sidebar of the mod's Modrith page\nYou can also use the project slug for this"))]
+		#[clap(help("The project ID is specified at the bottom of the left sidebar under 'Technical information'\nYou can also use the project slug for this"))]
 		project_id: String,
 	},
 	#[clap(about("Add a GitHub repository to the profile"))]
@@ -33,7 +32,7 @@ pub enum SubCommands {
 	},
 	#[clap(about("Add a CurseForge mod to the profile"))]
 	AddCurseforge {
-		#[clap(help("The project ID is specified as 'Project ID' in the 'About Project' sidebar of the mod's CurseForge page"))]
+		#[clap(help("The project ID is specified at the right sidebar under 'About Project'"))]
 		project_id: i32,
 	},
 	#[clap(about("List all the mods in the profile, and with some their metadata if verbose"))]
@@ -61,6 +60,8 @@ pub enum SubCommands {
 		#[clap(help("The name of the profile to switch to"))]
 		profile_name: Option<String>,
 	},
+	#[clap(about("Sort all your mods in alphabetical order"))]
+	Sort,
 	#[clap(about("Download and install the latest version of the mods specified"))]
 	Upgrade {
 		#[clap(long)]

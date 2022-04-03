@@ -74,6 +74,7 @@ pub async fn create(
 					if profile.name == name {
 						println!("A profile with name {} already exists!", name);
 						prompt = true;
+						break;
 					}
 				}
 			}
@@ -107,10 +108,8 @@ pub async fn create(
 				mod_loader: selected_loader,
 			});
 		},
-		// Either all or none of these options should exist
-		// TODO: make this into a group in the Clap app
 		_ => {
-			bail!("Provide all four arguments to create a profile using options",)
+			bail!("Provide all four arguments to create a profile using options")
 		},
 	}
 
