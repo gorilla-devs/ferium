@@ -46,7 +46,7 @@ When you first start up, you will have to create a new profile by running  `feri
     - You can find the slug in the website url (`modrinth.com/mod/<slug>`) and the project id at the bottom of the left sidebar under 'Technical information'
   - So, to add [Sodium](https://modrinth.com/mod/sodium) to your profile you should run `ferium add-modrinth sodium` or `ferium add-modrinth AANobbMI`
 - CurseForge Mods
-  - `ferium add-modrinth project_id`
+  - `ferium add-curseforge project_id`
   - Where `project_id` is the project id of the mod
     - For example, [Terralith](https://www.curseforge.com/minecraft/mc-mods/terralith) has project id `513688`
     - You can find the project id at the top of the right sidebar under 'About Project'
