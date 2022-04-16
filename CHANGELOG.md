@@ -1,5 +1,9 @@
 # Changelog for Ferium
 
+## [3.20.1] - 16.04.2022
+
+When picking a file from a version, Ferium will get the primary file rather than the first file
+
 ## [3.20.0] - 16.04.2022
 
 - Added a `Downloadable` struct that represents (and be converted from) a mod file from Modrinth, GitHub Releases, or CurseForge

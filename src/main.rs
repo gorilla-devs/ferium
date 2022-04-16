@@ -215,7 +215,14 @@ async fn actual_main() -> Result<()> {
                     ModIdentifier::ModrinthProject(project_id) => {
                         upgrade::modrinth(&modrinth, profile, project_id, no_patch_check)
                             .await
-                            .map(|ok| ok.files[0].clone().into())
+                            .map(|version| {
+                                for file in &version.files {
+                                    if file.primary {
+                                        return file.clone().into(); // stupid `clones()`s, I WANT POLONIUS
+                                    }
+                                }
+                                version.files[0].clone().into() // stupid `clones()`s, I WANT POLONIUS
+                            })
                     },
                     ModIdentifier::GitHubRepository(full_name) => {
                         upgrade::github(&github.repos(&full_name.0, &full_name.1), profile)
