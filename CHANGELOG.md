@@ -1,5 +1,14 @@
 # Changelog for Ferium
 
+## [3.20.0] - 16.04.2022
+
+- Added a `Downloadable` struct that represents (and be converted from) a mod file from Modrinth, GitHub Releases, or CurseForge
+- There is now also a constant for the cross too ("×")
+- Big changes to upgrading:
+  - Does not empty the output directory
+  - Checks if the latest compatible version is already downloaded, if so it does not download it again
+  - If there are files that are not the latest compatible version of a mod, then they are deleted. So _effectively_ the output directory is emptied
+
 ## [3.19.1] - 03.04.2022
 
 - Added a sort command that sorts mods in alphabetical order
