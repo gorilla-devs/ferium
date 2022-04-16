@@ -10,11 +10,11 @@ categories = ["command-line-utilities"]
 readme = "README.md"
 license = "MPL-2.0"
 keywords = [
-	"minecraft",
-	"mod-manager",
-	"modrinth",
-	"curseforge",
-	"github"
+    "minecraft",
+    "mod-manager",
+    "modrinth",
+    "curseforge",
+    "github"
 ]
 
 [features]
