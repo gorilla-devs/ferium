@@ -63,15 +63,7 @@ pub enum SubCommands {
     #[clap(about("Sort all your mods in alphabetical order"))]
     Sort,
     #[clap(about("Download and install the latest version of the mods specified"))]
-    Upgrade {
-        #[clap(long)]
-        #[clap(help(
-            "Do not check for the full game version, only check for the major and minor versions
-            \rSome Minecraft versions (e.g. 1.18 & 1.18.1) are compatible with each other,
-            \rthis option allows you to use older, but still compatible, versions of a mod that might not have yet updated to the latest version"
-        ))]
-        no_patch_check: bool,
-    },
+    Upgrade,
 }
 
 #[derive(Subcommand)]

@@ -197,7 +197,7 @@ async fn actual_main() -> Result<()> {
             subcommands::switch(&mut config, profile_name)?;
         },
         SubCommands::Sort => profile.mods.sort_by_cached_key(|mod_| mod_.name.clone()),
-        SubCommands::Upgrade { no_patch_check } => {
+        SubCommands::Upgrade => {
             check_empty_profile(profile)?;
             create_dir_all(&profile.output_dir).await?;
             let mut to_download = Vec::new();
@@ -207,21 +207,39 @@ async fn actual_main() -> Result<()> {
             for mod_ in &profile.mods {
                 use libium::config::structs::ModIdentifier;
                 let result: Result<Downloadable, _> = match &mod_.identifier {
-                    ModIdentifier::CurseForgeProject(project_id) => {
-                        upgrade::curseforge(&curseforge, profile, *project_id, no_patch_check)
-                            .await
-                            .map(std::convert::Into::into)
-                    },
-                    ModIdentifier::ModrinthProject(project_id) => {
-                        upgrade::modrinth(&modrinth, profile, project_id, no_patch_check)
-                            .await
-                            .map(|ok| ok.files[0].clone().into())
-                    },
-                    ModIdentifier::GitHubRepository(full_name) => {
-                        upgrade::github(&github.repos(&full_name.0, &full_name.1), profile)
-                            .await
-                            .map(std::convert::Into::into)
-                    },
+                    ModIdentifier::CurseForgeProject(project_id) => upgrade::curseforge(
+                        &curseforge,
+                        profile,
+                        *project_id,
+                        mod_.check_game_version,
+                        mod_.check_mod_loader,
+                    )
+                    .await
+                    .map(std::convert::Into::into),
+                    ModIdentifier::ModrinthProject(project_id) => upgrade::modrinth(
+                        &modrinth,
+                        profile,
+                        project_id,
+                        mod_.check_game_version,
+                        mod_.check_mod_loader,
+                    )
+                    .await
+                    .map(|version| {
+                        for file in &version.files {
+                            if file.primary {
+                                return file.clone().into();
+                            }
+                        }
+                        version.files[0].clone().into()
+                    }),
+                    ModIdentifier::GitHubRepository(full_name) => upgrade::github(
+                        &github.repos(&full_name.0, &full_name.1),
+                        profile,
+                        mod_.check_game_version,
+                        mod_.check_mod_loader,
+                    )
+                    .await
+                    .map(std::convert::Into::into),
                 };
                 match result {
                     Ok(result) => {

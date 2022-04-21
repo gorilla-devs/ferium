@@ -1,5 +1,14 @@
 # Changelog for Ferium
 
+## [3.21.0] - 20.04.2022
+
+- Removed `no_patch_check` flag for the upgrade command
+- There are now overrides for game version and mod loader checks. For now there is no UI, you have to edit the config file manually
+
+## [3.20.1] - 16.04.2022
+
+When picking a file from a version, Ferium will get the primary file rather than the first file
+
 ## [3.20.0] - 16.04.2022
 
 - Added a `Downloadable` struct that represents (and be converted from) a mod file from Modrinth, GitHub Releases, or CurseForge
