@@ -79,7 +79,6 @@ jobs:
           path: ./out
       - name: Create release
         uses: softprops/action-gh-release@v1
-        draft: true
         with:
           draft: true # TODO: FOR DEBUG ONLY!
           files: ./out/*
