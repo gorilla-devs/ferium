@@ -6,7 +6,7 @@ pub fn list(config: &config::structs::Config) {
             "{}{}
         \r  Output directory:   {}
         \r  Minecraft Version:  {}
-        \r  Mod Loader:         {}
+        \r  Mod Loader:         {:?}
         \r  Mods:               {}\n",
             profile.name,
             if i == config.active_profile { " *" } else { "" },

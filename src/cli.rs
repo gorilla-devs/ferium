@@ -78,7 +78,7 @@ pub enum ProfileSubCommands {
         #[clap(long)]
         #[clap(arg_enum)]
         #[clap(help("The mod loader to check compatibility for"))]
-        mod_loader: Option<libium::config::structs::ModLoaders>,
+        mod_loader: Option<libium::config::structs::ModLoader>,
         #[clap(long)]
         #[clap(help("The name of the profile"))]
         name: Option<String>,
@@ -97,7 +97,7 @@ pub enum ProfileSubCommands {
         #[clap(long)]
         #[clap(arg_enum)]
         #[clap(help("The mod loader to check compatibility for"))]
-        mod_loader: Option<libium::config::structs::ModLoaders>,
+        mod_loader: Option<libium::config::structs::ModLoader>,
         #[clap(long)]
         #[clap(help("The name of the profile"))]
         name: Option<String>,

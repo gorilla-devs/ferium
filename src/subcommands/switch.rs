@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use dialoguer::{theme::ColorfulTheme, Select};
+use dialoguer::Select;
 use libium::config;
 
 pub fn switch(config: &mut config::structs::Config, profile_name: Option<String>) -> Result<()> {
@@ -24,7 +24,7 @@ pub fn switch(config: &mut config::structs::Config, profile_name: Option<String>
             .map(|profile| &profile.name)
             .collect::<Vec<_>>();
 
-        let selection = Select::with_theme(&ColorfulTheme::default())
+        let selection = Select::with_theme(&*crate::THEME)
             .with_prompt("Select which profile to switch to")
             .items(&profile_names)
             .default(config.active_profile)

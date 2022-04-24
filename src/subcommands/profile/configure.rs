@@ -1,12 +1,13 @@
+use crate::subcommands::profile::pick_mod_loader;
 use anyhow::Result;
-use dialoguer::{theme::ColorfulTheme, Input, Select};
+use dialoguer::{Input, Select};
 use libium::{config, file_picker, misc};
 use std::path::PathBuf;
 
 pub async fn configure(
     profile: &mut config::structs::Profile,
     game_version: Option<String>,
-    mod_loader: Option<config::structs::ModLoaders>,
+    mod_loader: Option<config::structs::ModLoader>,
     name: Option<String>,
     output_dir: Option<PathBuf>,
 ) -> Result<()> {
@@ -44,7 +45,7 @@ pub async fn configure(
         ];
 
         loop {
-            let selection = Select::with_theme(&ColorfulTheme::default())
+            let selection = Select::with_theme(&*crate::THEME)
                 .with_prompt("Which setting would you like to change")
                 .items(&items)
                 .interact_opt()?;
@@ -59,7 +60,7 @@ pub async fn configure(
                     1 => {
                         // Let user pick mc version from latest 10 versions
                         let mut versions = misc::get_major_mc_versions(10).await?;
-                        let index = Select::with_theme(&ColorfulTheme::default())
+                        let index = Select::with_theme(&*crate::THEME)
                             .with_prompt("Select a Minecraft version")
                             .items(&versions)
                             .default(0)
@@ -70,23 +71,10 @@ pub async fn configure(
                     },
                     2 => {
                         // Let user pick mod loader
-                        let mod_loaders = ["Fabric", "Forge"];
-                        let index = Select::with_theme(&ColorfulTheme::default())
-                            .with_prompt("Pick a mod loader")
-                            .items(&mod_loaders)
-                            .default(match profile.mod_loader {
-                                config::structs::ModLoaders::Fabric => 0,
-                                config::structs::ModLoaders::Forge => 1,
-                            })
-                            .interact_opt()?;
-                        if index == Some(0) {
-                            profile.mod_loader = config::structs::ModLoaders::Fabric;
-                        } else if index == Some(1) {
-                            profile.mod_loader = config::structs::ModLoaders::Forge;
-                        }
+                        profile.mod_loader = pick_mod_loader(Some(&profile.mod_loader))?;
                     },
                     3 => {
-                        let name = Input::with_theme(&ColorfulTheme::default())
+                        let name = Input::with_theme(&*crate::THEME)
                             .with_prompt("Change the profile's name")
                             .default(profile.name.clone())
                             .interact_text()?;

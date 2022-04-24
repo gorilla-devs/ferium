@@ -1,5 +1,12 @@
 # Changelog for Ferium
 
+## [3.22.0] - 24.04.2022
+
+- Update to Libium 1.9
+- Added static variables for a yellow tick and the dialoguer colourful theme
+- Extracted the pick mod loader code to `profile/mod.rs`
+- Added a yellow tick if the mod was compatible due to backwards compatibility
+
 ## [3.21.0] - 20.04.2022
 
 - Removed `no_patch_check` flag for the upgrade command

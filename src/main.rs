@@ -18,6 +18,9 @@ use tokio::{
 const CROSS: &str = "×";
 lazy_static! {
     pub static ref TICK: ColoredString = "✓".green();
+    pub static ref YELLOW_TICK: ColoredString = "✓".yellow();
+    pub static ref THEME: dialoguer::theme::ColorfulTheme =
+        dialoguer::theme::ColorfulTheme::default();
 }
 
 struct Downloadable {
@@ -201,12 +204,13 @@ async fn actual_main() -> Result<()> {
             check_empty_profile(profile)?;
             create_dir_all(&profile.output_dir).await?;
             let mut to_download = Vec::new();
+            let mut backwards_compat = false;
             let mut error = false;
 
             println!("{}\n", "Determining the Latest Compatible Versions".bold());
             for mod_ in &profile.mods {
                 use libium::config::structs::ModIdentifier;
-                let result: Result<Downloadable, _> = match &mod_.identifier {
+                let result: Result<(Downloadable, bool), _> = match &mod_.identifier {
                     ModIdentifier::CurseForgeProject(project_id) => upgrade::curseforge(
                         &curseforge,
                         profile,
@@ -215,7 +219,7 @@ async fn actual_main() -> Result<()> {
                         mod_.check_mod_loader,
                     )
                     .await
-                    .map(std::convert::Into::into),
+                    .map(|ok| (ok.0.into(), ok.1)),
                     ModIdentifier::ModrinthProject(project_id) => upgrade::modrinth(
                         &modrinth,
                         profile,
@@ -224,13 +228,14 @@ async fn actual_main() -> Result<()> {
                         mod_.check_mod_loader,
                     )
                     .await
-                    .map(|version| {
+                    .map(|ok| {
+                        let version = ok.0;
                         for file in &version.files {
                             if file.primary {
-                                return file.clone().into();
+                                return (file.clone().into(), ok.1);
                             }
                         }
-                        version.files[0].clone().into()
+                        (version.files[0].clone().into(), ok.1)
                     }),
                     ModIdentifier::GitHubRepository(full_name) => upgrade::github(
                         &github.repos(&full_name.0, &full_name.1),
@@ -239,15 +244,20 @@ async fn actual_main() -> Result<()> {
                         mod_.check_mod_loader,
                     )
                     .await
-                    .map(std::convert::Into::into),
+                    .map(|ok| (ok.0.into(), ok.1)),
                 };
                 match result {
                     Ok(result) => {
                         println!(
                             "{} {:40}{}",
-                            *TICK,
+                            if result.1 {
+                                backwards_compat = true;
+                                YELLOW_TICK.clone()
+                            } else {
+                                TICK.clone()
+                            },
                             mod_.name,
-                            format!("({})", result.filename).dimmed()
+                            format!("({})", result.0.filename).dimmed()
                         );
                         to_download.push(result);
                     },
@@ -257,6 +267,12 @@ async fn actual_main() -> Result<()> {
                     },
                 }
             }
+            if backwards_compat {
+                println!(
+                    "{}",
+                    "Fabric mod using Quilt backwards compatibility".yellow()
+                );
+            }
 
             eprint!("\n{}", "Downloading Mod Files... ".bold());
             for file in std::fs::read_dir(&profile.output_dir)? {
@@ -265,10 +281,9 @@ async fn actual_main() -> Result<()> {
                 if path.is_file() {
                     let mut index = None;
                     // If a file is already downloaded
-                    if let Some(downloadable) = to_download
-                        .iter()
-                        .find_position(|thing| file.file_name().to_str().unwrap() == thing.filename)
-                    {
+                    if let Some(downloadable) = to_download.iter().find_position(|thing| {
+                        file.file_name().to_str().unwrap() == thing.0.filename
+                    }) {
                         index = Some(downloadable.0);
                     }
                     match index {
@@ -283,11 +298,11 @@ async fn actual_main() -> Result<()> {
             }
             match {
                 for downloadable in to_download {
-                    let contents = reqwest::get(downloadable.download_url)
+                    let contents = reqwest::get(downloadable.0.download_url)
                         .await?
                         .bytes()
                         .await?;
-                    upgrade::write_mod_file(profile, contents, &downloadable.filename).await?;
+                    upgrade::write_mod_file(profile, contents, &downloadable.0.filename).await?;
                 }
                 Ok::<(), anyhow::Error>(())
             } {

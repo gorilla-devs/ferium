@@ -1,5 +1,5 @@
 use anyhow::{bail, Result};
-use dialoguer::{theme::ColorfulTheme, MultiSelect};
+use dialoguer::MultiSelect;
 use libium::config;
 
 /// Display a list of mods and repos in the profile to select from and remove selected ones
@@ -28,7 +28,7 @@ pub fn remove(
             }
         },
         None => {
-            items_to_remove = match MultiSelect::with_theme(&ColorfulTheme::default())
+            items_to_remove = match MultiSelect::with_theme(&*crate::THEME)
                 .with_prompt("Select mods to remove")
                 .items(&names)
                 .interact_opt()?
