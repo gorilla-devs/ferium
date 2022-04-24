@@ -14,7 +14,6 @@ jobs:
     env:
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    needs: check
     steps:
       - uses: actions/checkout@v3
       - uses: extractions/setup-just@v1
