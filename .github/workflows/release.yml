@@ -1,0 +1,20 @@
+name: Build and Release
+
+on:
+  push:
+    # tags:
+    #   - "*"
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: extractions/setup-just@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: just lint
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
