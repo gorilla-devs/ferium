@@ -8,7 +8,8 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
-    environment: actions
+    env:
+      CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
     steps:
       - uses: actions/checkout@v3
       - uses: extractions/setup-just@v1
