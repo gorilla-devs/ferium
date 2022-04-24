@@ -6,10 +6,10 @@ on:
     #   - "*"
 
 jobs:
+  env:
+    CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
   check:
     runs-on: ubuntu-latest
-    env:
-      CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
     steps:
       - uses: actions/checkout@v3
       - uses: extractions/setup-just@v1
@@ -24,3 +24,41 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
+  build-linux:
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v3
+      - uses: extractions/setup-just@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Install dependencies
+        run: sudo apt-get install librust-gdk-dev
+      - name: Build
+        run: just build-linux
+      - run: ls out
+  build-mac:
+    runs-on: macos-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v3
+      - uses: extractions/setup-just@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Build
+        run: just build-mac
+      - run: ls out
+  build-linux:
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v3
+      - uses: extractions/setup-just@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Build
+        run: just build-win
+      - run: ls out
