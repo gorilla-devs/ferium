@@ -50,8 +50,8 @@ jobs:
       - name: Build
         run: just build-mac
       - run: ls out
-  build-linux:
-    runs-on: ubuntu-latest
+  build-win:
+    runs-on: windows-latest
     needs: check
     steps:
       - uses: actions/checkout@v3
