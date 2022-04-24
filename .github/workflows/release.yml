@@ -83,14 +83,14 @@ jobs:
         with:
           draft: true # TODO: FOR DEBUG ONLY!
           files: ./out/*
-          name: Ferium ${{ github.ref }}
+          name: Ferium ${{ github.ref_name }}
           body: |
-            Compiled binaries for Ferium version `${{ github.ref }}` ([changelog](https://github.com/theRookieCoder/ferium/blob/main/CHANGELOG.md#${{ github.ref }}))
+            Compiled binaries for Ferium version `${{ github.ref_name }}` ([changelog](https://github.com/theRookieCoder/ferium/blob/main/CHANGELOG.md#${{ github.ref_name }}))
 
             The provided binaries are for:
 
-            - GNU Linux (x64 linux gnu)
             - GNU Linux (x64 linux gnu) without a GUI file dialog and libraries
+            - GNU Linux (x64 linux gnu)
             - macOS Apple Silicon (aarch64 darwin)
             - macOS Intel (x64 darwin)
             - GNU Windows, e.g. cygwin (x64 windows gnu)
