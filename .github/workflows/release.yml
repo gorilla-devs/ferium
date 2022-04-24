@@ -6,7 +6,7 @@ on:
     #   - "*"
 
 jobs:
-  checks:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
