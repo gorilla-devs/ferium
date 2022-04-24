@@ -18,7 +18,7 @@ jobs:
         with:
           toolchain: stable
       - name: Install dependencies
-        run: sudo apt install librust-gdk-dev gcc-mingw-w64-x86-64
+        run: sudo apt install librust-gdk-dev
       - name: Lint code
         run: just lint
       - name: Run tests
@@ -40,7 +40,7 @@ jobs:
           toolchain: stable
           target: x86_64-pc-windows-gnu
       - name: Install dependencies
-        run: sudo apt-get install librust-gdk-dev
+        run: sudo apt-get install librust-gdk-dev gcc-mingw-w64-x86-64
       - name: Build
         run: just build-linux
       - run: ls out
