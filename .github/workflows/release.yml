@@ -14,7 +14,11 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: just lint
-      - uses: actions-rs/cargo@v1
+      - name: Install dependencies
+        run: sudo apt-get install gtk-3
+      - name: Lint code
+        run: just lint
+      - name: Run tests
+        uses: actions-rs/cargo@v1
         with:
           command: test
