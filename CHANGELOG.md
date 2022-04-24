@@ -1,6 +1,7 @@
 # Changelog for Ferium
 
-## [3.22.0] - 24.04.2022
+## `v3.22.0`
+### 24.04.2022
 
 - Update to Libium 1.9
 - Added static variables for a yellow tick and the dialoguer colourful theme

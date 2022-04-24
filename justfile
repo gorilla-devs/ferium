@@ -30,7 +30,7 @@ build-linux:
 build-linux-nogui:
     rm -f out/ferium-linux-gnu-nogui.zip
     mkdir -p out
-    cargo build --target=x86_64-unknown-linux-gnu --release
+    cargo build --target=x86_64-unknown-linux-gnu --release --no-default-features
     zip -r out/ferium-linux-gnu-nogui.zip -j target/x86_64-unknown-linux-gnu/release/ferium
 
 # Run clippy lints

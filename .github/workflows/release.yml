@@ -3,10 +3,10 @@ name: Build and Release
 on:
   push:
     # tags:
-    #   - "*"
+    #   - "v*.*.*"
 
 jobs:
-  build-release:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -64,7 +64,36 @@ jobs:
       - name: Upload build artefacts
         uses: actions/upload-artifact@v3
         with:
-          name: Ferium for ${{ matrix.os }}
+          name: binaries
           path: out/ferium*.zip
           if-no-files-found: error
-      
+
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download artefacts
+        uses: actions/download-artifact@v3
+        with:
+          name: binaries
+          path: ./out
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        draft: true
+        with:
+          draft: true # TODO: FOR DEBUG ONLY!
+          files: ./out/*
+          name: Ferium ${{ github.ref }}
+          body: |
+            Compiled binaries for Ferium version `${{ github.ref }}` ([changelog](https://github.com/theRookieCoder/ferium/blob/main/CHANGELOG.md#${{ github.ref }}))
+
+            The provided binaries are for:
+
+            - GNU Linux (x64 linux gnu)
+            - GNU Linux (x64 linux gnu) without a GUI file dialog and libraries
+            - macOS Apple Silicon (aarch64 darwin)
+            - macOS Intel (x64 darwin)
+            - GNU Windows, e.g. cygwin (x64 windows gnu)
+            - MSVC Windows (x64 windows msvc)
+
+            You can install these by downloading and unzipping the appropriate asset, and moving the executable to ~/bin or any other binary folder in your path.
