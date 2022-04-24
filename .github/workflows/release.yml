@@ -15,7 +15,7 @@ jobs:
         with:
           toolchain: stable
       - name: Install dependencies
-        run: sudo apt-get install gtk-3
+        run: sudo apt-get install librust-gdk-dev
       - name: Lint code
         run: just lint
       - name: Run tests
