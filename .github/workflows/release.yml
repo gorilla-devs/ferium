@@ -5,6 +5,7 @@ on:
     # tags:
     #   - "*"
 
+jobs:
   build-release:
     runs-on: ${{ matrix.os }}
     strategy:
