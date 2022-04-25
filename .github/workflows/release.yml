@@ -80,7 +80,7 @@ jobs:
           name: binaries
           path: ./out
       - name: Download ferium from AUR
-          run: git clone ssh://aur@aur.archlinux.org/ferium-bin.git
+        run: git clone ssh://aur@aur.archlinux.org/ferium-bin.git
       - name: Upgrade PKGBUILD
         uses: hapakaien/archlinux-package-action@v2
         with:
