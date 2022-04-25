@@ -3,8 +3,7 @@ name: Build and Release
 # Only run when a tag is pushed
 on:
   push:
-    tags:
-      - "*"
+    branches: [aur_action]
 
 jobs:
   build:
