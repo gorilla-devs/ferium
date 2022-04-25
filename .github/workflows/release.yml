@@ -78,6 +78,17 @@ jobs:
         with:
           name: binaries
           path: ./out
+      - name: Get ssh permission
+        run: |
+          mkdir ~/.ssh
+          touch ~/.ssh/known_hosts
+          ssh-keyscan -v -t ssh-rsa aur.archlinux.org >>~/.ssh/known_hosts
+          echo "Host aur.archlinux.org" >> ~/.ssh/config
+          echo "  IdentityFile ~/.ssh/aur" >> ~/.ssh/config
+          echo "  User aur" >> ~/.ssh/config
+          echo "${{ secrets.PRIVATE }}" >> ~/.ssh/aur
+          chmod -vR 600 ~/.ssh/aur
+          ssh-keygen -vy -f ~/.ssh/aur >~/.ssh/aur.pub
       - name: Download ferium from AUR
         run: git clone ssh://aur@aur.archlinux.org/ferium-bin.git
       - name: Upgrade PKGBUILD
@@ -90,15 +101,6 @@ jobs:
           flags: ''
       - name: Upload to the AUR
         run: |
-          mkdir ~/.ssh
-          touch ~/.ssh/known_hosts
-          ssh-keyscan -v -t ssh-rsa aur.archlinux.org >>~/.ssh/known_hosts
-          echo "Host aur.archlinux.org" >> ~/.ssh/config
-          echo "  IdentityFile ~/.ssh/aur" >> ~/.ssh/config
-          echo "  User aur" >> ~/.ssh/config
-          echo "${{ secrets.PRIVATE }}" >> ~/.ssh/aur
-          chmod -vR 600 ~/.ssh/aur
-          ssh-keygen -vy -f ~/.ssh/aur >~/.ssh/aur.pub
           cd ferium-bin
           git config --global user.email "shiue.kyle@gmail.com"
           git config --global user.name "KyleUltimate"
