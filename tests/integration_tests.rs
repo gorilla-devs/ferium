@@ -1,5 +1,6 @@
 mod util;
 
+use libium::HOME;
 use std::fs::remove_dir;
 use util::run_command;
 
@@ -19,6 +20,8 @@ fn create_config_file_when_none() {
 
 #[test]
 fn create_profile() -> Result {
+    let mut home = HOME.clone();
+    home.push("mods");
     run_command(
         vec![
             "profile",
@@ -30,7 +33,7 @@ fn create_profile() -> Result {
             "--mod-loader",
             "forge",
             "--output-dir",
-            "/mods",
+            home.to_str().unwrap(),
         ],
         Some("empty"),
     )
@@ -38,6 +41,8 @@ fn create_profile() -> Result {
 
 #[test]
 fn create_profile_non_existent_game_version() {
+    let mut home = HOME.clone();
+    home.push("mods");
     assert!(run_command(
         vec![
             "profile",
@@ -49,7 +54,7 @@ fn create_profile_non_existent_game_version() {
             "--mod-loader",
             "forge",
             "--output-dir",
-            "/mods"
+            home.to_str().unwrap(),
         ],
         Some("empty")
     )
@@ -78,6 +83,8 @@ fn create_profile_output_dir_not_absolute() {
 
 #[test]
 fn create_profile_missing_args() {
+    let mut home = HOME.clone();
+    home.push("mods");
     assert!(run_command(
         vec![
             "profile",
@@ -88,7 +95,7 @@ fn create_profile_missing_args() {
             "--mod-loader",
             "forge",
             "--output-dir",
-            "/mods"
+            home.to_str().unwrap(),
         ],
         Some("empty")
     )
@@ -97,6 +104,8 @@ fn create_profile_missing_args() {
 
 #[test]
 fn create_profile_name_already_exists() {
+    let mut home = HOME.clone();
+    home.push("mods");
     assert!(run_command(
         vec![
             "profile",
@@ -108,7 +117,7 @@ fn create_profile_name_already_exists() {
             "--mod-loader",
             "forge",
             "--output-dir",
-            "/mods"
+            home.to_str().unwrap(),
         ],
         Some("empty_profile")
     )

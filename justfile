@@ -26,6 +26,13 @@ build-linux:
     zip -r out/ferium-linux-gnu.zip -j target/x86_64-unknown-linux-gnu/release/ferium
     zip -r out/ferium-windows-gnu.zip -j target/x86_64-pc-windows-gnu/release/ferium.exe
 
+# Build for GNU Linux without a GUI file dialog
+build-linux-nogui:
+    rm -f out/ferium-linux-gnu-nogui.zip
+    mkdir -p out
+    cargo build --target=x86_64-unknown-linux-gnu --release --no-default-features
+    zip -r out/ferium-linux-gnu-nogui.zip -j target/x86_64-unknown-linux-gnu/release/ferium
+
 # Run clippy lints
 lint:
     cargo clippy -- \
