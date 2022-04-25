@@ -3,7 +3,8 @@ name: Build and Release
 # Only run when a tag is pushed
 on:
   push:
-    branches: [aur_action]
+    tags:
+      - "*"
 
 jobs:
   build:
@@ -43,10 +44,10 @@ jobs:
       - name: Lint code
         run: just lint
 
-      #- name: Run tests
-      #  uses: actions-rs/cargo@v1
-      #  with:
-      #    command: test
+      - name: Run tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
 
       - name: Build macOS
         if: matrix.os == 'macos-latest'
