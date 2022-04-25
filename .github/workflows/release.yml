@@ -43,10 +43,10 @@ jobs:
       - name: Lint code
         run: just lint
 
-      - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+      #- name: Run tests
+      #  uses: actions-rs/cargo@v1
+      #  with:
+      #    command: test
 
       - name: Build macOS
         if: matrix.os == 'macos-latest'
