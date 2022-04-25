@@ -79,7 +79,7 @@ async fn actual_main() -> Result<()> {
     let github = {
         let mut builder = octocrab::OctocrabBuilder::new();
         if let Some(token) = cli_app.github_token {
-            builder = builder.personal_token(token.into());
+            builder = builder.personal_token(token);
         }
         octocrab::initialise(builder)
     }?;
