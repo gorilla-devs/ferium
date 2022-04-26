@@ -86,13 +86,16 @@ jobs:
           commit_username: "Ilesh Thiada"
           commit_email: ileshkt@gmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      # Remove the dots for the markdown header
+      - name: MD Header
+        run: MD_HEADER=$(echo ${{ github.ref_name }} | sed 's/\.//g')
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
           files: ./out/*
           name: Ferium ${{ github.ref_name }}
           body: |
-            Compiled binaries for Ferium version `${{ github.ref_name }}` ([changelog](https://github.com/theRookieCoder/ferium/blob/main/CHANGELOG.md#${{ github.ref_name }}))
+            Compiled binaries for Ferium version `${{ github.ref_name }}` ([changelog](https://github.com/theRookieCoder/ferium/blob/main/CHANGELOG.md#${{ env.MD_HEADER }}))
 
             The provided binaries are for:
 

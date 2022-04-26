@@ -76,7 +76,13 @@ async fn actual_main() -> Result<()> {
         }
     };
 
-    let github = octocrab::instance();
+    let github = {
+        let mut builder = octocrab::OctocrabBuilder::new();
+        if let Some(token) = cli_app.github_token {
+            builder = builder.personal_token(token);
+        }
+        octocrab::initialise(builder)
+    }?;
     let modrinth = Ferinth::new();
     let curseforge = Furse::new(env!(
         "CURSEFORGE_API_KEY",

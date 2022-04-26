@@ -11,8 +11,11 @@ pub struct Ferium {
     #[clap(subcommand)]
     pub subcommand: SubCommands,
     #[clap(long)]
+    #[clap(help("A GitHub personal access token for increasing the rate limit"))]
+    pub github_token: Option<String>,
+    #[clap(long)]
     #[clap(hide = true)]
-    #[clap(help("Nur zum testen"))]
+    #[clap(help("Only for testing"))]
     pub config_file: Option<PathBuf>,
 }
 

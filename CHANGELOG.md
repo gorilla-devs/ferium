@@ -1,5 +1,11 @@
 # Changelog for Ferium
 
+## `v3.22.1`
+### 25.04.2022
+
+- Add a GitHub personal access token option to the root command
+- The integration tests will use the `GITHUB_TOKEN` environment variable if it is available (e.g. during actions workflows)
+
 ## `v3.22.0`
 ### 24.04.2022
 

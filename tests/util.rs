@@ -12,6 +12,10 @@ pub fn run_command(args: Vec<&str>, config_file: Option<&str>) -> Result<()> {
     }
 
     let mut command = Command::new(env!("CARGO_BIN_EXE_ferium"));
+    if let Some(token) = option_env!("GITHUB_TOKEN") {
+        command.arg("--github-token");
+        command.arg(token);
+    }
     command.args(
         // Prepend the config file path to the arguments
         // If none is given, provide a config file which doesn't exist
