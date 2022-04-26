@@ -79,6 +79,20 @@ jobs:
         with:
           name: binaries
           path: ./out
+      - name: Upload to the AUR(nogui)
+        uses: ATiltedTree/create-aur-release@v1
+        with:
+          package_name: ferium-bin
+          commit_username: "Ilesh Thiada"
+          commit_email: ileshkt@gmail.com
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      - name: Upload to the AUR(with gui)
+        uses: ATiltedTree/create-aur-release@v1
+        with:
+          package_name: ferium-gui-bin
+          commit_username: "Ilesh Thiada"
+          commit_email: ileshkt@gmail.com
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
       # Remove the dots for the markdown header
       - name: MD Header
         run: MD_HEADER=$(echo ${{ github.ref_name }} | sed 's/\.//g')
