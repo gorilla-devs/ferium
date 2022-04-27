@@ -1,5 +1,10 @@
 # Changelog for Ferium
 
+## `v3.22.2`
+### 27.04.2022
+
+Make GitHub Release downloads actually work
+
 ## `v3.22.1`
 ### 25.04.2022
 

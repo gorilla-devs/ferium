@@ -72,6 +72,20 @@ PS: [There is a known bug about this](https://github.com/theRookieCoder/ferium/i
 
 You can see all the mods in your current profile by running `ferium list`. If you want to see more information about them, you can run `ferium list -v` or `ferium list --verbose`. You can remove some of your mod by runnning `ferium remove` and selecting the ones you would like to remove by using the space key and pressing enter once you're done.
 
+#### Advanced
+
+If some mod is compatible with your profile but Ferium does not download it, then [create an issue]((https://github.com/theRookieCoder/ferium/issues/new)) if you think it's a bug. Or else, you can disable the game version or mod loader checks by setting `check_game_version` or `check_mod_loader` to false in the specific mod.  
+For example, [Just Enough Items](https://www.curseforge.com/minecraft/mc-mods/jei) does not specify the mod loader for older minecraft versions such as `1.12.2`. In this case, you would disable the mod loader check like so
+```json
+{
+    "name": "Just Enough Items (JEI)",
+    "identifier": {
+        "CurseForgeProject": 238222
+    },
+    "check_mod_loader": false
+}
+```
+
 ### Profiles
 
 #### Create

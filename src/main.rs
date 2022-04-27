@@ -47,7 +47,7 @@ impl From<octocrab::models::repos::Asset> for Downloadable {
     fn from(asset: octocrab::models::repos::Asset) -> Self {
         Self {
             filename: asset.name,
-            download_url: asset.url.into(),
+            download_url: asset.browser_download_url.into(),
         }
     }
 }
