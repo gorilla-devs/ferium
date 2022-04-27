@@ -4,6 +4,7 @@ use std::fs::{copy, create_dir};
 use std::io::Result;
 
 pub fn run_command(args: Vec<&str>, config_file: Option<&str>) -> Result<()> {
+    let mut args = args; // Borrow checker bug (I think)
     let running = format!("./tests/configs/running/{}.json", rand::random::<u16>());
     if let Some(config_file) = config_file {
         let _ = create_dir("./tests/configs/running");
@@ -12,15 +13,15 @@ pub fn run_command(args: Vec<&str>, config_file: Option<&str>) -> Result<()> {
     }
 
     let mut command = Command::new(env!("CARGO_BIN_EXE_ferium"));
+    let mut arguments = Vec::new();
     if let Some(token) = option_env!("GITHUB_TOKEN") {
-        command.arg("--github-token");
-        command.arg(token);
+        arguments.push("--github-token");
+        arguments.push(token);
     }
-    command.args(
-        // Prepend the config file path to the arguments
-        // If none is given, provide a config file which doesn't exist
-        vec![vec!["--config-file", &running], args].concat(),
-    );
+    arguments.push("--config-file");
+    arguments.push(&running);
+    arguments.append(&mut args);
+    command.args(arguments);
     let output = command.output()?;
     if output.status.success() {
         Ok(())
