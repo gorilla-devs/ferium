@@ -74,6 +74,7 @@ jobs:
     needs: build
     env:
       CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
@@ -106,7 +107,7 @@ jobs:
           files: ./out/*
           name: Ferium ${{ github.ref_name }}
           body: |
-            Compiled binaries for Ferium version `${{ github.ref_name }}` ([changelog](https://github.com/theRookieCoder/ferium/blob/main/CHANGELOG.md#${{ env.MD_HEADER }}))
+            Compiled binaries for Ferium version `${{ github.ref_name }}` ([changelog](https://github.com/theRookieCoder/ferium/blob/main/CHANGELOG.md#$MD_HEADER))
 
             The provided binaries are for:
 
