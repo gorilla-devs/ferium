@@ -1,6 +1,4 @@
-#![deny(missing_docs)] // All commands must have help/about statements
-
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueHint};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -16,6 +14,7 @@ pub struct Ferium {
     #[clap(long)]
     #[clap(hide = true)]
     #[clap(help("Only for testing"))]
+    #[clap(value_hint(ValueHint::FilePath))]
     pub config_file: Option<PathBuf>,
 }
 
@@ -86,6 +85,7 @@ pub enum ProfileSubCommands {
         #[clap(help("The name of the profile"))]
         name: Option<String>,
         #[clap(long)]
+        #[clap(value_hint(ValueHint::DirPath))]
         #[clap(help("The directory to output mods to"))]
         output_dir: Option<PathBuf>,
     },
@@ -105,6 +105,7 @@ pub enum ProfileSubCommands {
         #[clap(help("The name of the profile"))]
         name: Option<String>,
         #[clap(long)]
+        #[clap(value_hint(ValueHint::DirPath))]
         #[clap(help("The directory to output mods to"))]
         output_dir: Option<PathBuf>,
     },
