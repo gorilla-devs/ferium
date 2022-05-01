@@ -17,7 +17,8 @@ Ferium is an easy to use CLI program for downloading and updating Minecraft mods
 
 ## Installation
 
-Ferium is a compiled program that does not require any external dependencies
+Ferium is a compiled, statically linked program that does not require any external dependencies.
+On Linux the regular version requires GTK to be installed, the `no-gui` version does not need this.
 
 ### GitHub Releases
 
