@@ -1,5 +1,16 @@
 # Changelog for Ferium
 
+## `v3.23.0`
+### 01.05.2022
+
+- All crates have their minor version specified in `Crates.toml`
+- The workflow will now publish to crates.io too
+- Update README
+- Move upgrading code in `main.rs` to `subcommands::upgrade`
+- Added dependency handling to `subcommands::add`
+  - Required dependencies will automatically be added
+  - Optional dependencies will be added after the user approves
+
 ## `v3.22.2`
 ### 27.04.2022
 

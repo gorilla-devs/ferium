@@ -64,9 +64,7 @@ When you first start up, you will have to create a new profile by running  `feri
 
 Now after adding all your mods, run `ferium upgrade` to download all of them to your output directory. This defaults to `.minecraft/mods` where `.minecraft` is the default Minecraft resources directory, you don't need to worry about this if you play with Mojang's launcher (unless you change the resources directory, of course). You can choose to pick a custom output directory during profile creation or [change it later](#profiles).
 
-If Ferium fails to find a compatible version of a mod, it will print it's name in red and give a reason. It will continue downloading the rest of the mods and will exit with an error. This most likely means that the mod does not release for the mod loader and/or game version you selected. (if it does and Ferium can't find it for some reason [file a bug](https://github.com/theRookieCoder/ferium/issues/new))
-
-PS: [There is a known bug about this](https://github.com/theRookieCoder/ferium/issues/12)
+If Ferium fails to find a compatible version of a mod, it will print it's name in red and give a reason. It will continue downloading the rest of the mods and will exit with an error. See the [advanced section](#advanced) for more information.
 
 ### Managing Mods
 

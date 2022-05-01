@@ -13,6 +13,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     env:
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -68,6 +69,11 @@ jobs:
           name: binaries
           path: out/ferium*.zip
           if-no-files-found: error
+      
+      - name: Upload to Crates
+        uses: actions-rs/cargo@v1
+        with:
+          command: publish
 
   release:
     runs-on: ubuntu-latest
