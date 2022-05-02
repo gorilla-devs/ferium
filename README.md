@@ -66,7 +66,7 @@ When you first start up, you will have to create a new profile by running  `feri
 
 ### Upgrading Mods
 
-> Warning: upgrading will empty your output directory before downloading mods
+## _Warning: Upgrading will empty the output directory before downloading your mods!_
 
 Now after adding all your mods, run `ferium upgrade` to download all of them to your output directory.
 This defaults to `.minecraft/mods`, where `.minecraft` is the default Minecraft resources directory. You don't need to worry about this if you play with Mojang's launcher (unless you changed the resources directory).
