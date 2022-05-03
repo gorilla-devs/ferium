@@ -133,7 +133,7 @@ fn add_modrinth() -> Result {
 #[test]
 fn add_curseforge() -> Result {
     // Add Terralith to the config
-    run_command(vec!["add-curseforge", "513688"], Some("empty_profile"))
+    run_command(vec!["add-curseforge", "591388"], Some("empty_profile"))
 }
 
 #[test]
@@ -148,7 +148,7 @@ fn add_github() -> Result {
 #[test]
 fn already_added() {
     assert!(run_command(vec!["add-modrinth", "StArLiGhT"], Some("one_profile_full")).is_err());
-    assert!(run_command(vec!["add-curseforge", "513688"], Some("one_profile_full")).is_err());
+    assert!(run_command(vec!["add-curseforge", "591388"], Some("one_profile_full")).is_err());
     assert!(run_command(
         vec!["add-github", "caffeinemc", "Sodium-Fabric"],
         Some("one_profile_full")
@@ -192,7 +192,7 @@ fn remove_fail() {
             "--mod-names",
             "starlght", // Wrong
             "--mod-names",
-            "terralith",
+            "incendium",
             "--mod-names",
             "sodium",
         ],
@@ -205,7 +205,7 @@ fn remove_fail() {
             "--mod-names",
             "starlight (fabric)",
             "--mod-names",
-            "terrlith", // Wrong
+            "incendum", // Wrong
             "--mod-names",
             "sodium",
         ],
@@ -218,7 +218,7 @@ fn remove_fail() {
             "--mod-names",
             "starlight (fabric)",
             "--mod-names",
-            "terralith",
+            "incendium",
             "--mod-names",
             "sodum", // Wrong
         ],
@@ -235,7 +235,7 @@ fn remove_all() -> Result {
             "--mod-names",
             "starlight (fabric)",
             "--mod-names",
-            "terralith",
+            "incendium",
             "--mod-names",
             "sodium-fabric",
         ],

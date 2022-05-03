@@ -14,10 +14,15 @@ pub async fn modrinth(
     eprint!("Adding mod... ");
     let project = add::modrinth(modrinth, project_id, profile).await?;
     // Add dependencies
-    let latest_version =
-        libium::upgrade::modrinth(modrinth, profile, &project.id, Some(true), Some(true))
-            .await?
-            .0;
+    let latest_version = libium::upgrade::modrinth(
+        modrinth,
+        &project.id,
+        &profile.game_version,
+        &profile.mod_loader,
+        Some(true),
+        Some(true),
+    )
+    .await?;
     println!("{} ({})", *TICK, project.title);
     for dependency in latest_version.dependencies {
         let id = if let Some(project_id) = dependency.project_id {
@@ -64,10 +69,15 @@ pub async fn curseforge(
     eprint!("Adding mod... ");
     let project = add::curseforge(curseforge, project_id, profile).await?;
     // Add dependencies
-    let latest_version =
-        libium::upgrade::curseforge(curseforge, profile, project.id, Some(true), Some(true))
-            .await?
-            .0;
+    let latest_version = libium::upgrade::curseforge(
+        curseforge,
+        project.id,
+        &profile.game_version,
+        &profile.mod_loader,
+        Some(true),
+        Some(true),
+    )
+    .await?;
     println!("{} ({})", *TICK, project.name);
     for dependency in latest_version.dependencies {
         let id = dependency.mod_id;

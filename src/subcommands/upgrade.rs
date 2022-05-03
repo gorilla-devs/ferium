@@ -21,8 +21,21 @@ impl From<furse::structures::file_structs::File> for Downloadable {
         }
     }
 }
-impl From<ferinth::structures::version_structs::VersionFile> for Downloadable {
-    fn from(file: ferinth::structures::version_structs::VersionFile) -> Self {
+impl From<ferinth::structures::version_structs::Version> for Downloadable {
+    #[allow(clippy::redundant_else)] // The `else` makes it more readable
+    fn from(version: ferinth::structures::version_structs::Version) -> Self {
+        let mut files = Vec::new();
+        for file in version.files {
+            if file.primary {
+                return Self {
+                    filename: file.filename,
+                    download_url: file.url,
+                };
+            } else {
+                files.push(file);
+            }
+        }
+        let file = files.remove(0);
         Self {
             filename: file.filename,
             download_url: file.url,
@@ -45,60 +58,115 @@ pub async fn upgrade(
     profile: &config::structs::Profile,
 ) -> Result<()> {
     let mut to_download = Vec::new();
-    let mut backwards_compat = false;
+    let mut backwards_compat_msg = false;
     let mut error = false;
 
     println!("{}\n", "Determining the Latest Compatible Versions".bold());
     for mod_ in &profile.mods {
         use libium::config::structs::ModIdentifier;
-        let result: Result<(Downloadable, bool), _> = match &mod_.identifier {
-            ModIdentifier::CurseForgeProject(project_id) => upgrade::curseforge(
-                curseforge,
-                profile,
-                *project_id,
-                mod_.check_game_version,
-                mod_.check_mod_loader,
-            )
-            .await
-            .map(|ok| (ok.0.into(), ok.1)),
-            ModIdentifier::ModrinthProject(project_id) => upgrade::modrinth(
-                modrinth,
-                profile,
-                project_id,
-                mod_.check_game_version,
-                mod_.check_mod_loader,
-            )
-            .await
-            .map(|ok| {
-                let version = ok.0;
-                for file in &version.files {
-                    if file.primary {
-                        return (file.clone().into(), ok.1);
-                    }
+        let (result, backwards_compat): (Result<Downloadable, _>, bool) = match &mod_.identifier {
+            ModIdentifier::CurseForgeProject(project_id) => {
+                let result = upgrade::curseforge(
+                    curseforge,
+                    *project_id,
+                    &profile.game_version,
+                    &profile.mod_loader,
+                    mod_.check_game_version,
+                    mod_.check_mod_loader,
+                )
+                .await;
+                if matches!(result, Err(upgrade::Error::NoCompatibleFile))
+                    && profile.mod_loader == config::structs::ModLoader::Quilt
+                {
+                    (
+                        upgrade::curseforge(
+                            curseforge,
+                            *project_id,
+                            &profile.game_version,
+                            &config::structs::ModLoader::Fabric,
+                            mod_.check_game_version,
+                            mod_.check_mod_loader,
+                        )
+                        .await
+                        .map(Into::into),
+                        true,
+                    )
+                } else {
+                    (result.map(Into::into), false)
                 }
-                (version.files[0].clone().into(), ok.1)
-            }),
-            ModIdentifier::GitHubRepository(full_name) => upgrade::github(
-                &github.repos(&full_name.0, &full_name.1),
-                profile,
-                mod_.check_game_version,
-                mod_.check_mod_loader,
-            )
-            .await
-            .map(|ok| (ok.0.into(), ok.1)),
+            },
+            ModIdentifier::ModrinthProject(project_id) => {
+                let result = upgrade::modrinth(
+                    modrinth,
+                    project_id,
+                    &profile.game_version,
+                    &profile.mod_loader,
+                    mod_.check_game_version,
+                    mod_.check_mod_loader,
+                )
+                .await;
+                if matches!(result, Err(upgrade::Error::NoCompatibleFile))
+                    && profile.mod_loader == config::structs::ModLoader::Quilt
+                {
+                    (
+                        upgrade::modrinth(
+                            modrinth,
+                            project_id,
+                            &profile.game_version,
+                            &config::structs::ModLoader::Fabric,
+                            mod_.check_game_version,
+                            mod_.check_mod_loader,
+                        )
+                        .await
+                        .map(Into::into),
+                        true,
+                    )
+                } else {
+                    (result.map(Into::into), false)
+                }
+            },
+            ModIdentifier::GitHubRepository(full_name) => {
+                let result = upgrade::github(
+                    &github.repos(&full_name.0, &full_name.1),
+                    &profile.game_version,
+                    &profile.mod_loader,
+                    mod_.check_game_version,
+                    mod_.check_mod_loader,
+                )
+                .await;
+                if matches!(result, Err(upgrade::Error::NoCompatibleFile))
+                    && profile.mod_loader == config::structs::ModLoader::Quilt
+                {
+                    (
+                        upgrade::github(
+                            &github.repos(&full_name.0, &full_name.1),
+                            &profile.game_version,
+                            &config::structs::ModLoader::Fabric,
+                            mod_.check_game_version,
+                            mod_.check_mod_loader,
+                        )
+                        .await
+                        .map(Into::into),
+                        true,
+                    )
+                } else {
+                    (result.map(Into::into), false)
+                }
+            },
         };
+
         match result {
             Ok(result) => {
                 println!(
                     "{} {:40}{}",
-                    if result.1 {
-                        backwards_compat = true;
+                    if backwards_compat {
+                        backwards_compat_msg = true;
                         YELLOW_TICK.clone()
                     } else {
                         TICK.clone()
                     },
                     mod_.name,
-                    format!("({})", result.0.filename).dimmed()
+                    format!("({})", result.filename).dimmed()
                 );
                 to_download.push(result);
             },
@@ -108,7 +176,7 @@ pub async fn upgrade(
             },
         }
     }
-    if backwards_compat {
+    if backwards_compat_msg {
         println!(
             "{}",
             "Fabric mod using Quilt backwards compatibility".yellow()
@@ -124,7 +192,7 @@ pub async fn upgrade(
             // If a file is already downloaded
             if let Some(downloadable) = to_download
                 .iter()
-                .find_position(|thing| file.file_name().to_str().unwrap() == thing.0.filename)
+                .find_position(|thing| file.file_name().to_str().unwrap() == thing.filename)
             {
                 index = Some(downloadable.0);
             }
@@ -140,11 +208,11 @@ pub async fn upgrade(
     }
     match {
         for downloadable in to_download {
-            let contents = reqwest::get(downloadable.0.download_url)
+            let contents = reqwest::get(downloadable.download_url)
                 .await?
                 .bytes()
                 .await?;
-            upgrade::write_mod_file(profile, contents, &downloadable.0.filename).await?;
+            upgrade::write_mod_file(profile, contents, &downloadable.filename).await?;
         }
         Ok::<(), anyhow::Error>(())
     } {

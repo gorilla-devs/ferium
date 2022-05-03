@@ -1,5 +1,16 @@
 # Changelog for Ferium
 
+## `v3.24.0`
+### 03.05.2022
+
+ - Updated to Libium `1.11`
+   - Quilt -> Fabric backwards compatibility is now handled by Ferium rather than Libium
+ - Updated the integration tests to use Incendium rather than Terralith because the CF API currently has some problems with Terralith
+ - Calls to `libium::upgrade` functions no longer provide a `Profile`, the game version and mod loader to check are given instead
+ - Getting the primary file of a Modrinth `Version` has been moved to the conversion function
+   - A workaround with vectors is being used to avoid a possible borrow checker bug
+ - Ferium will now only rely on Fabric backwards compatibility if it can't find a native Quilt version. This fixes [#30](https://github.com/theRookieCoder/ferium/issues/30)
+
 ## `v3.23.0`
 ### 01.05.2022
 

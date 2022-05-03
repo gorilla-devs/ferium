@@ -1,6 +1,6 @@
 [package]
 name = "ferium"
-version = "3.23.0"
+version = "3.24.0"
 edition = "2021"
 authors = ["Ilesh Thiada (theRookieCoder) <ileshkt@gmail.com>", "Daniel Hauck (SolidTux)"]
 description = "Ferium is a CLI program for managing Minecraft mods from Modrinth, CurseForge, and Github Releases"
@@ -32,7 +32,7 @@ serde_json = "1.0"
 itertools = "0.10"
 colored = "2.0"
 ferinth = "2.1"
-libium = "1.10"
+libium = "1.11"
 anyhow = "1.0"
 online = "3.0"
 semver = "1.0"
