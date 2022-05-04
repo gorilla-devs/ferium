@@ -4,25 +4,49 @@ use dialoguer::Confirm;
 use ferinth::structures::version_structs::DependencyType;
 use ferinth::Ferinth;
 use furse::{structures::file_structs::FileRelationType, Furse};
-use libium::{add, config};
+use libium::{add, config, upgrade};
 
 pub async fn modrinth(
     modrinth: &Ferinth,
-    profile: &mut config::structs::Profile,
     project_id: &str,
+    profile: &mut config::structs::Profile,
+    should_check_game_version: Option<bool>,
+    should_check_mod_loader: Option<bool>,
 ) -> Result<()> {
     eprint!("Adding mod... ");
-    let project = add::modrinth(modrinth, project_id, profile).await?;
+    let project = add::modrinth(
+        modrinth,
+        project_id,
+        profile,
+        should_check_game_version,
+        should_check_mod_loader,
+    )
+    .await?;
     // Add dependencies
-    let latest_version = libium::upgrade::modrinth(
+    let result = upgrade::modrinth(
         modrinth,
         &project.id,
         &profile.game_version,
         &profile.mod_loader,
-        Some(true),
-        Some(true),
+        should_check_game_version,
+        should_check_mod_loader,
     )
-    .await?;
+    .await;
+    let latest_version = if matches!(result, Err(upgrade::Error::NoCompatibleFile))
+        && profile.mod_loader == config::structs::ModLoader::Quilt
+    {
+        upgrade::modrinth(
+            modrinth,
+            &project.id,
+            &profile.game_version,
+            &config::structs::ModLoader::Fabric,
+            should_check_game_version,
+            should_check_mod_loader,
+        )
+        .await
+    } else {
+        result
+    }?;
     println!("{} ({})", *TICK, project.title);
     for dependency in latest_version.dependencies {
         let id = if let Some(project_id) = dependency.project_id {
@@ -39,7 +63,7 @@ pub async fn modrinth(
             // If it's required, add it without asking
             if dependency.dependency_type == DependencyType::Required {
                 eprint!("Adding required dependency... ");
-                let project = add::modrinth(modrinth, &id, profile).await?;
+                let project = add::modrinth(modrinth, &id, profile, None, None).await?;
                 println!("{} ({})", *TICK, project.title);
             } else if dependency.dependency_type == DependencyType::Optional {
                 let project = modrinth.get_project(&id).await?;
@@ -51,7 +75,7 @@ pub async fn modrinth(
                     .interact()?;
                 if should_add {
                     eprint!("Adding optional dependency... ");
-                    let project = add::modrinth(modrinth, &id, profile).await?;
+                    let project = add::modrinth(modrinth, &id, profile, None, None).await?;
                     println!("{} ({})", *TICK, project.title);
                 }
             }
@@ -63,21 +87,45 @@ pub async fn modrinth(
 
 pub async fn curseforge(
     curseforge: &Furse,
-    profile: &mut config::structs::Profile,
     project_id: i32,
+    profile: &mut config::structs::Profile,
+    should_check_game_version: Option<bool>,
+    should_check_mod_loader: Option<bool>,
 ) -> Result<()> {
     eprint!("Adding mod... ");
-    let project = add::curseforge(curseforge, project_id, profile).await?;
+    let project = add::curseforge(
+        curseforge,
+        project_id,
+        profile,
+        should_check_game_version,
+        should_check_mod_loader,
+    )
+    .await?;
     // Add dependencies
-    let latest_version = libium::upgrade::curseforge(
+    let result = upgrade::curseforge(
         curseforge,
         project.id,
         &profile.game_version,
         &profile.mod_loader,
-        Some(true),
-        Some(true),
+        should_check_game_version,
+        should_check_mod_loader,
     )
-    .await?;
+    .await;
+    let latest_version = if matches!(result, Err(upgrade::Error::NoCompatibleFile))
+        && profile.mod_loader == config::structs::ModLoader::Quilt
+    {
+        upgrade::curseforge(
+            curseforge,
+            project.id,
+            &profile.game_version,
+            &config::structs::ModLoader::Fabric,
+            should_check_game_version,
+            should_check_mod_loader,
+        )
+        .await
+    } else {
+        result
+    }?;
     println!("{} ({})", *TICK, project.name);
     for dependency in latest_version.dependencies {
         let id = dependency.mod_id;
@@ -90,7 +138,7 @@ pub async fn curseforge(
             // If it's required, add it without asking
             if dependency.relation_type == FileRelationType::RequiredDependency {
                 eprint!("Adding required dependency... ");
-                let project = add::curseforge(curseforge, id, profile).await?;
+                let project = add::curseforge(curseforge, id, profile, None, None).await?;
                 println!("{} ({})", *TICK, project.name);
             } else if dependency.relation_type == FileRelationType::OptionalDependency {
                 let project = curseforge.get_mod(id).await?;
@@ -102,7 +150,7 @@ pub async fn curseforge(
                     .interact()?;
                 if should_add {
                     eprint!("Adding optional dependency... ");
-                    let project = add::curseforge(curseforge, id, profile).await?;
+                    let project = add::curseforge(curseforge, id, profile, None, None).await?;
                     println!("{} ({})", *TICK, project.name);
                 }
             }

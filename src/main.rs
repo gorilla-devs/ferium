@@ -107,16 +107,49 @@ async fn actual_main() -> Result<()> {
 
     // Run function(s) based on the sub(sub)command to be executed
     match cli_app.subcommand {
-        SubCommands::AddModrinth { project_id } => {
-            add::modrinth(&modrinth, profile, &project_id).await?;
+        SubCommands::AddModrinth {
+            project_id,
+            dont_check_game_version,
+            dont_check_mod_loader,
+        } => {
+            add::modrinth(
+                &modrinth,
+                &project_id,
+                profile,
+                Some(!dont_check_game_version),
+                Some(!dont_check_mod_loader),
+            )
+            .await?;
         },
-        SubCommands::AddGithub { owner, name } => {
+        SubCommands::AddGithub {
+            owner,
+            name,
+            dont_check_game_version,
+            dont_check_mod_loader,
+        } => {
             eprint!("Adding mod... ");
-            let repo = libium::add::github(github.repos(owner, name), profile).await?;
+            let repo = libium::add::github(
+                github.repos(owner, name),
+                profile,
+                Some(!dont_check_game_version),
+                Some(!dont_check_mod_loader),
+            )
+            .await?;
             println!("{} ({})", *TICK, repo.name);
         },
-        SubCommands::AddCurseforge { project_id } => {
-            add::curseforge(&curseforge, profile, project_id).await?;
+        SubCommands::AddCurseforge {
+            project_id,
+            dont_check_game_version,
+            dont_check_mod_loader,
+        } => {
+            add::curseforge(
+                &curseforge,
+                project_id,
+                profile,
+                Some(!dont_check_game_version),
+                Some(!dont_check_mod_loader),
+            )
+            .await?;
         },
         SubCommands::List { verbose } => {
             check_empty_profile(profile)?;

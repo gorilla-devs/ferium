@@ -1,5 +1,13 @@
 # Changelog for Ferium
 
+## `v3.25.0`
+### 04.05.2022
+
+- Added `--dont_check_game_version` and `--dont_check_mod_loader` flags to add commands
+  - The check overrides are follow when checking for dependencies
+  - These check overrides will be added to the config automatically
+- Added Quilt->Fabric backwards compatibility to the add commands' dependency checking
+
 ## `v3.24.0`
 ### 03.05.2022
 

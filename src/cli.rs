@@ -24,6 +24,12 @@ pub enum SubCommands {
     AddModrinth {
         #[clap(help("The project ID is specified at the bottom of the left sidebar under 'Technical information'\nYou can also use the project slug for this"))]
         project_id: String,
+        #[clap(long)]
+        #[clap(help("Whether the game version should be checked for this mod"))]
+        dont_check_game_version: bool,
+        #[clap(long)]
+        #[clap(help("Whether the mod loader should be checked for this mod"))]
+        dont_check_mod_loader: bool,
     },
     #[clap(about("Add a GitHub repository to the profile"))]
     AddGithub {
@@ -31,11 +37,23 @@ pub enum SubCommands {
         owner: String,
         #[clap(help("The name of the repository"))]
         name: String,
+        #[clap(long)]
+        #[clap(help("Whether the game version should be checked for this mod"))]
+        dont_check_game_version: bool,
+        #[clap(long)]
+        #[clap(help("Whether the mod loader should be checked for this mod"))]
+        dont_check_mod_loader: bool,
     },
     #[clap(about("Add a CurseForge mod to the profile"))]
     AddCurseforge {
         #[clap(help("The project ID is specified at the right sidebar under 'About Project'"))]
         project_id: i32,
+        #[clap(long)]
+        #[clap(help("Whether the game version should be checked for this mod"))]
+        dont_check_game_version: bool,
+        #[clap(long)]
+        #[clap(help("Whether the mod loader should be checked for this mod"))]
+        dont_check_mod_loader: bool,
     },
     #[clap(about("List all the mods in the profile, and with some their metadata if verbose"))]
     List {

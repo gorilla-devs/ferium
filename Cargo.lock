@@ -477,9 +477,9 @@ dependencies = [
 
 [[package]]
 name = "ferinth"
-version = "2.1.1"
+version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b5b206b814dad055ff5cd4b39b44e5e4382af406f9de65c71ba57f95fb74670"
+checksum = "6b47db2005894b7bd04c93482017f90a9b070a323ba3b8d625b6a701866c6c55"
 dependencies = [
  "bytes",
  "chrono",
@@ -493,7 +493,7 @@ dependencies = [
 
 [[package]]
 name = "ferium"
-version = "3.24.0"
+version = "3.25.0"
 dependencies = [
  "anyhow",
  "bytes",
@@ -980,9 +980,9 @@ checksum = "5916d2ae698f6de9bfb891ad7a8d65c09d232dc58cc4ac433c7da3b2fd84bc2b"
 
 [[package]]
 name = "libium"
-version = "1.11.0"
+version = "1.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d13edb1f0de83a9d082638bd8b2fd37a31435d286c6679a636db9d5df783929e"
+checksum = "221dd6ce501535ce403dc7ff41bb1c4f13314318ba8866d0d83be0cb3daba6f3"
 dependencies = [
  "bytes",
  "clap",
@@ -1561,9 +1561,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.80"
+version = "1.0.81"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f972498cf015f7c0746cac89ebe1d6ef10c293b94175a243a2d9442c163d9944"
+checksum = "9b7ce2b32a1aed03c558dc61a5cd328f15aff2dbc17daad8fb8af04d2100e15c"
 dependencies = [
  "itoa",
  "ryu",
@@ -1830,9 +1830,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-rustls"
-version = "0.23.3"
+version = "0.23.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4151fda0cf2798550ad0b34bcfc9b9dcc2a9d2471c895c68f3a8818e54f2389e"
+checksum = "c43ee83903113e03984cb9e5cebe6c04a5116269e900e3ddba8f068a62adda59"
 dependencies = [
  "rustls",
  "tokio",
