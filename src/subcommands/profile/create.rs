@@ -1,9 +1,8 @@
+use super::{check_output_directory, check_profile_name, pick_minecraft_version};
 use anyhow::{bail, Result};
 use dialoguer::{Confirm, Input, Select};
 use libium::{config, file_picker, misc};
 use std::path::PathBuf;
-
-use super::{check_profile_name, pick_minecraft_version};
 
 #[allow(clippy::option_option)]
 pub async fn create(
@@ -39,10 +38,10 @@ pub async fn create(
                 .with_prompt("Would you like to specify a custom mods directory?")
                 .interact()?
             {
-                if let Some(dir) = file_picker::pick_folder(&selected_mods_dir).await {
-                    if !dir.is_absolute() {
-                        bail!("The provided output directory is not absolute, i.e. it is a relative path")
-                    }
+                if let Some(dir) =
+                    file_picker::pick_folder(&selected_mods_dir, "Pick an output directory").await
+                {
+                    check_output_directory(&dir).await?;
                     selected_mods_dir = dir;
                 };
             }

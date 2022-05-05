@@ -1,4 +1,4 @@
-use crate::subcommands::profile::{pick_minecraft_version, pick_mod_loader};
+use super::{check_output_directory, pick_minecraft_version, pick_mod_loader};
 use anyhow::Result;
 use dialoguer::{Input, Select};
 use libium::{config, file_picker};
@@ -53,7 +53,13 @@ pub async fn configure(
             if let Some(index) = selection {
                 match index {
                     0 => {
-                        if let Some(dir) = file_picker::pick_folder(&profile.output_dir).await {
+                        if let Some(dir) = file_picker::pick_folder(
+                            &profile.output_dir,
+                            "Pick an output directory",
+                        )
+                        .await
+                        {
+                            check_output_directory(&dir).await?;
                             profile.output_dir = dir;
                         }
                     },

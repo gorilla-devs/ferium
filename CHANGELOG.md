@@ -13,6 +13,11 @@
   - If `--import "Profile Name"` is provided, the mods from the `Profile Name` profile will be imported
 - Only check internet connection for subcommands which need it
   - Extract internet connection check function
+- Created a `check_output_directory()` that uhhh.. checks the output directory
+  - If it's not called `mods`, it will output a warning
+  - If it contains stuff, it will ask if you want to create a backup
+    - So that you don't lose the stuff in there when you upgrade
+  - Along with the original relative directory check
 
 ## `v3.25.1`
 
