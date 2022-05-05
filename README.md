@@ -77,7 +77,10 @@ See the [advanced section](#advanced) for more information.
 
 ### Managing Mods
 
-You can see all the mods in your current profile by running `ferium list`. If you want to see more information about them, you can run `ferium list -v` or `ferium list --verbose`. You can remove any of your mod by runnning `ferium remove`, selecting the ones you would like to remove by using the space key, and pressing enter once you're done.
+You can see all the mods in your current profile by running `ferium list`. If you want to see more information about them, you can run `ferium list -v` or `ferium list --verbose`.
+
+You can remove any of your mod by runnning `ferium remove`, selecting the ones you would like to remove by using the space key, and pressing enter once you're done.
+You can also provide the names of the mods to remove as arguments. Mod names with spaces have to be given in quotes (`ferium remove "ok zoomer"`) or the spaces should be escaped (`ferium remove ok\ zoomer`).
 
 #### Advanced
 

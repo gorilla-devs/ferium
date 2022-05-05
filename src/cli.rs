@@ -69,10 +69,9 @@ pub enum SubCommands {
     },
     #[clap(about("Remove a mod or repository from the profile\nOptionally, provide a list of names of the mods to remove"))]
     Remove {
-        #[clap(long)]
         #[clap(name("mod-name"))]
-        #[clap(help("A case-insensitive name of a mod to remove\nYou can repeat this option to remove multiple mods\nIf one or more of the mod names provided does not exist, the program will error out without changing anything in the config"))]
-        mod_names: Option<Vec<String>>,
+        #[clap(help("A case-insensitive list of names of a mods to remove\nIf one or more of the mod names provided does not exist, the program will error out without changing anything in the config"))]
+        mod_names: Vec<String>,
     },
     #[clap(about("Switch between different profiles\nOptionally, provide the name of the profile to switch to"))]
     Switch {

@@ -189,11 +189,8 @@ fn remove_fail() {
     assert!(run_command(
         vec![
             "remove",
-            "--mod-names",
             "starlght", // Wrong
-            "--mod-names",
             "incendium",
-            "--mod-names",
             "sodium",
         ],
         Some("one_profile_full")
@@ -202,11 +199,8 @@ fn remove_fail() {
     assert!(run_command(
         vec![
             "remove",
-            "--mod-names",
             "starlight (fabric)",
-            "--mod-names",
             "incendum", // Wrong
-            "--mod-names",
             "sodium",
         ],
         Some("one_profile_full")
@@ -215,11 +209,8 @@ fn remove_fail() {
     assert!(run_command(
         vec![
             "remove",
-            "--mod-names",
             "starlight (fabric)",
-            "--mod-names",
             "incendium",
-            "--mod-names",
             "sodum", // Wrong
         ],
         Some("one_profile_full")
@@ -230,15 +221,7 @@ fn remove_fail() {
 #[test]
 fn remove_all() -> Result {
     run_command(
-        vec![
-            "remove",
-            "--mod-names",
-            "starlight (fabric)",
-            "--mod-names",
-            "incendium",
-            "--mod-names",
-            "sodium-fabric",
-        ],
+        vec!["remove", "starlight (fabric)", "incendium", "sodium-fabric"],
         Some("one_profile_full"),
     )
 }
