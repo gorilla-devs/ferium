@@ -493,7 +493,7 @@ dependencies = [
 
 [[package]]
 name = "ferium"
-version = "3.25.0"
+version = "3.25.1"
 dependencies = [
  "anyhow",
  "bytes",
@@ -533,9 +533,9 @@ dependencies = [
 
 [[package]]
 name = "furse"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29fd8d6dad30fa72d96fb69121ce23db94c1fe3b26d3dd9963be246b9ce65b10"
+checksum = "664b1e6fb4f602b81c1599738894091be4071aee21e94676fe99d450e3bb87aa"
 dependencies = [
  "bytes",
  "chrono",
@@ -980,9 +980,9 @@ checksum = "5916d2ae698f6de9bfb891ad7a8d65c09d232dc58cc4ac433c7da3b2fd84bc2b"
 
 [[package]]
 name = "libium"
-version = "1.11.1"
+version = "1.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "221dd6ce501535ce403dc7ff41bb1c4f13314318ba8866d0d83be0cb3daba6f3"
+checksum = "596977d1e89bc5946a8506dce988e071f41c75ec074298aef9fa151c9b1a2a70"
 dependencies = [
  "bytes",
  "clap",
@@ -1120,9 +1120,9 @@ dependencies = [
 
 [[package]]
 name = "num_threads"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aba1801fb138d8e85e11d0fc70baf4fe1cdfffda7c6cd34a854905df588e5ed0"
+checksum = "2819ce041d2ee131036f4fc9d6ae7ae125a3a40e97ba64d04fe799ad9dabbb44"
 dependencies = [
  "libc",
 ]

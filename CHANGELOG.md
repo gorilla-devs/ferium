@@ -1,5 +1,11 @@
 # Changelog for Ferium
 
+## `v3.25.1`
+
+- Updated Libium and Ferinth, to fix 2 issues
+- CurseForge mods that have no logo no longer cause errors
+- The default mods directory now uses `Application Support` rather than a shortcut to it, `ApplicationSupport` (thanks [douira](https://github.com/douira)!)
+
 ## `v3.25.0`
 ### 04.05.2022
 
