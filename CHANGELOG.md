@@ -5,6 +5,7 @@
 
 - The `remove` command now uses arguments instead of flags
   - Mod names with spaces have to be given in quotes (`ferium remove "ok zoomer"`) or the spaces should be escaped (`ferium remove ok\ zoomer`)
+- Extracted minecraft version picking in `configure` and `create` into `mod.rs`
 
 ## `v3.25.1`
 

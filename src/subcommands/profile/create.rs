@@ -1,8 +1,10 @@
 use anyhow::{bail, Result};
-use dialoguer::{Confirm, Input, Select};
+use dialoguer::{Confirm, Input};
 use ferinth::Ferinth;
 use libium::{config, file_picker, misc};
 use std::path::PathBuf;
+
+use super::{check_profile_name, pick_minecraft_version};
 
 pub async fn create(
     modrinth: &Ferinth,
@@ -28,12 +30,7 @@ pub async fn create(
                     bail!("The game version {} does not exist", game_version);
                 }
             }
-            // Check that there isn't already a profile with the same name
-            for profile in &config.profiles {
-                if profile.name == name {
-                    bail!("A profile with name {} already exists", name);
-                }
-            }
+            check_profile_name(config, &name)?;
             // Check that the output_dir isn't relative
             if !output_dir.is_absolute() {
                 bail!("The provided output directory is not absolute, i.e. it is a relative path")
@@ -62,32 +59,18 @@ pub async fn create(
                 };
             }
 
-            let mut name = String::new();
-            let mut prompt = true;
-            while prompt {
-                name = Input::with_theme(&*crate::THEME)
+            let name = loop {
+                let name: String = Input::with_theme(&*crate::THEME)
                     .with_prompt("What should this profile be called?")
                     .interact_text()?;
 
-                prompt = false;
-                for profile in &config.profiles {
-                    if profile.name == name {
-                        println!("A profile with name {} already exists!", name);
-                        prompt = true;
-                        break;
-                    }
+                match check_profile_name(config, &name) {
+                    Ok(_) => break name,
+                    Err(_) => continue,
                 }
-            }
+            };
 
-            // Let user pick Minecraft version
-            let mut latest_versions: Vec<String> = misc::get_major_mc_versions(10).await?;
-            println!();
-            let selected_version = Select::with_theme(&*crate::THEME)
-                .with_prompt("Which version of Minecraft do you play?")
-                .items(&latest_versions)
-                .default(0)
-                .interact()?;
-            let selected_version = latest_versions.swap_remove(selected_version);
+            let selected_version = pick_minecraft_version().await?;
 
             config.profiles.push(config::structs::Profile {
                 name,
