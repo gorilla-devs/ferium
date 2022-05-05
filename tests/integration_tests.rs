@@ -40,25 +40,26 @@ fn create_profile() -> Result {
 }
 
 #[test]
-fn create_profile_non_existent_game_version() {
+fn create_profile_import_mods() -> Result {
     let mut home = HOME.clone();
     home.push("mods");
-    assert!(run_command(
+    run_command(
         vec![
             "profile",
             "create",
             "--name",
             "Test profile",
             "--game-version",
-            "1.12.3", // oops does not exist
+            "1.12.2",
             "--mod-loader",
             "forge",
             "--output-dir",
             home.to_str().unwrap(),
+            "--import",
+            "Default Modded",
         ],
-        Some("empty")
+        Some("one_profile_full"),
     )
-    .is_err());
 }
 
 #[test]

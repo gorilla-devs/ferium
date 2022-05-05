@@ -1,7 +1,7 @@
 mod cli;
 mod subcommands;
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use clap::StructOpt;
 use cli::{Ferium, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
@@ -32,18 +32,6 @@ async fn actual_main() -> Result<()> {
     // This also displays the help page or version automatically
     let cli_app = Ferium::parse();
 
-    // Check for an internet connection
-    if online::check(Some(1)).await.is_err() {
-        // If it takes more than 1 second
-        // show that we're checking the internet connection
-        // and check for 4 more seconds
-        eprint!("Checking internet connection... ");
-        match online::check(Some(4)).await {
-            Ok(_) => println!("{}", *TICK),
-            Err(_) => bail!("{} Ferium requires an internet connection to work", CROSS),
-        }
-    };
-
     let github = {
         let mut builder = octocrab::OctocrabBuilder::new();
         if let Some(token) = cli_app.github_token {
@@ -68,19 +56,19 @@ async fn actual_main() -> Result<()> {
     if let SubCommands::Profile {
         subcommand:
             ProfileSubCommands::Create {
+                import,
                 game_version,
-                force_game_version,
                 mod_loader,
                 name,
                 output_dir,
             },
     } = cli_app.subcommand
     {
+        check_internet().await?;
         subcommands::profile::create(
-            &modrinth,
             &mut config,
+            import,
             game_version,
-            force_game_version,
             mod_loader,
             name,
             output_dir,
@@ -112,6 +100,7 @@ async fn actual_main() -> Result<()> {
             dont_check_game_version,
             dont_check_mod_loader,
         } => {
+            check_internet().await?;
             add::modrinth(
                 &modrinth,
                 &project_id,
@@ -127,6 +116,7 @@ async fn actual_main() -> Result<()> {
             dont_check_game_version,
             dont_check_mod_loader,
         } => {
+            check_internet().await?;
             eprint!("Adding mod... ");
             let repo = libium::add::github(
                 github.repos(owner, name),
@@ -142,6 +132,7 @@ async fn actual_main() -> Result<()> {
             dont_check_game_version,
             dont_check_mod_loader,
         } => {
+            check_internet().await?;
             add::curseforge(
                 &curseforge,
                 project_id,
@@ -156,6 +147,7 @@ async fn actual_main() -> Result<()> {
             for mod_ in &profile.mods {
                 if verbose {
                     use config::structs::ModIdentifier;
+                    check_internet().await?;
                     match &mod_.identifier {
                         ModIdentifier::CurseForgeProject(project_id) => {
                             subcommands::list::curseforge(&curseforge, *project_id).await
@@ -179,6 +171,7 @@ async fn actual_main() -> Result<()> {
                 name,
                 output_dir,
             } => {
+                check_internet().await?;
                 subcommands::profile::configure(
                     profile,
                     game_version,
@@ -199,18 +192,17 @@ async fn actual_main() -> Result<()> {
             check_empty_profile(profile)?;
             subcommands::remove(profile, mod_names)?;
         },
-        SubCommands::Switch { profile_name } => {
-            subcommands::switch(&mut config, profile_name)?;
-        },
+        SubCommands::Switch { profile_name } => subcommands::switch(&mut config, profile_name)?,
         SubCommands::Sort => profile.mods.sort_by_cached_key(|mod_| mod_.name.clone()),
         SubCommands::Upgrade => {
+            check_internet().await?;
             check_empty_profile(profile)?;
             create_dir_all(&profile.output_dir).await?;
             upgrade(&modrinth, &curseforge, &github, profile).await?;
         },
     };
 
-    // Update config file with new values
+    // Update config file with possibly edited config
     config::write_file(&mut config_file, &config).await?;
 
     Ok(())
@@ -222,4 +214,26 @@ fn check_empty_profile(profile: &config::structs::Profile) -> Result<()> {
         bail!("Your currently selected profile is empty! Run `ferium help` to see how to add mods");
     }
     Ok(())
+}
+
+/// Check for an internet connection
+async fn check_internet() -> Result<()> {
+    if online::check(Some(1)).await.is_err() {
+        // If it takes more than 1 second
+        // show that we're checking the internet connection
+        // and check for 4 more seconds
+        eprint!("Checking internet connection... ");
+        match online::check(Some(4)).await {
+            Ok(_) => {
+                println!("{}", *TICK);
+                Ok(())
+            },
+            Err(_) => Err(anyhow!(
+                "{} Ferium requires an internet connection to work",
+                CROSS
+            )),
+        }
+    } else {
+        Ok(())
+    }
 }

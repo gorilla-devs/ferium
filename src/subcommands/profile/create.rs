@@ -1,47 +1,32 @@
 use anyhow::{bail, Result};
-use dialoguer::{Confirm, Input};
-use ferinth::Ferinth;
+use dialoguer::{Confirm, Input, Select};
 use libium::{config, file_picker, misc};
 use std::path::PathBuf;
 
 use super::{check_profile_name, pick_minecraft_version};
 
+#[allow(clippy::option_option)]
 pub async fn create(
-    modrinth: &Ferinth,
     config: &mut config::structs::Config,
+    import: Option<Option<String>>,
     game_version: Option<String>,
-    force_game_version: bool,
     mod_loader: Option<config::structs::ModLoader>,
     name: Option<String>,
     output_dir: Option<PathBuf>,
 ) -> Result<()> {
-    match (game_version, mod_loader, name, output_dir) {
+    let mut profile = match (game_version, mod_loader, name, output_dir) {
         (Some(game_version), Some(mod_loader), Some(name), Some(output_dir)) => {
-            // If force game version is false
-            if !force_game_version {
-                // And if the game_version provided does not exist
-                if !modrinth
-                    .list_game_versions()
-                    .await?
-                    .iter()
-                    .any(|version| version.version == game_version)
-                {
-                    // Then error out
-                    bail!("The game version {} does not exist", game_version);
-                }
-            }
             check_profile_name(config, &name)?;
-            // Check that the output_dir isn't relative
             if !output_dir.is_absolute() {
                 bail!("The provided output directory is not absolute, i.e. it is a relative path")
             }
-            config.profiles.push(config::structs::Profile {
+            config::structs::Profile {
                 name,
                 output_dir,
                 game_version,
                 mod_loader,
                 mods: Vec::new(),
-            }); // Create profile
+            }
         },
         (None, None, None, None) => {
             // Create profile using a UI
@@ -55,6 +40,9 @@ pub async fn create(
                 .interact()?
             {
                 if let Some(dir) = file_picker::pick_folder(&selected_mods_dir).await {
+                    if !dir.is_absolute() {
+                        bail!("The provided output directory is not absolute, i.e. it is a relative path")
+                    }
                     selected_mods_dir = dir;
                 };
             }
@@ -72,19 +60,49 @@ pub async fn create(
 
             let selected_version = pick_minecraft_version().await?;
 
-            config.profiles.push(config::structs::Profile {
+            config::structs::Profile {
                 name,
                 output_dir: selected_mods_dir,
                 mods: Vec::new(),
                 game_version: selected_version,
                 mod_loader: super::pick_mod_loader(None)?,
-            });
+            }
         },
         _ => {
             bail!("Provide all four arguments to create a profile using options")
         },
+    };
+
+    if let Some(from) = import {
+        let selection = match from {
+            // If the profile name has been provided as an option
+            Some(profile_name) => {
+                match config
+                    .profiles
+                    .iter()
+                    .position(|profile| profile.name == profile_name)
+                {
+                    Some(selection) => selection,
+                    None => bail!("The profile name provided does not exist"),
+                }
+            },
+            None => {
+                let profile_names = config
+                    .profiles
+                    .iter()
+                    .map(|profile| &profile.name)
+                    .collect::<Vec<_>>();
+                Select::with_theme(&*crate::THEME)
+                    .with_prompt("Select which profile to import mods from")
+                    .items(&profile_names)
+                    .default(config.active_profile)
+                    .interact()?
+            },
+        };
+        profile.mods = config.profiles[selection].mods.clone();
     }
 
+    config.profiles.push(profile);
     config.active_profile = config.profiles.len() - 1; // Make created profile active
     Ok(())
 }

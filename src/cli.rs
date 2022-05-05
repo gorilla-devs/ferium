@@ -109,11 +109,12 @@ pub enum ProfileSubCommands {
     #[clap(about("Create a new profile\nOptionally, provide ALL the options to create the profile without the UI"))]
     Create {
         #[clap(long)]
+        #[allow(clippy::option_option)]
+        #[clap(help("Copy over the mods from an existing profile\nOptionally, provide the name of the profile to import mods from"))]
+        import: Option<Option<String>>,
+        #[clap(long)]
         #[clap(help("The Minecraft version to check compatibility for"))]
         game_version: Option<String>,
-        #[clap(long)]
-        #[clap(help("Do not check whether the game version exists or not"))]
-        force_game_version: bool,
         #[clap(long)]
         #[clap(arg_enum)]
         #[clap(help("The mod loader to check compatibility for"))]

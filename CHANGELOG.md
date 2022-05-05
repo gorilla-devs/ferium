@@ -6,6 +6,13 @@
 - The `remove` command now uses arguments instead of flags
   - Mod names with spaces have to be given in quotes (`ferium remove "ok zoomer"`) or the spaces should be escaped (`ferium remove ok\ zoomer`)
 - Extracted minecraft version picking in `configure` and `create` into `mod.rs`
+- Removed checking of Minecraft version when creating profile using arguments
+  - Also removed the related `--force_game_version` flag and integration test
+- Added an `--import` flag to `profile create`
+  - If only `--import` is provided, then the profile to import mods from will be asked
+  - If `--import "Profile Name"` is provided, the mods from the `Profile Name` profile will be imported
+- Only check internet connection for subcommands which need it
+  - Extract internet connection check function
 
 ## `v3.25.1`
 
