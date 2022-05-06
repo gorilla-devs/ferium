@@ -73,6 +73,9 @@ pub async fn create(
     };
 
     if let Some(from) = import {
+        if config.profiles.is_empty() {
+            bail!("There are no profiles configured to import mods from")
+        }
         let selection = match from {
             // If the profile name has been provided as an option
             Some(profile_name) => {

@@ -15,11 +15,15 @@ Simply specify the mods you use through the CLI and in just one command, you can
 - Upgrade all your mods in one command, `ferium upgrade`
   - Ferium checks that the version being downloaded is the latest one compatible with the chosen mod loader and Minecraft version
 - Create multiple profiles and configure different mod loaders, Minecraft versions, output directories, and mods for each
+- Configure overrides for mods that are not specified as compatible, but still work
 
 ## Installation
 
 Ferium is a compiled, statically linked program that does not require any external dependencies.
 On Linux the regular version requires GTK to be installed, but the `no-gui` version does not need this.
+
+Ferium is coming to more package managers soon!
+[Tracking Issue](https://github.com/theRookieCoder/ferium/issues/42)
 
 ### AUR
 
@@ -38,6 +42,11 @@ Remember to use an add-on like [cargo-update](https://crates.io/crates/cargo-upd
 3. Remember to check the releases page for any updates!
 
 ## Overview / Help Page
+
+> Note! A lot of Ferium's backend is in a seperate project [Libium](https://github.com/theRookieCoder/libium).
+> It has things like the config, add, upgrade, file pickers, etc
+
+> The config file is located at `~/.config/ferium/config.json` if you're interested in manually editing it
 
 ### First Startup
 
@@ -63,10 +72,12 @@ When you first start up, you will have to create a new profile by running  `feri
     - For example [Sodium's repository](https://github.com/CaffeineMC/sodium-fabric) has the id `CaffeineMC` and `sodium-fabric`
     - You can find these at the top left part of the repository's page as a big 'owner / name'
   - So to add [Sodium](https://github.com/CaffeineMC/sodium-fabric), you should run `ferium add-github CaffeineMC sodium-fabric` (again, case-insensitive)
+  - Note: The GitHub repository has to release JAR files in their Releases for Ferium to download, or else it will refuse to be added
 
 ### Upgrading Mods
 
-## _Warning: Upgrading will empty the output directory before downloading your mods!_
+> _Warning: Upgrading will empty the output directory before downloading your mods!_
+> If your output directory is not empty when setting it, Ferium will offer to create a backup
 
 Now after adding all your mods, run `ferium upgrade` to download all of them to your output directory.
 This defaults to `.minecraft/mods`, where `.minecraft` is the default Minecraft resources directory. You don't need to worry about this if you play with Mojang's launcher (unless you changed the resources directory).
@@ -84,8 +95,10 @@ You can also provide the names of the mods to remove as arguments. Mod names wit
 
 #### Advanced
 
-If some mod is compatible with your profile but Ferium does not download it, [create an issue]((https://github.com/theRookieCoder/ferium/issues/new)) if you think it's a bug. Or else, you can disable the game version or mod loader checks by setting `check_game_version` or `check_mod_loader` to false in the specific mod.  
-For example, [Just Enough Items](https://www.curseforge.com/minecraft/mc-mods/jei) does not specify the mod loader for older minecraft versions such as `1.12.2`. In this case, you would disable the mod loader check like so
+If some mod is compatible with your profile but Ferium does not download it, [create an issue]((https://github.com/theRookieCoder/ferium/issues/new)) if you think it's a bug. Or else, you can disable the game version or mod loader checks by setting `check_game_version` or `check_mod_loader` to false for the specific mod.
+
+For example, [Just Enough Items](https://www.curseforge.com/minecraft/mc-mods/jei) does not specify the mod loader for older minecraft versions such as `1.12.2`. In this case, you would add JEI by running `ferium add-curseforge 238222 --dont-check-mod-loader` so that the mod loader check is disabled.
+You can also manually disable the mod loader (and/or game version) check(s) in the config like so
 ```json
 {
     "name": "Just Enough Items (JEI)",
@@ -107,17 +120,19 @@ You can create a profile by running `ferium profile create` and configuring the 
 - Minecraft version
 - Mod loader
 
-Ferium will automatically switch to the newly created profile.
+You can also provide these settings as flags to the create command.
+If you want to copy the mods from another profile, provide the `--import` flag. You can also provide the profile name to the `--import` flag, if you don't a profile picker will be shown.
+Finally, Ferium will automatically switch to the newly created profile.
 
 #### Configure
 
-You can configure these same settings afterwards by running `ferium profile configure`
+You can configure these same settings afterwards by running `ferium profile configure`.
+Again, you can provide these settings as flags to the command.
 
 #### Manage
 
-You can see all the profiles you have by running `ferium 
-profile list`.
-Switch between your profiles using `ferium profile switch`.
+You can see all the profiles you have by running `ferium profile list`.
+Switch between your profiles using `ferium switch`.
 
 #### Delete
 
@@ -125,20 +140,18 @@ You can delete a profile by running `ferium profile delete` and selecting the pr
 
 ## Feature Requests
 
-If you would like to make a feature request, check the [issues](https://github.com/theRookieCoder/ferium/issues?q=is%3Aissue) to see if the feature has already been added/planned. If not, [create a new issue](https://github.com/theRookieCoder/ferium/issues/new).
+If you would like to make a feature request, check the [issues](https://github.com/theRookieCoder/ferium/issues?q=is%3Aissue) to see if the feature has already been added or is planned. If not, [create a new issue](https://github.com/theRookieCoder/ferium/issues/new).
 
 ## Building from Source or Working with Ferium
 
-> Note; A lot of Ferium's backend is in a seperate project, [Libium](https://github.com/theRookieCoder/libium). You might want to make some edits there for things like the config, add, upgrade, etc
-
 Firstly, you need the Rust toolchain which includes `cargo`, `rustup`, etc. You can install these from [the Rust website](https://www.rust-lang.org/tools/install).
-You'll also need the [Just](https://github.com/casey/just#installation) command runner, its basically a better version of `make`.
+You'll also need the [Just](https://github.com/casey/just#installation) command runner, its basically a much better version of `make`.
 
 If you want to build Ferium without cloning the repo, set the `CURSEFORGE_API_KEY` environment variable, then run `cargo install ferium`.
 If you don't have a CurseForge API key you can set the variable to an empty value, however anything using the CurseForge API will not work.
 
 To build the project and install it to your Cargo binary directory, clone the project and run `just install`. If you want to install it for testing a developement version, run `just` (alias for `just install-dev`).
 
-If you want to obtain executables for a specific OS, you can run `just build-<OS>` and replace `<OS>` with `mac`, `win`, or `linux`. The produced binaries will be zipped and moved to `out/`.
+If you want to obtain executables for a specific OS, you can run `just build-<OS>` and replace `<OS>` with `mac`, `win`, or `linux`. The produced binaries will be zipped and moved to `out/`. There is also `just build-linux-nogui`for building binaries that don't need GTK.
 
-You can run clippy linters using `just lint`, and integration tests using `cargo test`.
+You can run clippy linters using `just lint`, and integration tests using `cargo test`. Finally you can delete all the build and test artefacts by using `just clean`.

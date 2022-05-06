@@ -193,7 +193,9 @@ async fn actual_main() -> Result<()> {
             subcommands::remove(profile, mod_names)?;
         },
         SubCommands::Switch { profile_name } => subcommands::switch(&mut config, profile_name)?,
-        SubCommands::Sort => profile.mods.sort_by_cached_key(|mod_| mod_.name.clone()),
+        SubCommands::Sort => profile
+            .mods
+            .sort_by_cached_key(|mod_| mod_.name.to_lowercase()),
         SubCommands::Upgrade => {
             check_internet().await?;
             check_empty_profile(profile)?;

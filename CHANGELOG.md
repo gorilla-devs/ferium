@@ -18,6 +18,7 @@
   - If it contains stuff, it will ask if you want to create a backup
     - So that you don't lose the stuff in there when you upgrade
   - Along with the original relative directory check
+- Made sort command convert to lowercase when sorting
 
 ## `v3.25.1`
 
