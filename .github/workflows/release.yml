@@ -107,7 +107,7 @@ jobs:
           files: ./out/*
           name: Ferium ${{ github.ref_name }}
           body: |
-            Compiled binaries for Ferium version `${{ github.ref_name }}` ([changelog](https://github.com/theRookieCoder/ferium/blob/main/CHANGELOG.md#$MD_HEADER))
+            Compiled binaries for Ferium version `${{ github.ref_name }}` ([changelog](https://github.com/theRookieCoder/ferium/blob/main/CHANGELOG.md#${{ $MD_HEADER }}))
 
             The provided binaries are for:
 

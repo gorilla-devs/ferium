@@ -73,11 +73,12 @@ When you first start up, you will have to create a new profile by running  `feri
     - You can find these at the top left part of the repository's page as a big 'owner / name'
   - So to add [Sodium](https://github.com/CaffeineMC/sodium-fabric), you should run `ferium add-github CaffeineMC sodium-fabric` (again, case-insensitive)
   - Note: The GitHub repository has to release JAR files in their Releases for Ferium to download, or else it will refuse to be added
+- External mods
+  - If you want to add files that are not on Modrinth, CurseForge, or GitHub Release, place them in a `user` folder in the output directory. Files here will be copied to the output directory when upgrading
 
 ### Upgrading Mods
 
-> _Warning: Upgrading will empty the output directory before downloading your mods!_
-> If your output directory is not empty when setting it, Ferium will offer to create a backup
+> If your output directory is not empty when setting it, Ferium will offer to create a backup. Please do so if it contains any files you would like to keep
 
 Now after adding all your mods, run `ferium upgrade` to download all of them to your output directory.
 This defaults to `.minecraft/mods`, where `.minecraft` is the default Minecraft resources directory. You don't need to worry about this if you play with Mojang's launcher (unless you changed the resources directory).
@@ -86,6 +87,8 @@ You can choose to pick a custom output directory during profile creation or [cha
 If Ferium fails to find a compatible version of a mod, it will print it's name in red and give a reason.It will continue downloading the rest of the mods and will exit with an error.
 See the [advanced section](#advanced) for more information.
 
+**WARNING:** _When upgrading, any files not downloaded by Ferium will be moved to the `.old` folder in the output directory_
+
 ### Managing Mods
 
 You can see all the mods in your current profile by running `ferium list`. If you want to see more information about them, you can run `ferium list -v` or `ferium list --verbose`.
@@ -93,7 +96,7 @@ You can see all the mods in your current profile by running `ferium list`. If yo
 You can remove any of your mod by runnning `ferium remove`, selecting the ones you would like to remove by using the space key, and pressing enter once you're done.
 You can also provide the names of the mods to remove as arguments. Mod names with spaces have to be given in quotes (`ferium remove "ok zoomer"`) or the spaces should be escaped (`ferium remove ok\ zoomer`).
 
-#### Advanced
+#### Check Overrides
 
 If some mod is compatible with your profile but Ferium does not download it, [create an issue]((https://github.com/theRookieCoder/ferium/issues/new)) if you think it's a bug. Or else, you can disable the game version or mod loader checks by setting `check_game_version` or `check_mod_loader` to false for the specific mod.
 
@@ -121,7 +124,7 @@ You can create a profile by running `ferium profile create` and configuring the 
 - Mod loader
 
 You can also provide these settings as flags to the create command.
-If you want to copy the mods from another profile, provide the `--import` flag. You can also provide the profile name to the `--import` flag, if you don't a profile picker will be shown.
+If you want to copy the mods from another profile, provide the `--import` flag. You can also provide the profile name to the `--import` flag if you don't a profile picker will be shown.
 Finally, Ferium will automatically switch to the newly created profile.
 
 #### Configure
@@ -148,7 +151,7 @@ Firstly, you need the Rust toolchain which includes `cargo`, `rustup`, etc. You 
 You'll also need the [Just](https://github.com/casey/just#installation) command runner, its basically a much better version of `make`.
 
 If you want to build Ferium without cloning the repo, set the `CURSEFORGE_API_KEY` environment variable, then run `cargo install ferium`.
-If you don't have a CurseForge API key you can set the variable to an empty value, however anything using the CurseForge API will not work.
+If you don't have a CurseForge API key, you can set the variable to an empty value. However anything using the CurseForge API will not work.
 
 To build the project and install it to your Cargo binary directory, clone the project and run `just install`. If you want to install it for testing a developement version, run `just` (alias for `just install-dev`).
 

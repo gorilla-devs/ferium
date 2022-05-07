@@ -1,5 +1,14 @@
 # Changelog for Ferium
 
+## `v3.27.0`
+### 07.05.2022
+
+- Added a `.old` directory in the output directory to store 'deleted' mods
+- Update the output directory checking code so that the backup is only requested when there are files (because directories will not be deleted)
+- Added support for user installed mods
+  - These are read from `<output_dir>/user`
+- There are now download and install messages when upgrading
+
 ## `v3.26.0`
 ### 05.05.2022
 

@@ -5,19 +5,18 @@ mod list;
 pub use configure::configure;
 pub use create::create;
 pub use delete::delete;
-use fs_extra::dir::{copy, CopyOptions};
 pub use list::list;
 
 use crate::THEME;
 use anyhow::{bail, Result};
 use colored::Colorize;
 use dialoguer::{Confirm, Select};
+use fs_extra::dir::{copy, CopyOptions};
 use libium::{
     config::{self, structs::ModLoader},
     file_picker, misc, HOME,
 };
 use std::path::PathBuf;
-use tokio::fs::read_dir;
 
 fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
     let mut picker = Select::with_theme(&*THEME);
@@ -66,13 +65,29 @@ async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
     if output_dir.file_name().unwrap() != "mods" {
         println!("{}", "Warning! The output directory is not called `mods`. Most mod loaders will load a directory called `mods`.".bright_yellow());
     }
-    if output_dir.exists()
-        && read_dir(output_dir).await?.next_entry().await?.is_some()
-        && Confirm::with_theme(&*THEME)
-            .with_prompt("Your output directory is not empty and it will be erased when upgrading. Would like to create a backup of it?")
-            .interact()? {
-        let backup_dir = file_picker::pick_folder(&*HOME, "Where should the backup be made?").await.unwrap();
-        copy(output_dir, backup_dir, &CopyOptions::new())?;
+    let mut backup = false;
+    if output_dir.exists() {
+        for file in std::fs::read_dir(output_dir)? {
+            let file = file?;
+            if file.path().is_file() && file.file_name() != ".DS_Store" {
+                backup = true;
+                break;
+            }
+        }
+    }
+    if backup {
+        println!(
+            "There are files in your output directory, these will be deleted when you upgrade."
+        );
+        if Confirm::with_theme(&*THEME)
+            .with_prompt("Would like to create a backup?")
+            .interact()?
+        {
+            let backup_dir = file_picker::pick_folder(&*HOME, "Where should the backup be made?")
+                .await
+                .unwrap();
+            copy(output_dir, backup_dir, &CopyOptions::new())?;
+        }
     }
     Ok(())
 }

@@ -199,7 +199,7 @@ async fn actual_main() -> Result<()> {
         SubCommands::Upgrade => {
             check_internet().await?;
             check_empty_profile(profile)?;
-            create_dir_all(&profile.output_dir).await?;
+            create_dir_all(&profile.output_dir.join(".old")).await?;
             upgrade(&modrinth, &curseforge, &github, profile).await?;
         },
     };
