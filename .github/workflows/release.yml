@@ -99,10 +99,10 @@ jobs:
           name: binaries
           path: ./out
       - name: Create sha256sum for scoop
-        run: sha256sum ferium-windows-msvc.zip | cut -d ' ' -f 1 > ./out/ferium-windows-msvc.zip.sha256
+        run: sha256sum ./out/ferium-windows-msvc.zip | cut -d ' ' -f 1 > ./out/ferium-windows-msvc.zip.sha256
       # Remove the dots for the markdown header
       - name: MD Header
-        run: export MD_HEADER=$(echo ${{ github.ref_name }} | sed 's/\.//g')
+        run: echo "MD_HEADER=$(echo ${{ github.ref_name }} | sed 's/\.//g')" >> $GITHUB_ENV
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
