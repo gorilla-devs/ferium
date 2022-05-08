@@ -8,6 +8,9 @@ use std::path::PathBuf;
 pub struct Ferium {
     #[clap(subcommand)]
     pub subcommand: SubCommands,
+    #[clap(long, short)]
+    #[clap(help("The limit for additional threads spawned by the Tokio runtime"))]
+    pub threads: Option<usize>,
     #[clap(long)]
     #[clap(help("A GitHub personal access token for increasing the rate limit"))]
     pub github_token: Option<String>,

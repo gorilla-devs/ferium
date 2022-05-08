@@ -15,7 +15,9 @@ Simply specify the mods you use through the CLI and in just one command, you can
 - Upgrade all your mods in one command, `ferium upgrade`
   - Ferium checks that the version being downloaded is the latest one compatible with the chosen mod loader and Minecraft version
 - Create multiple profiles and configure different mod loaders, Minecraft versions, output directories, and mods for each
-- Configure overrides for mods that are not specified as compatible, but still work
+- Configure overrides for mods that are not specified as compatible but still work
+- Multi-threading for network intensive subcommands
+  - You can configure the maximum number of additional threads using the `--threads` options
 
 ## Installation
 

@@ -1,5 +1,17 @@
 # Changelog for Ferium
 
+## `v3.28.0`
+### 08.05.2022
+
+Upgrading and verbose listing of mods is now _**SUPER**_ fast compared to before (14-20 times) due to multi threading
+
+- Added multi threading for getting latest mod versions and downloading mods
+- Added `--threads` options to limit the maximum number of additional threads
+- Used `Arc` in many locations to use the APIs without having to _actually_ clone them
+- Added `mutex_ext` to (somewhat unsafely) recover from a poison error and lock a mutex
+- If a CurseForge request fails during version determination with a status code, then the request is tried again
+  - Requests are sent so fast the CF API gives 500 internal server errors sometimes
+
 ## `v3.27.0`
 ### 07.05.2022
 

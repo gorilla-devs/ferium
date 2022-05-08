@@ -1,4 +1,5 @@
-use crate::{CROSS, TICK, YELLOW_TICK};
+use crate::{mutex_ext::MutexExt, CROSS, TICK, YELLOW_TICK};
+use anyhow::Error;
 use anyhow::{bail, Result};
 use colored::Colorize;
 use ferinth::Ferinth;
@@ -8,9 +9,15 @@ use itertools::Itertools;
 use libium::config;
 use libium::upgrade;
 use octocrab::Octocrab;
-use std::fs::read_dir;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::{
+    fs::read_dir,
+    sync::{Arc, Mutex},
+};
 use tokio::fs::copy;
+use tokio::spawn;
 
+#[derive(Debug, Clone)]
 struct Downloadable {
     filename: String,
     download_url: String,
@@ -54,131 +61,174 @@ impl From<octocrab::models::repos::Asset> for Downloadable {
 }
 
 pub async fn upgrade(
-    modrinth: &Ferinth,
-    curseforge: &Furse,
-    github: &Octocrab,
+    modrinth: Arc<Ferinth>,
+    curseforge: Arc<Furse>,
+    github: Arc<Octocrab>,
     profile: &config::structs::Profile,
 ) -> Result<()> {
-    let mut to_download = Vec::new();
-    let mut backwards_compat_msg = false;
-    let mut error = false;
+    let profile = Arc::new(profile.clone());
+    let to_download = Arc::new(Mutex::new(Vec::new()));
+    let backwards_compat_msg = Arc::new(AtomicBool::new(false));
+    let error = Arc::new(AtomicBool::new(false));
+    let mut tasks = Vec::new();
 
     println!("{}\n", "Determining the Latest Compatible Versions".bold());
     for mod_ in &profile.mods {
-        use libium::config::structs::ModIdentifier;
-        let (result, backwards_compat): (Result<Downloadable, _>, bool) = match &mod_.identifier {
-            ModIdentifier::CurseForgeProject(project_id) => {
-                let result = upgrade::curseforge(
-                    curseforge,
-                    *project_id,
-                    &profile.game_version,
-                    &profile.mod_loader,
-                    mod_.check_game_version,
-                    mod_.check_mod_loader,
-                )
-                .await;
-                if matches!(result, Err(upgrade::Error::NoCompatibleFile))
-                    && profile.mod_loader == config::structs::ModLoader::Quilt
-                {
-                    (
-                        upgrade::curseforge(
-                            curseforge,
-                            *project_id,
-                            &profile.game_version,
-                            &config::structs::ModLoader::Fabric,
-                            mod_.check_game_version,
-                            mod_.check_mod_loader,
-                        )
-                        .await
-                        .map(Into::into),
-                        true,
+        let backwards_compat_msg = backwards_compat_msg.clone();
+        let to_download = to_download.clone();
+        let error = error.clone();
+        let curseforge = curseforge.clone();
+        let modrinth = modrinth.clone();
+        let profile = profile.clone();
+        let github = github.clone();
+        let mod_ = mod_.clone();
+        tasks.push(spawn(async move {
+            use libium::config::structs::ModIdentifier;
+            let (result, backwards_compat): (Result<Downloadable, _>, bool) = match &mod_.identifier
+            {
+                ModIdentifier::CurseForgeProject(project_id) => {
+                    let result = upgrade::curseforge(
+                        &curseforge,
+                        *project_id,
+                        &profile.game_version,
+                        &profile.mod_loader,
+                        mod_.check_game_version,
+                        mod_.check_mod_loader,
                     )
-                } else {
-                    (result.map(Into::into), false)
-                }
-            },
-            ModIdentifier::ModrinthProject(project_id) => {
-                let result = upgrade::modrinth(
-                    modrinth,
-                    project_id,
-                    &profile.game_version,
-                    &profile.mod_loader,
-                    mod_.check_game_version,
-                    mod_.check_mod_loader,
-                )
-                .await;
-                if matches!(result, Err(upgrade::Error::NoCompatibleFile))
-                    && profile.mod_loader == config::structs::ModLoader::Quilt
-                {
-                    (
-                        upgrade::modrinth(
-                            modrinth,
-                            project_id,
-                            &profile.game_version,
-                            &config::structs::ModLoader::Fabric,
-                            mod_.check_game_version,
-                            mod_.check_mod_loader,
+                    .await;
+                    if matches!(result, Err(upgrade::Error::NoCompatibleFile))
+                        && profile.mod_loader == config::structs::ModLoader::Quilt
+                    {
+                        (
+                            upgrade::curseforge(
+                                &curseforge,
+                                *project_id,
+                                &profile.game_version,
+                                &config::structs::ModLoader::Fabric,
+                                mod_.check_game_version,
+                                mod_.check_mod_loader,
+                            )
+                            .await
+                            .map(Into::into),
+                            true,
                         )
-                        .await
-                        .map(Into::into),
-                        true,
-                    )
-                } else {
-                    (result.map(Into::into), false)
-                }
-            },
-            ModIdentifier::GitHubRepository(full_name) => {
-                let result = upgrade::github(
-                    &github.repos(&full_name.0, &full_name.1),
-                    &profile.game_version,
-                    &profile.mod_loader,
-                    mod_.check_game_version,
-                    mod_.check_mod_loader,
-                )
-                .await;
-                if matches!(result, Err(upgrade::Error::NoCompatibleFile))
-                    && profile.mod_loader == config::structs::ModLoader::Quilt
-                {
-                    (
-                        upgrade::github(
-                            &github.repos(&full_name.0, &full_name.1),
-                            &profile.game_version,
-                            &config::structs::ModLoader::Fabric,
-                            mod_.check_game_version,
-                            mod_.check_mod_loader,
-                        )
-                        .await
-                        .map(Into::into),
-                        true,
-                    )
-                } else {
-                    (result.map(Into::into), false)
-                }
-            },
-        };
-
-        match result {
-            Ok(result) => {
-                println!(
-                    "{} {:40}{}",
-                    if backwards_compat {
-                        backwards_compat_msg = true;
-                        YELLOW_TICK.clone()
+                    } else if let Err(upgrade::Error::CurseForgeError(
+                        furse::Error::ReqwestError(err),
+                    )) = &result
+                    {
+                        if err.is_status() {
+                            (
+                                upgrade::curseforge(
+                                    &curseforge,
+                                    *project_id,
+                                    &profile.game_version,
+                                    &profile.mod_loader,
+                                    mod_.check_game_version,
+                                    mod_.check_mod_loader,
+                                )
+                                .await
+                                .map(Into::into),
+                                false,
+                            )
+                        } else {
+                            (result.map(Into::into), false)
+                        }
                     } else {
-                        TICK.clone()
-                    },
-                    mod_.name,
-                    format!("({})", result.filename).dimmed()
-                );
-                to_download.push(result);
-            },
-            Err(err) => {
-                eprintln!("{}", format!("{} {:40}{}", CROSS, mod_.name, err).red());
-                error = true;
-            },
-        }
+                        (result.map(Into::into), false)
+                    }
+                },
+                ModIdentifier::ModrinthProject(project_id) => {
+                    let result = upgrade::modrinth(
+                        &modrinth,
+                        project_id,
+                        &profile.game_version,
+                        &profile.mod_loader,
+                        mod_.check_game_version,
+                        mod_.check_mod_loader,
+                    )
+                    .await;
+                    if matches!(result, Err(upgrade::Error::NoCompatibleFile))
+                        && profile.mod_loader == config::structs::ModLoader::Quilt
+                    {
+                        (
+                            upgrade::modrinth(
+                                &modrinth,
+                                project_id,
+                                &profile.game_version,
+                                &config::structs::ModLoader::Fabric,
+                                mod_.check_game_version,
+                                mod_.check_mod_loader,
+                            )
+                            .await
+                            .map(Into::into),
+                            true,
+                        )
+                    } else {
+                        (result.map(Into::into), false)
+                    }
+                },
+                ModIdentifier::GitHubRepository(full_name) => {
+                    let result = upgrade::github(
+                        &github.repos(&full_name.0, &full_name.1),
+                        &profile.game_version,
+                        &profile.mod_loader,
+                        mod_.check_game_version,
+                        mod_.check_mod_loader,
+                    )
+                    .await;
+                    if matches!(result, Err(upgrade::Error::NoCompatibleFile))
+                        && profile.mod_loader == config::structs::ModLoader::Quilt
+                    {
+                        (
+                            upgrade::github(
+                                &github.repos(&full_name.0, &full_name.1),
+                                &profile.game_version,
+                                &config::structs::ModLoader::Fabric,
+                                mod_.check_game_version,
+                                mod_.check_mod_loader,
+                            )
+                            .await
+                            .map(Into::into),
+                            true,
+                        )
+                    } else {
+                        (result.map(Into::into), false)
+                    }
+                },
+            };
+
+            match result {
+                Ok(result) => {
+                    println!(
+                        "{} {:40}{}",
+                        if backwards_compat {
+                            backwards_compat_msg.store(true, Ordering::Relaxed);
+                            YELLOW_TICK.clone()
+                        } else {
+                            TICK.clone()
+                        },
+                        mod_.name,
+                        format!("({})", result.filename).dimmed()
+                    );
+                    {
+                        let mut to_download = to_download.force_lock();
+                        to_download.push(result);
+                    }
+                },
+                Err(err) => {
+                    eprintln!("{}", format!("{} {:40}{}", CROSS, mod_.name, err).red());
+                    error.store(true, Ordering::Relaxed);
+                },
+            }
+        }));
     }
-    if backwards_compat_msg {
+    for handle in tasks {
+        handle.await?;
+    }
+    let mut to_download = Arc::try_unwrap(to_download)
+        .expect("Failed to run threads to completion")
+        .into_inner()?;
+    if backwards_compat_msg.load(Ordering::Relaxed) {
         println!(
             "{}",
             "Fabric mod using Quilt backwards compatibility".yellow()
@@ -222,14 +272,22 @@ pub async fn upgrade(
         }
     }
 
+    let mut tasks = Vec::new();
     for downloadable in to_download {
-        eprint!("Downloading {}... ", downloadable.filename.dimmed());
-        let contents = reqwest::get(downloadable.download_url)
-            .await?
-            .bytes()
-            .await?;
-        upgrade::write_mod_file(profile, contents, &downloadable.filename).await?;
-        println!("{}", &*TICK);
+        let profile = profile.clone();
+        let downloadable = downloadable.clone();
+        tasks.push(spawn(async move {
+            let contents = reqwest::get(&downloadable.download_url)
+                .await?
+                .bytes()
+                .await?;
+            upgrade::write_mod_file(&profile, contents, &downloadable.filename).await?;
+            println!("{} Downloaded {}", &*TICK, downloadable.filename.dimmed());
+            Ok::<(), Error>(())
+        }));
+    }
+    for handle in tasks {
+        handle.await??;
     }
     for installable in to_install {
         eprint!(
@@ -240,7 +298,7 @@ pub async fn upgrade(
         println!("{}", &*TICK);
     }
 
-    if error {
+    if error.load(Ordering::Relaxed) {
         bail!("\nCould not get the latest compatible version of some mods")
     }
 

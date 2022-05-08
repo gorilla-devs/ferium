@@ -1,4 +1,5 @@
 mod cli;
+mod mutex_ext;
 mod subcommands;
 
 use anyhow::{anyhow, bail, Result};
@@ -9,8 +10,9 @@ use ferinth::Ferinth;
 use furse::Furse;
 use lazy_static::lazy_static;
 use libium::config;
+use std::sync::Arc;
 use subcommands::{add, upgrade};
-use tokio::{fs::create_dir_all, io::AsyncReadExt};
+use tokio::{fs::create_dir_all, io::AsyncReadExt, runtime, spawn};
 
 const CROSS: &str = "×";
 lazy_static! {
@@ -20,18 +22,23 @@ lazy_static! {
         dialoguer::theme::ColorfulTheme::default();
 }
 
-#[tokio::main]
-async fn main() {
-    if let Err(err) = actual_main().await {
+fn main() {
+    let cli = Ferium::parse();
+    let mut builder = runtime::Builder::new_multi_thread();
+    builder.enable_all();
+    builder.thread_name("ferium-worker");
+    if let Some(threads) = cli.threads {
+        builder.max_blocking_threads(threads);
+    }
+    let runtime = builder.build().expect("Could not initialise Tokio runtime");
+    if let Err(err) = runtime.block_on(actual_main(cli)) {
         eprintln!("{}", err.to_string().red().bold());
+        runtime.shutdown_background();
         std::process::exit(1);
     }
 }
 
-async fn actual_main() -> Result<()> {
-    // This also displays the help page or version automatically
-    let cli_app = Ferium::parse();
-
+async fn actual_main(cli_app: Ferium) -> Result<()> {
     let github = {
         let mut builder = octocrab::OctocrabBuilder::new();
         if let Some(token) = cli_app.github_token {
@@ -39,11 +46,11 @@ async fn actual_main() -> Result<()> {
         }
         octocrab::initialise(builder)
     }?;
-    let modrinth = Ferinth::new();
-    let curseforge = Furse::new(env!(
+    let modrinth = Arc::new(Ferinth::new());
+    let curseforge = Arc::new(Furse::new(env!(
         "CURSEFORGE_API_KEY",
         "A CurseForge API key is required to build. If you don't have one, you can bypass this by setting the variable to a blank string, however anything using the CurseForge API will not work."
-    ));
+    )));
     let mut config_file =
         config::get_file(cli_app.config_file.unwrap_or_else(config::file_path)).await?;
     let mut config_file_contents = String::new();
@@ -144,22 +151,28 @@ async fn actual_main() -> Result<()> {
         },
         SubCommands::List { verbose } => {
             check_empty_profile(profile)?;
-            for mod_ in &profile.mods {
-                if verbose {
+            if verbose {
+                check_internet().await?;
+                let mut tasks = Vec::new();
+                for mod_ in &profile.mods {
                     use config::structs::ModIdentifier;
-                    check_internet().await?;
                     match &mod_.identifier {
-                        ModIdentifier::CurseForgeProject(project_id) => {
-                            subcommands::list::curseforge(&curseforge, *project_id).await
-                        },
-                        ModIdentifier::ModrinthProject(project_id) => {
-                            subcommands::list::modrinth(&modrinth, project_id).await
-                        },
-                        ModIdentifier::GitHubRepository(full_name) => {
-                            subcommands::list::github(&github, full_name).await
-                        },
-                    }?;
-                } else {
+                        ModIdentifier::CurseForgeProject(project_id) => tasks.push(spawn(
+                            subcommands::list::curseforge(curseforge.clone(), *project_id),
+                        )),
+                        ModIdentifier::ModrinthProject(project_id) => tasks.push(spawn(
+                            subcommands::list::modrinth(modrinth.clone(), project_id.clone()),
+                        )),
+                        ModIdentifier::GitHubRepository(full_name) => tasks.push(spawn(
+                            subcommands::list::github(github.clone(), full_name.clone()),
+                        )),
+                    };
+                }
+                for handle in tasks {
+                    handle.await??;
+                }
+            } else {
+                for mod_ in &profile.mods {
                     println!("{}", mod_.name);
                 }
             }
@@ -200,7 +213,7 @@ async fn actual_main() -> Result<()> {
             check_internet().await?;
             check_empty_profile(profile)?;
             create_dir_all(&profile.output_dir.join(".old")).await?;
-            upgrade(&modrinth, &curseforge, &github, profile).await?;
+            upgrade(modrinth, curseforge, github, profile).await?;
         },
     };
 
