@@ -98,6 +98,8 @@ jobs:
         with:
           name: binaries
           path: ./out
+      - name: Create sha256sum for scoop
+        run: sha256sum ferium-windows-msvc.zip | cut -d ' ' -f 1 > ./out/ferium-windows-msvc.zip.sha256
       # Remove the dots for the markdown header
       - name: MD Header
         run: export MD_HEADER=$(echo ${{ github.ref_name }} | sed 's/\.//g')
