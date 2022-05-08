@@ -124,15 +124,13 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             dont_check_mod_loader,
         } => {
             check_internet().await?;
-            eprint!("Adding mod... ");
-            let repo = libium::add::github(
+            add::github(
                 github.repos(owner, name),
                 profile,
                 Some(!dont_check_game_version),
                 Some(!dont_check_mod_loader),
             )
             .await?;
-            println!("{} ({})", *TICK, repo.name);
         },
         SubCommands::AddCurseforge {
             project_id,

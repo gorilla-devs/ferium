@@ -1,5 +1,11 @@
 # Changelog for Ferium
 
+## `v3.28.1`
+### 08.05.2022
+
+- Adding github mods now checks tried to get the latest compatible version
+- Fixed [#47](https://github.com/theRookieCoder/ferium/issues/47) by using Libium 1.11.4
+
 ## `v3.28.0`
 ### 08.05.2022
 

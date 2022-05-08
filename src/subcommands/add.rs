@@ -5,6 +5,33 @@ use ferinth::structures::version_structs::DependencyType;
 use ferinth::Ferinth;
 use furse::{structures::file_structs::FileRelationType, Furse};
 use libium::{add, config, upgrade};
+use octocrab::repos::RepoHandler;
+
+pub async fn github(
+    repo_handler: RepoHandler<'_>,
+    profile: &mut config::structs::Profile,
+    should_check_game_version: Option<bool>,
+    should_check_mod_loader: Option<bool>,
+) -> Result<()> {
+    eprint!("Adding mod... ");
+    let repo = libium::add::github(
+        &repo_handler,
+        profile,
+        should_check_game_version,
+        should_check_mod_loader,
+    )
+    .await?;
+    upgrade::github(
+        &repo_handler,
+        &profile.game_version,
+        &profile.mod_loader,
+        should_check_game_version,
+        should_check_mod_loader,
+    )
+    .await?;
+    println!("{} ({})", *TICK, repo.name);
+    Ok(())
+}
 
 pub async fn modrinth(
     modrinth: &Ferinth,
