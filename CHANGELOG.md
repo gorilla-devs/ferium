@@ -1,5 +1,13 @@
 # Changelog for Ferium
 
+## `v3.28.2`
+
+- Update to Libium 1.12
+- Improved upgrade code to be faster and more clean
+- Immediately fail if rate limit error occured
+  - Somewhat fixes [#51](https://github.com/theRookieCoder/ferium/issues/51)
+- Show the file size when downloading files
+
 ## `v3.28.1`
 ### 08.05.2022
 

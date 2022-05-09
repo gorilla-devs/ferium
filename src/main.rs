@@ -109,7 +109,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         } => {
             check_internet().await?;
             add::modrinth(
-                &modrinth,
+                modrinth,
                 &project_id,
                 profile,
                 Some(!dont_check_game_version),
@@ -139,7 +139,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         } => {
             check_internet().await?;
             add::curseforge(
-                &curseforge,
+                curseforge,
                 project_id,
                 profile,
                 Some(!dont_check_game_version),
