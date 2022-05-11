@@ -1,5 +1,11 @@
 # Changelog for Ferium
 
+## `v3.28.5`
+### 11.05.2022
+
+- Added a progress bar that looks very cool when upgrading
+  - Not that you can see it for that long anyways :P
+
 ## `v3.28.4`
 ### 11.05.2022
 

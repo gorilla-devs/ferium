@@ -8,6 +8,7 @@ use cli::{Ferium, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
 use ferinth::Ferinth;
 use furse::Furse;
+use indicatif::ProgressStyle;
 use lazy_static::lazy_static;
 use libium::config;
 use octocrab::OctocrabBuilder;
@@ -21,6 +22,9 @@ lazy_static! {
     pub static ref YELLOW_TICK: ColoredString = "✓".yellow();
     pub static ref THEME: dialoguer::theme::ColorfulTheme =
         dialoguer::theme::ColorfulTheme::default();
+    pub static ref STYLE: ProgressStyle = ProgressStyle::default_bar()
+        .template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}")
+        .progress_chars("#>-");
 }
 
 fn main() {
