@@ -31,6 +31,10 @@ Ferium is coming to more package managers soon!
 
 Ferium releases a no-gui version [here](https://aur.archlinux.org/packages/ferium-bin) and a version with a GUI file dialog [here](https://aur.archlinux.org/packages/ferium-gui-bin). The GUI version dependes on GTK
 
+### Scoop
+
+Ferium releases [here](https://scoop.sh/#/apps?q=ferium) in Scoop's official games bucket. Run `scoop bucket add games` then `scoop install ferium` to install Ferium.
+
 ### Cargo Install
 
 If you have the Rust toolchain, you can also compile and install Ferium by running `cargo install ferium`.

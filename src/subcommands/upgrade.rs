@@ -15,7 +15,10 @@ use std::{
         Arc, Mutex,
     },
 };
-use tokio::{fs::copy, spawn};
+use tokio::{
+    fs::{copy, remove_file},
+    spawn,
+};
 
 pub async fn upgrade(
     modrinth: Arc<Ferinth>,
@@ -118,12 +121,14 @@ pub async fn upgrade(
                 to_install.iter().find_position(|thing| filename == thing.0)
             {
                 to_install.swap_remove(index);
-            } else {
-                let _ = move_file(
-                    file.path(),
-                    profile.output_dir.join(".old").join(filename),
-                    &CopyOptions::new(),
-                );
+            } else if move_file(
+                file.path(),
+                profile.output_dir.join(".old").join(filename),
+                &CopyOptions::new(),
+            )
+            .is_err()
+            {
+                remove_file(file.path()).await?;
             }
         }
     }

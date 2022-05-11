@@ -12,15 +12,18 @@ pub async fn curseforge(curseforge: Arc<Furse>, project_id: i32) -> Result<()> {
         "{}
        \r  {}\n
        \r  Link:         {}
-       \r  Source:       CurseForge Mod
+       \r  Source:       {}
+       \r  Project ID:   {}
        \r  Open Source:  {}
        \r  Downloads:    {}
        \r  Authors:      {}
        \r  Categories:   {}
        ",
-        project.name.bold().italic(),
-        project.summary.trim(),
+        project.name.bold(),
+        project.summary.trim().italic(),
         project.links.website_url.blue(),
+        "CurseForge Mod".dimmed(),
+        project.id.to_string().dimmed(),
         project.links.source_url.map_or("No".red(), |url| format!(
             "Yes ({})",
             url.blue().underline()
@@ -54,18 +57,21 @@ pub async fn modrinth(modrinth: Arc<Ferinth>, project_id: String) -> Result<()> 
         "{}
        \r  {}\n
        \r  Link:         {}
-       \r  Source:       Modrinth Mod
+       \r  Source:       {}
+       \r  Project ID:   {}
        \r  Open Source:  {}
        \r  Downloads:    {}
        \r  Authors:      {}
        \r  Categories:   {}
        \r  License:      {}{}
        ",
-        project.title.bold().italic(),
-        project.description,
+        project.title.bold(),
+        project.description.italic(),
         format!("https://modrinth.com/mod/{}", project.slug)
             .blue()
             .underline(),
+        "Modrinth Mod".dimmed(),
+        project.id.dimmed(),
         project.source_url.map_or("No".red(), |url| {
             format!("Yes ({})", url.blue().underline()).green()
         }),
@@ -104,17 +110,21 @@ pub async fn github(github: Arc<Octocrab>, full_name: (String, String)) -> Resul
     println!(
         "{}{}\n
        \r  Link:         {}
-       \r  Source:       GitHub Repository
+       \r  Source:       {}
+       \r  Identifier:   {}
        \r  Open Source:  {}
        \r  Downloads:    {}
        \r  Authors:      {}
        \r  Topics:       {}
        \r  License:      {}
        ",
-        repo.name.bold().italic(),
+        repo.name.bold(),
         repo.description
-            .map_or("".into(), |description| { format!("\n  {}", description) }),
+            .map_or("".into(), |description| { format!("\n  {}", description) })
+            .italic(),
         repo.html_url.unwrap().to_string().blue().underline(),
+        "GitHub Repository".dimmed(),
+        repo.full_name.unwrap().dimmed(),
         "Yes".green(),
         downloads.to_string().yellow(),
         repo.owner.unwrap().login.cyan(),

@@ -493,7 +493,7 @@ dependencies = [
 
 [[package]]
 name = "ferium"
-version = "3.28.3"
+version = "3.28.4"
 dependencies = [
  "anyhow",
  "bytes",

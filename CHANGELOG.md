@@ -1,6 +1,14 @@
 # Changelog for Ferium
 
+## `v3.28.4`
+### 11.05.2022
+
+- Added project id to list verbose and some other small tweaks
+- Upgrading now deletes old files if moving the file failed (e.g. if it's already in `.old`)
+  - This fixes [#60](https://github.com/theRookieCoder/ferium/issues/60)
+
 ## `v3.28.3`
+### 11.05.2022
 
 - Update to Libium 1.14
   - This fixes [#53](https://github.com/theRookieCoder/ferium/issues/53)
@@ -10,6 +18,7 @@
 - Significantly improved verbose listing to be more colourful, consistent, and informative
 
 ## `v3.28.2`
+### 09.05.2022
 
 - Update to Libium 1.12
 - Improved upgrade code to be faster and more clean
