@@ -1,5 +1,13 @@
 # Changelog for Ferium
 
+## `v3.28.6`
+### 11.05.2022
+
+- `add-github` now accepts the `theRookieCoder/ferium` format (only one argument)
+  - This makes it easier to copy paste the name from the URL
+- Fixed a bug when adding dependencies
+- Improved the non-verbose list command by showing the source and identifier
+
 ## `v3.28.5`
 ### 11.05.2022
 

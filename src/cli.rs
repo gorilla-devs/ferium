@@ -36,9 +36,7 @@ pub enum SubCommands {
     },
     #[clap(about("Add a GitHub repository to the profile"))]
     AddGithub {
-        #[clap(help("The repository owner's username"))]
-        owner: String,
-        #[clap(help("The name of the repository"))]
+        #[clap(help("The full name of the repository, e.g. `theRookieCoder/ferium`"))]
         name: String,
         #[clap(long)]
         #[clap(help("Whether the game version should be checked for this mod"))]

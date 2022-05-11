@@ -141,7 +141,7 @@ fn add_curseforge() -> Result {
 fn add_github() -> Result {
     // Add Sodium to config
     run_command(
-        vec!["add-github", "CaffeineMC", "sodium-fabric"],
+        vec!["add-github", "CaffeineMC/sodium-fabric"],
         Some("empty_profile"),
     )
 }

@@ -10,7 +10,7 @@ use ferinth::Ferinth;
 use furse::Furse;
 use indicatif::ProgressStyle;
 use lazy_static::lazy_static;
-use libium::config;
+use libium::config::{self, structs::ModIdentifier};
 use octocrab::OctocrabBuilder;
 use std::sync::Arc;
 use subcommands::{add, upgrade};
@@ -124,14 +124,17 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             .await?;
         },
         SubCommands::AddGithub {
-            owner,
             name,
             dont_check_game_version,
             dont_check_mod_loader,
         } => {
             check_internet().await?;
+            let name = name.split('/').collect::<Vec<_>>();
+            if name.len() != 2 {
+                bail!("Invalid repository name")
+            }
             add::github(
-                github.repos(owner, name),
+                github.repos(name[0], name[1]),
                 profile,
                 Some(!dont_check_game_version),
                 Some(!dont_check_mod_loader),
@@ -159,7 +162,6 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 check_internet().await?;
                 let mut tasks = Vec::new();
                 for mod_ in &profile.mods {
-                    use config::structs::ModIdentifier;
                     match &mod_.identifier {
                         ModIdentifier::CurseForgeProject(project_id) => tasks.push(spawn(
                             subcommands::list::curseforge(curseforge.clone(), *project_id),
@@ -177,7 +179,22 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 }
             } else {
                 for mod_ in &profile.mods {
-                    println!("{}", mod_.name);
+                    println!(
+                        "{:45} {:10} {}",
+                        mod_.name.bold(),
+                        match &mod_.identifier {
+                            ModIdentifier::CurseForgeProject(_) => "CurseForge".red(),
+                            ModIdentifier::ModrinthProject(_) => "Modrinth".green(),
+                            ModIdentifier::GitHubRepository(_) => "GitHub".purple(),
+                        },
+                        match &mod_.identifier {
+                            ModIdentifier::CurseForgeProject(id) => id.to_string(),
+                            ModIdentifier::ModrinthProject(id) => id.into(),
+                            ModIdentifier::GitHubRepository(name) =>
+                                format!("{}/{}", name.0, name.1),
+                        }
+                        .dimmed()
+                    );
                 }
             }
         },

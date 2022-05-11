@@ -1,10 +1,14 @@
 use crate::{THEME, TICK};
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use dialoguer::Confirm;
 use ferinth::structures::version_structs::DependencyType;
 use ferinth::Ferinth;
 use furse::{structures::file_structs::FileRelationType, Furse};
-use libium::{add, config, upgrade};
+use libium::{
+    add,
+    config::{self, structs::ModIdentifier},
+    upgrade,
+};
 use octocrab::repos::RepoHandler;
 use std::sync::Arc;
 
@@ -68,28 +72,36 @@ pub async fn modrinth(
         } else {
             break;
         };
-        // Check if the dependency has already been added
-        if !profile.mods.iter().any(|mod_| {
-            config::structs::ModIdentifier::ModrinthProject(id.clone()) == mod_.identifier
-        }) {
-            // If it's required, add it without asking
-            if dependency.dependency_type == DependencyType::Required {
-                eprint!("Adding required dependency... ");
+        // If it's required, add it without asking
+        if dependency.dependency_type == DependencyType::Required {
+            eprint!("Adding required dependency... ");
+            match add::modrinth(modrinth.clone(), &id, profile, None, None).await {
+                Ok(project) => println!("{} ({})", *TICK, project.title),
+                Err(err) => {
+                    if matches!(err, add::Error::AlreadyAdded) {
+                        println!("{} Already added", *TICK);
+                    } else {
+                        bail!(err);
+                    }
+                },
+            };
+        } else if dependency.dependency_type == DependencyType::Optional {
+            let project = modrinth.get_project(&id).await?;
+            // If it is not already added:
+            if profile.mods.iter().any(|mod_| {
+                mod_.name == project.title
+                    || ModIdentifier::ModrinthProject(id.clone()) == mod_.identifier
+                // And the user wants to add it:
+            }) && Confirm::with_theme(&*THEME)
+                .with_prompt(format!(
+                    "Add optional dependency {} (https://modrinth.com/mod/{})?",
+                    project.title, project.slug
+                ))
+                .interact()?
+            {
+                eprint!("Adding optional dependency... ");
                 let project = add::modrinth(modrinth.clone(), &id, profile, None, None).await?;
                 println!("{} ({})", *TICK, project.title);
-            } else if dependency.dependency_type == DependencyType::Optional {
-                let project = modrinth.get_project(&id).await?;
-                let should_add = Confirm::with_theme(&*THEME)
-                    .with_prompt(format!(
-                        "Add optional dependency {} (https://modrinth.com/mod/{})?",
-                        project.title, project.slug
-                    ))
-                    .interact()?;
-                if should_add {
-                    eprint!("Adding optional dependency... ");
-                    let project = add::modrinth(modrinth.clone(), &id, profile, None, None).await?;
-                    println!("{} ({})", *TICK, project.title);
-                }
             }
         }
     }
@@ -125,31 +137,35 @@ pub async fn curseforge(
     println!("{} ({})", *TICK, project.name);
     for dependency in &latest_file.dependencies {
         let id = dependency.mod_id;
-        // Check if the dependency has already been added
-        if !profile
-            .mods
-            .iter()
-            .any(|mod_| config::structs::ModIdentifier::CurseForgeProject(id) == mod_.identifier)
-        {
-            // If it's required, add it without asking
-            if dependency.relation_type == FileRelationType::RequiredDependency {
-                eprint!("Adding required dependency... ");
+        // If it's required, add it without asking
+        if dependency.relation_type == FileRelationType::RequiredDependency {
+            eprint!("Adding required dependency... ");
+            match add::curseforge(curseforge.clone(), id, profile, None, None).await {
+                Ok(project) => println!("{} ({})", *TICK, project.name),
+                Err(err) => {
+                    if matches!(err, add::Error::AlreadyAdded) {
+                        println!("{} Already added", *TICK);
+                    } else {
+                        bail!(err);
+                    }
+                },
+            };
+        } else if dependency.relation_type == FileRelationType::OptionalDependency {
+            let project = curseforge.get_mod(id).await?;
+            // If it is not already added:
+            if !profile.mods.iter().any(|mod_| {
+                mod_.name == project.name || ModIdentifier::CurseForgeProject(id) == mod_.identifier
+                // And the user wants to add it:
+            }) && Confirm::with_theme(&*THEME)
+                .with_prompt(format!(
+                    "Add optional dependency {} ({})?",
+                    project.name, project.links.website_url
+                ))
+                .interact()?
+            {
+                eprint!("Adding optional dependency... ");
                 let project = add::curseforge(curseforge.clone(), id, profile, None, None).await?;
                 println!("{} ({})", *TICK, project.name);
-            } else if dependency.relation_type == FileRelationType::OptionalDependency {
-                let project = curseforge.get_mod(id).await?;
-                let should_add = Confirm::with_theme(&*THEME)
-                    .with_prompt(format!(
-                        "Add optional dependency {} ({})?",
-                        project.name, project.links.website_url
-                    ))
-                    .interact()?;
-                if should_add {
-                    eprint!("Adding optional dependency... ");
-                    let project =
-                        add::curseforge(curseforge.clone(), id, profile, None, None).await?;
-                    println!("{} ({})", *TICK, project.name);
-                }
             }
         }
     }
