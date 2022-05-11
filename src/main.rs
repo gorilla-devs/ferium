@@ -10,6 +10,7 @@ use ferinth::Ferinth;
 use furse::Furse;
 use lazy_static::lazy_static;
 use libium::config;
+use octocrab::OctocrabBuilder;
 use std::sync::Arc;
 use subcommands::{add, upgrade};
 use tokio::{fs::create_dir_all, io::AsyncReadExt, runtime, spawn};
@@ -39,13 +40,14 @@ fn main() {
 }
 
 async fn actual_main(cli_app: Ferium) -> Result<()> {
-    let github = {
-        let mut builder = octocrab::OctocrabBuilder::new();
-        if let Some(token) = cli_app.github_token {
-            builder = builder.personal_token(token);
-        }
-        octocrab::initialise(builder)
-    }?;
+    let github = Arc::new(
+        cli_app
+            .github_token
+            .map_or_else(OctocrabBuilder::new, |token| {
+                OctocrabBuilder::new().personal_token(token)
+            })
+            .build()?,
+    );
     let modrinth = Arc::new(Ferinth::new());
     let curseforge = Arc::new(Furse::new(env!(
         "CURSEFORGE_API_KEY",

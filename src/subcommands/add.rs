@@ -1,5 +1,5 @@
 use crate::{THEME, TICK};
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use dialoguer::Confirm;
 use ferinth::structures::version_structs::DependencyType;
 use ferinth::Ferinth;
@@ -23,13 +23,13 @@ pub async fn github(
     )
     .await?;
     upgrade::get_latest_compatible_asset(
-        repo_handler,
+        &repo_handler.releases().list().send().await?.items,
         &profile.game_version,
         &profile.mod_loader,
         should_check_game_version,
         should_check_mod_loader,
     )
-    .await?;
+    .ok_or_else(|| anyhow!("Repository does not release mods compatible with your profile"))?;
     println!("{} ({})", *TICK, repo.name);
     Ok(())
 }
@@ -51,14 +51,13 @@ pub async fn modrinth(
     )
     .await?;
     let latest_version = upgrade::get_latest_compatible_version(
-        modrinth.clone(),
-        &project.id,
+        &modrinth.list_versions(&project.id).await?,
         &profile.game_version,
         &profile.mod_loader,
         should_check_game_version,
         should_check_mod_loader,
     )
-    .await?
+    .ok_or_else(|| anyhow!("Mod is not compatible with your profile"))?
     .1;
     println!("{} ({})", *TICK, project.title);
     for dependency in &latest_version.dependencies {
@@ -115,14 +114,13 @@ pub async fn curseforge(
     )
     .await?;
     let latest_file = upgrade::get_latest_compatible_file(
-        curseforge.clone(),
-        project.id,
+        curseforge.get_mod_files(project.id).await?,
         &profile.game_version,
         &profile.mod_loader,
         should_check_game_version,
         should_check_mod_loader,
     )
-    .await?
+    .ok_or_else(|| anyhow!("Mod is not compatible with your profile"))?
     .0;
     println!("{} ({})", *TICK, project.name);
     for dependency in &latest_file.dependencies {

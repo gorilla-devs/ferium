@@ -1,6 +1,6 @@
 [package]
 name = "ferium"
-version = "3.28.2"
+version = "3.28.3"
 edition = "2021"
 authors = ["Ilesh Thiada (theRookieCoder) <ileshkt@gmail.com>", "薛詠謙 (KyleUltimate)", "Daniel Hauck (SolidTux)"]
 description = "Ferium is a CLI program for managing Minecraft mods from Modrinth, CurseForge, and Github Releases"
@@ -22,7 +22,7 @@ default = ["gui"]
 gui = ["libium/gui"]
 
 [dependencies]
-tokio = { version = "1.18", default-features = false, features = ["rt-multi-thread", "macros", "time"] }
+tokio = { version = "1.18", default-features = false, features = ["rt-multi-thread", "macros"] }
 reqwest = { version = "0.11", default-features = false, features = ["rustls-tls"] }
 octocrab = { version = "0.16", default-features = false, features = ["rustls"] }
 clap = { version = "3.1", features = ["derive"] }
@@ -33,7 +33,7 @@ itertools = "0.10"
 fs_extra = "1.2"
 colored = "2.0"
 ferinth = "2.2"
-libium = "1.12"
+libium = "1.14"
 anyhow = "1.0"
 online = "3.0"
 semver = "1.0"

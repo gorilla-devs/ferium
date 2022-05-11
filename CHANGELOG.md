@@ -1,5 +1,14 @@
 # Changelog for Ferium
 
+## `v3.28.3`
+
+- Update to Libium 1.14
+  - This fixes [#53](https://github.com/theRookieCoder/ferium/issues/53)
+- Update Releases description
+- Update the way the GitHub PAT is applied to the API
+  - This fixes [#52](https://github.com/theRookieCoder/ferium/issues/52)
+- Significantly improved verbose listing to be more colourful, consistent, and informative
+
 ## `v3.28.2`
 
 - Update to Libium 1.12

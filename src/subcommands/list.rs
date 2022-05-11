@@ -1,4 +1,5 @@
 use anyhow::Result;
+use colored::Colorize;
 use ferinth::Ferinth;
 use furse::Furse;
 use itertools::Itertools;
@@ -7,36 +8,39 @@ use std::sync::Arc;
 
 pub async fn curseforge(curseforge: Arc<Furse>, project_id: i32) -> Result<()> {
     let project = curseforge.get_mod(project_id).await?;
-    let authors = project
-        .authors
-        .iter()
-        .map(|author| &author.name)
-        .collect::<Vec<_>>();
-    let categories = project
-        .categories
-        .iter()
-        .map(|category| &category.name)
-        .collect::<Vec<_>>();
-
     println!(
         "{}
-        \r  {}\n
-        \r  Link:        {}
-        \r  Source:      CurseForge Project
-        \r  Open Source: {}
-        \r  Downloads:   {}
-        \r  Authors:     {}
-        \r  Category:    {}\n",
-        project.name,
-        project.summary,
-        project.links.website_url,
+       \r  {}\n
+       \r  Link:         {}
+       \r  Source:       CurseForge Mod
+       \r  Open Source:  {}
+       \r  Downloads:    {}
+       \r  Authors:      {}
+       \r  Categories:   {}
+       ",
+        project.name.bold().italic(),
+        project.summary.trim(),
+        project.links.website_url.blue(),
+        project.links.source_url.map_or("No".red(), |url| format!(
+            "Yes ({})",
+            url.blue().underline()
+        )
+        .green()),
+        project.download_count.to_string().yellow(),
         project
-            .links
-            .source_url
-            .map_or("No".into(), |url| format!("Yes ({})", url)),
-        project.download_count,
-        authors.iter().format(", "),
-        categories.iter().format(", "),
+            .authors
+            .iter()
+            .map(|author| &author.name)
+            .format(", ")
+            .to_string()
+            .cyan(),
+        project
+            .categories
+            .iter()
+            .map(|category| &category.name)
+            .format(", ")
+            .to_string()
+            .magenta(),
     );
 
     Ok(())
@@ -46,38 +50,37 @@ pub async fn modrinth(modrinth: Arc<Ferinth>, project_id: String) -> Result<()> 
     let project = modrinth.get_project(&project_id).await?;
     let team_members = modrinth.list_team_members(&project.team).await?;
 
-    // Get the usernames of all the developers
-    let developers = team_members
-        .iter()
-        .map(|member| &member.user.username)
-        .collect::<Vec<_>>();
-
     println!(
         "{}
-        \r  {}\n
-        \r  Link:           https://modrinth.com/mod/{}
-        \r  Source:         Modrinth Mod
-        \r  Open Source:    {}
-        \r  Downloads:      {}
-        \r  Developers:     {}
-        \r  Client side:    {:?}
-        \r  Server side:    {:?}
-        \r  License:        {}{}\n",
-        project.title,
+       \r  {}\n
+       \r  Link:         {}
+       \r  Source:       Modrinth Mod
+       \r  Open Source:  {}
+       \r  Downloads:    {}
+       \r  Authors:      {}
+       \r  Categories:   {}
+       \r  License:      {}{}
+       ",
+        project.title.bold().italic(),
         project.description,
-        project.slug,
-        project
-            .source_url
-            .map_or("No".into(), |url| { format!("Yes ({})", url) }),
-        project.downloads,
-        developers.iter().format(", "),
-        project.client_side,
-        project.server_side,
+        format!("https://modrinth.com/mod/{}", project.slug)
+            .blue()
+            .underline(),
+        project.source_url.map_or("No".red(), |url| {
+            format!("Yes ({})", url.blue().underline()).green()
+        }),
+        project.downloads.to_string().yellow(),
+        team_members
+            .iter()
+            .map(|member| &member.user.username)
+            .format(", ")
+            .to_string()
+            .cyan(),
+        project.categories.iter().format(", ").to_string().magenta(),
         project.license.name,
-        project
-            .license
-            .url
-            .map_or("".into(), |url| { format!(" ({})", url) }),
+        project.license.url.map_or("".into(), |url| {
+            format!(" ({})", url.blue().underline())
+        }),
     );
 
     Ok(())
@@ -100,27 +103,33 @@ pub async fn github(github: Arc<Octocrab>, full_name: (String, String)) -> Resul
     // Print repository data formatted
     println!(
         "{}{}\n
-            \r  Link:           {}
-            \r  Source:         GitHub Repository
-            \r  Downloads:      {}
-            \r  Developer:      {}{}\n",
-        repo.name,
+       \r  Link:         {}
+       \r  Source:       GitHub Repository
+       \r  Open Source:  {}
+       \r  Downloads:    {}
+       \r  Authors:      {}
+       \r  Topics:       {}
+       \r  License:      {}
+       ",
+        repo.name.bold().italic(),
         repo.description
             .map_or("".into(), |description| { format!("\n  {}", description) }),
-        repo.html_url.unwrap(),
-        downloads,
-        repo.owner.unwrap().login,
-        if let Some(license) = repo.license {
-            format!(
-                "\n  License:        {}{}",
-                license.name,
-                license
-                    .html_url
-                    .map_or("".into(), |url| { format!(" ({})", url) })
-            )
-        } else {
-            "".into()
-        },
+        repo.html_url.unwrap().to_string().blue().underline(),
+        "Yes".green(),
+        downloads.to_string().yellow(),
+        repo.owner.unwrap().login.cyan(),
+        repo.topics.map_or("".into(), |topics| topics
+            .iter()
+            .format(", ")
+            .to_string()
+            .magenta()),
+        repo.license.map_or("None".into(), |license| format!(
+            "{}{}",
+            license.name,
+            license.html_url.map_or("".into(), |url| {
+                format!(" ({})", url.to_string().blue().underline())
+            })
+        )),
     );
 
     Ok(())
