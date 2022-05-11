@@ -39,7 +39,9 @@ jobs:
 
       - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install librust-gdk-dev gcc-mingw-w64-x86-64
+        run: |
+          sudo apt-get update
+          sudo apt-get install librust-gdk-dev gcc-mingw-w64-x86-64
 
       - name: Lint code
         run: just lint
@@ -82,7 +84,9 @@ jobs:
         with:
           toolchain: stable
       - name: Install dependencies
-        run: sudo apt-get install librust-gdk-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install librust-gdk-dev
       - name: Upload to Crates
         uses: actions-rs/cargo@v1
         with:
