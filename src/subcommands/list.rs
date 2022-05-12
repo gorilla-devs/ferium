@@ -21,7 +21,7 @@ pub async fn curseforge(curseforge: Arc<Furse>, project_id: i32) -> Result<()> {
        ",
         project.name.bold(),
         project.summary.trim().italic(),
-        project.links.website_url.blue(),
+        project.links.website_url.blue().underline(),
         "CurseForge Mod".dimmed(),
         project.id.to_string().dimmed(),
         project.links.source_url.map_or("No".red(), |url| format!(

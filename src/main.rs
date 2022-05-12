@@ -14,7 +14,7 @@ use libium::config::{self, structs::ModIdentifier};
 use octocrab::OctocrabBuilder;
 use std::sync::Arc;
 use subcommands::{add, upgrade};
-use tokio::{fs::create_dir_all, io::AsyncReadExt, runtime, spawn};
+use tokio::{fs::create_dir_all, runtime, spawn};
 
 const CROSS: &str = "×";
 lazy_static! {
@@ -23,7 +23,7 @@ lazy_static! {
     pub static ref THEME: dialoguer::theme::ColorfulTheme =
         dialoguer::theme::ColorfulTheme::default();
     pub static ref STYLE: ProgressStyle = ProgressStyle::default_bar()
-        .template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len}")
+        .template("{spinner} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
         .progress_chars("#>-");
 }
 
@@ -53,17 +53,15 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             .build()?,
     );
     let modrinth = Arc::new(Ferinth::new());
-    let curseforge = Arc::new(Furse::new(env!(
-        "CURSEFORGE_API_KEY",
-        "A CurseForge API key is required to build. If you don't have one, you can bypass this by setting the variable to a blank string, however anything using the CurseForge API will not work."
-    )));
+    // Yes this is a personal API key, but I am allowed to write it in source.
+    // The reason is the API key is used for tracking usage, it's not for authentication.
+    // So please don't use this outside of Ferium, although telling you not to is all I can do...
+    let curseforge = Arc::new(Furse::new(
+        "$2a$10$QbCxI6f4KxEs50QKwE2piu1t6oOA8ayOw27H9N/eaH3Sdp5NTWwvO",
+    ));
     let mut config_file =
         config::get_file(cli_app.config_file.unwrap_or_else(config::file_path)).await?;
-    let mut config_file_contents = String::new();
-    config_file
-        .read_to_string(&mut config_file_contents)
-        .await?;
-    let mut config: config::structs::Config = serde_json::from_str(&config_file_contents)?;
+    let mut config = config::deserialise(&config::read_file(&mut config_file).await?)?;
 
     // The create command must run before getting the profile so that configs without profiles can have profiles added to them
     if let SubCommands::Profile {
@@ -103,7 +101,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         // Default to first profile if index is set incorrectly
         config.active_profile = 0;
         config::write_file(&mut config_file, &config).await?;
-        bail!("Active profile specified incorrectly. Switched to first profile",)
+        bail!("Active profile specified incorrectly. Switched to first profile")
     };
 
     // Run function(s) based on the sub(sub)command to be executed
@@ -112,6 +110,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             project_id,
             dont_check_game_version,
             dont_check_mod_loader,
+            dont_add_dependencies,
         } => {
             check_internet().await?;
             add::modrinth(
@@ -120,6 +119,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 profile,
                 Some(!dont_check_game_version),
                 Some(!dont_check_mod_loader),
+                !dont_add_dependencies,
             )
             .await?;
         },
@@ -145,6 +145,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             project_id,
             dont_check_game_version,
             dont_check_mod_loader,
+            dont_add_dependencies,
         } => {
             check_internet().await?;
             add::curseforge(
@@ -153,6 +154,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 profile,
                 Some(!dont_check_game_version),
                 Some(!dont_check_mod_loader),
+                !dont_add_dependencies,
             )
             .await?;
         },

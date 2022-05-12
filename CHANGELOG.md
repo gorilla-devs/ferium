@@ -1,5 +1,16 @@
 # Changelog for Ferium
 
+## `v3.28.7`
+### 12.05.2022
+
+- Added the minor version to all dependencies because `cargo install` doesn't use the lockfile
+- Update to Libium 1.14.1
+- The CurseForge API key is now written in source, no more environment variable! This is allowed as explained in the source code
+- Added `--dont-add-dependencies` flag to add commands ([#63](https://github.com/theRookieCoder/ferium/issues/63))
+- Tweak progress bar style colours
+- Changed the way the progress bar status is updated so that the spinner is smooth
+- Added coloured formatting to profile listing too
+
 ## `v3.28.6`
 ### 11.05.2022
 

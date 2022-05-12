@@ -33,6 +33,9 @@ pub enum SubCommands {
         #[clap(long)]
         #[clap(help("Whether the mod loader should be checked for this mod"))]
         dont_check_mod_loader: bool,
+        #[clap(long)]
+        #[clap(help("Do not add any of the mod's dependencies"))]
+        dont_add_dependencies: bool,
     },
     #[clap(about("Add a GitHub repository to the profile"))]
     AddGithub {
@@ -55,6 +58,9 @@ pub enum SubCommands {
         #[clap(long)]
         #[clap(help("Whether the mod loader should be checked for this mod"))]
         dont_check_mod_loader: bool,
+        #[clap(long)]
+        #[clap(help("Do not add any of the mod's dependencies"))]
+        dont_add_dependencies: bool,
     },
     #[clap(about("List all the mods in the profile, and with some their metadata if verbose"))]
     List {

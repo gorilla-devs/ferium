@@ -32,7 +32,7 @@ pub async fn create(
             println!("Please enter the details for the new profile");
 
             // Let user pick mods directory
-            let mut selected_mods_dir = misc::get_mods_dir();
+            let mut selected_mods_dir = misc::get_minecraft_dir().join("mods");
             println!("The default mods directory is {:?}", selected_mods_dir);
             if Confirm::with_theme(&*crate::THEME)
                 .with_prompt("Would you like to specify a custom mods directory?")

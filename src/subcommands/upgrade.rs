@@ -93,7 +93,7 @@ pub async fn upgrade(
                     error.store(true, Ordering::Relaxed);
                 },
             }
-            progress_bar.inc(1);
+            progress_bar.set_position(progress_bar.position() + 1);
             Ok(())
         }));
     }
@@ -181,7 +181,7 @@ pub async fn upgrade(
                     size.to_string(Base::Base10, Style::Smart),
                     downloadable.filename.dimmed(),
                 ));
-                progress_bar.inc(1);
+                progress_bar.set_position(progress_bar.position() + 1);
                 Ok::<(), Error>(())
             }));
         }
