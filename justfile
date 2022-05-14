@@ -1,15 +1,20 @@
 default: install-dev
 set windows-powershell := true
 
-# Build for macOS Intel and macOS Apple Silicon
-build-mac:
-    rm -f out/ferium-macos-x64.zip out/ferium-macos-arm.zip
+# Build for macOS Intel
+build-mac-intel:
+    rm -f out/ferium-macos-x64.zip
     mkdir -p out
     cargo build --target=x86_64-apple-darwin --release
-    cargo build --target=aarch64-apple-darwin --release
     zip -r out/ferium-macos-x64.zip -j target/x86_64-apple-darwin/release/ferium
-    zip -r out/ferium-macos-arm.zip -j target/aarch64-apple-darwin/release/ferium
 
+# Build for macOS Apple Silicon
+build-mac-m1:
+    rm -f out/ferium-macos-arm.zip
+    mkdir -p out
+    cargo build --target=aarch64-apple-darwin --release
+    zip -r out/ferium-macos-arm.zip -j target/aarch64-apple-darwin/release/ferium
+    
 # Build for Windows MSVC
 build-win:
     if (Test-Path -Path ".\out\ferium-windows-msvc.zip") { Remove-Item -Path ".\out\ferium-windows-msvc.zip" }
@@ -17,16 +22,21 @@ build-win:
     cargo build --target=x86_64-pc-windows-msvc --release
     Compress-Archive -Path "target\x86_64-pc-windows-msvc\release\ferium.exe" -DestinationPath "out\ferium-windows-msvc.zip"
 
-# Build for GNU Linux and GNU Windows (e.g. cygwin)
+# Build for glibc Linux
 build-linux:
-    rm -f out/ferium-linux-gnu.zip out/ferium-windows-gnu.zip
+    rm -f out/ferium-linux-gnu.zip
     mkdir -p out
-    cargo build --target=x86_64-pc-windows-gnu --release
     cargo build --target=x86_64-unknown-linux-gnu --release
     zip -r out/ferium-linux-gnu.zip -j target/x86_64-unknown-linux-gnu/release/ferium
+    
+# Build for glibc Windows (e.g. Cygwin)
+build-windows-glibc:
+    rm -f out/ferium-windows-gnu.zip
+    mkdir -p out
+    cargo build --target=x86_64-pc-windows-gnu --release
     zip -r out/ferium-windows-gnu.zip -j target/x86_64-pc-windows-gnu/release/ferium.exe
 
-# Build for GNU Linux without a GUI file dialog
+# Build for glibc Linux without a GUI file dialog
 build-linux-nogui:
     rm -f out/ferium-linux-gnu-nogui.zip
     mkdir -p out

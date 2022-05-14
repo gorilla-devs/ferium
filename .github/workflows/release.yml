@@ -18,6 +18,12 @@ jobs:
       - uses: actions/checkout@v3
       - uses: extractions/setup-just@v1
 
+      - name: Install Rust for macOS Intel
+        if: matrix.os == 'macos-latest'
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: aarch64-apple-darwin
       - name: Install Rust for macOS
         if: matrix.os == 'macos-latest'
         uses: actions-rs/toolchain@v1
@@ -34,7 +40,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          target: x86_64-pc-windows-gnu
+          target: x86_64-unknown-linux-gnu
 
       - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -52,18 +58,22 @@ jobs:
 
       - name: Build macOS
         if: matrix.os == 'macos-latest'
-        run: just build-mac
-      - name: Build Windows
+        run: |
+          just build-mac-intel
+          just build-mac-arm
+      - name: Build Windows MSVC
         if: matrix.os == 'windows-latest'
         run: just build-win
       - name: Build Linux
         if: matrix.os == 'ubuntu-latest'
-        run: just build-linux
+        run: |
+          just build-linux
+          just build-windows-glibc
       - name: Build Linux NoGUI
         if: matrix.os == 'ubuntu-latest'
         run: just build-linux-nogui
 
-      - name: Upload build artefacts
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
           name: binaries
