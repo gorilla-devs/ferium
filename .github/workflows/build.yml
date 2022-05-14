@@ -6,7 +6,6 @@ on:
     paths:
       - "**.rs"
       - "**.yml"
-  pull_request:
   workflow_dispatch:
 
 jobs:
