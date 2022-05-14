@@ -64,7 +64,7 @@ pub async fn upgrade(
             match result {
                 Ok((downloadable, backwards_compat)) => {
                     progress_bar.println(format!(
-                        "{} {:45} {}",
+                        "{} {:43} {}",
                         if backwards_compat {
                             backwards_compat_msg.store(true, Ordering::Relaxed);
                             YELLOW_TICK.clone()
@@ -72,7 +72,7 @@ pub async fn upgrade(
                             TICK.clone()
                         },
                         mod_.name,
-                        format!("({})", downloadable.filename).dimmed()
+                        downloadable.filename.dimmed()
                     ));
                     {
                         let mut to_download = to_download.force_lock();
@@ -88,7 +88,7 @@ pub async fn upgrade(
                     }
                     progress_bar.println(format!(
                         "{}",
-                        format!("{} {:45} {}", CROSS, mod_.name, err).red()
+                        format!("{} {:43} {}", CROSS, mod_.name, err).red()
                     ));
                     error.store(true, Ordering::Relaxed);
                 },
