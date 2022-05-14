@@ -72,7 +72,7 @@ pub async fn upgrade(
                             TICK.clone()
                         },
                         mod_.name,
-                        format!("{}", downloadable.filename).dimmed()
+                        downloadable.filename.dimmed()
                     ));
                     {
                         let mut to_download = to_download.force_lock();
