@@ -1,4 +1,4 @@
-name: Build and Release
+name: Publish and Release
 
 # Only run when a tag is pushed
 on:
@@ -7,72 +7,8 @@ on:
       - "*"
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: extractions/setup-just@v1
-
-      - name: Install Rust for macOS
-        if: matrix.os == 'macos-latest'
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: aarch64-apple-darwin
-      - name: Install Rust for Windows
-        if: matrix.os == 'windows-latest'
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - name: Install Rust for Linux
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: x86_64-pc-windows-gnu
-
-      - name: Install Linux dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install librust-gdk-dev gcc-mingw-w64-x86-64
-
-      - name: Lint code
-        run: just lint
-
-      - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-
-      - name: Build macOS
-        if: matrix.os == 'macos-latest'
-        run: just build-mac
-      - name: Build Windows
-        if: matrix.os == 'windows-latest'
-        run: just build-win
-      - name: Build Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: just build-linux
-      - name: Build Linux NoGUI
-        if: matrix.os == 'ubuntu-latest'
-        run: just build-linux-nogui
-
-      - name: Upload build artefacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: binaries
-          path: out/ferium*.zip
-          if-no-files-found: error
-  
   publish:
     runs-on: ubuntu-latest
-    needs: build
     env:
       CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
     steps:
@@ -92,12 +28,13 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    needs: build
     steps:
       - uses: actions/checkout@v3
       - name: Download artefacts
-        uses: actions/download-artifact@v3
+        uses: dawidd6/action-download-artifact@v2
         with:
+          workflow_conclusion: success
+          workflow: build.yml
           name: binaries
           path: ./out
       - name: Create sha256sum for scoop
@@ -123,17 +60,17 @@ jobs:
             - Windows (x64 windows msvc)
 
             You can install these by downloading and unzipping the appropriate asset, and moving the executable to ~/bin or any other binary folder in your path.
-      - name: Update no-gui AUR package
-        uses: ATiltedTree/create-aur-release@v1
-        with:
-          package_name: ferium-bin
-          commit_username: "Ilesh Thiada"
-          commit_email: ileshkt@gmail.com
-          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-      - name: Update gui AUR package
-        uses: ATiltedTree/create-aur-release@v1
-        with:
-          package_name: ferium-gui-bin
-          commit_username: "Ilesh Thiada"
-          commit_email: ileshkt@gmail.com
-          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      # - name: Update no-gui AUR package
+      #   uses: ATiltedTree/create-aur-release@v1
+      #   with:
+      #     package_name: ferium-bin
+      #     commit_username: "Ilesh Thiada"
+      #     commit_email: ileshkt@gmail.com
+      #     ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      # - name: Update gui AUR package
+      #   uses: ATiltedTree/create-aur-release@v1
+      #   with:
+      #     package_name: ferium-gui-bin
+      #     commit_username: "Ilesh Thiada"
+      #     commit_email: ileshkt@gmail.com
+      #     ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
