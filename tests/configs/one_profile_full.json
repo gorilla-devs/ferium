@@ -1,34 +1,36 @@
 {
-	"active_profile": 0,
-	"profiles": [
-		{
-			"name": "Default Modded",
-			"output_dir": "./tests/mods",
-			"game_version": "1.18.2",
-			"mod_loader": "Fabric",
-			"mods": [
-				{
-					"name": "Starlight (Fabric)",
-					"identifier": {
-						"ModrinthProject": "H8CaAYZC"
-					}
-				},
-				{
-					"name": "Incendium",
-					"identifier": {
-						"CurseForgeProject": 591388
-					}
-				},
-				{
-					"name": "sodium-fabric",
-					"identifier": {
-						"GitHubRepository": [
-							"CaffeineMC",
-							"sodium-fabric"
-						]
-					}
-				}
-			]
-		}
-	]
+    "active_profile": 0,
+    "active_modpack": 0,
+    "profiles": [
+        {
+            "name": "Default Modded",
+            "output_dir": "./tests/mods",
+            "game_version": "1.18.2",
+            "mod_loader": "Fabric",
+            "mods": [
+                {
+                    "name": "Starlight (Fabric)",
+                    "identifier": {
+                        "ModrinthProject": "H8CaAYZC"
+                    }
+                },
+                {
+                    "name": "Incendium",
+                    "identifier": {
+                        "CurseForgeProject": 591388
+                    }
+                },
+                {
+                    "name": "sodium-fabric",
+                    "identifier": {
+                        "GitHubRepository": [
+                            "CaffeineMC",
+                            "sodium-fabric"
+                        ]
+                    }
+                }
+            ]
+        }
+    ],
+    "modpacks": []
 }

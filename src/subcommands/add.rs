@@ -92,6 +92,15 @@ pub async fn modrinth(
         }
     }
 
+    if let Some(donations) = project.donation_urls {
+        for donation in donations {
+            println!(
+                "Consider supporting the mod creator on {}: {}",
+                donation.platform, donation.url
+            );
+        }
+    }
+
     Ok(())
 }
 

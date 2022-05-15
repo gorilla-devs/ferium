@@ -1,10 +1,10 @@
 mod cli;
-mod mutex_ext;
+mod download;
 mod subcommands;
 
 use anyhow::{anyhow, bail, Result};
 use clap::StructOpt;
-use cli::{Ferium, ProfileSubCommands, SubCommands};
+use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
 use ferinth::Ferinth;
 use furse::Furse;
@@ -85,6 +85,52 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             output_dir,
         )
         .await?;
+
+        // Update config file and quit
+        config::write_file(&mut config_file, &config).await?;
+        return Ok(());
+    }
+
+    if let SubCommands::Modpack { subcommand } = &cli_app.subcommand {
+        if let ModpackSubCommands::AddCurseforge { project_id } = subcommand {
+            check_internet().await?;
+            subcommands::modpack::add::curseforge(curseforge.clone(), &mut config, *project_id)
+                .await?;
+
+            // Update config file and quit
+            config::write_file(&mut config_file, &config).await?;
+            return Ok(());
+        }
+        // Get a mutable reference to the active modpack
+        let modpack = if let Some(modpack) = config.modpacks.get_mut(config.active_modpack) {
+            modpack
+        } else {
+            if config.modpacks.is_empty() {
+                bail!("There are no modpacks configured! Run `ferium modpack help` to see how to add modpacks")
+            }
+            // Default to first modpack if index is set incorrectly
+            config.active_modpack = 0;
+            config::write_file(&mut config_file, &config).await?;
+            bail!("Active modpack specified incorrectly. Switched to first modpack")
+        };
+
+        match subcommand {
+            ModpackSubCommands::AddCurseforge { .. } => unreachable!(),
+            ModpackSubCommands::Configure { output_dir } => {
+                subcommands::modpack::configure(modpack, output_dir).await?;
+            },
+            ModpackSubCommands::Delete { modpack_name } => {
+                subcommands::modpack::delete(&mut config, modpack_name)?;
+            },
+            ModpackSubCommands::List => subcommands::modpack::list(&config),
+            ModpackSubCommands::Switch { profile_name } => {
+                subcommands::modpack::switch(&mut config, profile_name)?;
+            },
+            ModpackSubCommands::Upgrade => {
+                check_internet().await?;
+                subcommands::modpack::upgrade(curseforge.clone(), modpack).await?;
+            },
+        }
 
         // Update config file and quit
         config::write_file(&mut config_file, &config).await?;
@@ -200,6 +246,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 }
             }
         },
+        SubCommands::Modpack { .. } => unreachable!(),
         SubCommands::Profile { subcommand } => match subcommand {
             ProfileSubCommands::Configure {
                 game_version,
@@ -223,12 +270,14 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 subcommands::profile::delete(&mut config, profile_name)?;
             },
             ProfileSubCommands::List => subcommands::profile::list(&config),
+            ProfileSubCommands::Switch { profile_name } => {
+                subcommands::profile::switch(&mut config, profile_name)?;
+            },
         },
         SubCommands::Remove { mod_names } => {
             check_empty_profile(profile)?;
             subcommands::remove(profile, mod_names)?;
         },
-        SubCommands::Switch { profile_name } => subcommands::switch(&mut config, profile_name)?,
         SubCommands::Sort => profile
             .mods
             .sort_by_cached_key(|mod_| mod_.name.to_lowercase()),

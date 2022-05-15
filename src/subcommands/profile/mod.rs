@@ -2,10 +2,12 @@ mod configure;
 mod create;
 mod delete;
 mod list;
+mod switch;
 pub use configure::configure;
 pub use create::create;
 pub use delete::delete;
 pub use list::list;
+pub use switch::switch;
 
 use crate::THEME;
 use anyhow::{bail, Result};
@@ -18,7 +20,7 @@ use libium::{
 };
 use std::path::PathBuf;
 
-fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
+pub fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
     let mut picker = Select::with_theme(&*THEME);
     picker
         .with_prompt("Which mod loader do you use?")
@@ -38,7 +40,7 @@ fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
     }
 }
 
-async fn pick_minecraft_version() -> Result<String> {
+pub async fn pick_minecraft_version() -> Result<String> {
     let mut latest_versions: Vec<String> = misc::get_major_mc_versions(10).await?;
     let selected_version = Select::with_theme(&*THEME)
         .with_prompt("Which version of Minecraft do you play?")
@@ -49,7 +51,7 @@ async fn pick_minecraft_version() -> Result<String> {
 }
 
 /// Check that there isn't already a profile with the same name
-fn check_profile_name(config: &mut config::structs::Config, name: &str) -> Result<()> {
+pub fn check_profile_name(config: &mut config::structs::Config, name: &str) -> Result<()> {
     for profile in &config.profiles {
         if profile.name == name {
             bail!("A profile with name {} already exists", name);
@@ -58,7 +60,7 @@ fn check_profile_name(config: &mut config::structs::Config, name: &str) -> Resul
     Ok(())
 }
 
-async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
+pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
     if output_dir.is_relative() {
         bail!("The provided output directory is not absolute, i.e. it is a relative path");
     }

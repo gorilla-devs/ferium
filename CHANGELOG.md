@@ -1,5 +1,19 @@
 # Changelog for Ferium
 
+## `v4.0.0`
+### ???
+
+Support for modpacks! (not ready for use as of now)
+
+- Add `modpack` subcommand
+  - It's quite similar to the `profile` subcommand
+- Move `switch` subcommand to `profile switch`
+- Add `download` that will download and/or install the files provided
+- Removed `mutex_ext`, now uses the one in Libium
+- Add donations to the `add-modrinth` subcommand
+- The profile has two new fields, `active_modpack` and `modpacks`
+  - Again, they work very similarly to profiles
+
 ## `v3.28.7`
 ### 12.05.2022
 
