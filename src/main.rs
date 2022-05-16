@@ -22,8 +22,11 @@ lazy_static! {
     pub static ref YELLOW_TICK: ColoredString = "✓".yellow();
     pub static ref THEME: dialoguer::theme::ColorfulTheme =
         dialoguer::theme::ColorfulTheme::default();
-    pub static ref STYLE: ProgressStyle = ProgressStyle::default_bar()
+    pub static ref STYLE_NO: ProgressStyle = ProgressStyle::default_bar()
         .template("{spinner} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
+        .progress_chars("#>-");
+    pub static ref STYLE_BYTE: ProgressStyle = ProgressStyle::default_bar()
+        .template("{spinner} [{bytes_per_sec}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes}",)
         .progress_chars("#>-");
 }
 

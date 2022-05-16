@@ -1152,9 +1152,9 @@ checksum = "5916d2ae698f6de9bfb891ad7a8d65c09d232dc58cc4ac433c7da3b2fd84bc2b"
 
 [[package]]
 name = "libium"
-version = "1.15.1"
+version = "1.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9779ef6f04aaa61d8e3c079931ee1a726448bc059808f8b07f44a56a51aac55"
+checksum = "34657138d27e8af0824ef2dbb413e3a5537638b5f0db377f278cb46e07107a4a"
 dependencies = [
  "bytes",
  "clap",
@@ -1171,6 +1171,7 @@ dependencies = [
  "size",
  "thiserror",
  "tokio",
+ "urlencoding",
  "zip",
 ]
 
@@ -2192,6 +2193,12 @@ dependencies = [
  "percent-encoding",
  "serde",
 ]
+
+[[package]]
+name = "urlencoding"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "68b90931029ab9b034b300b797048cf23723400aa757e8a2bfb9d748102f9821"
 
 [[package]]
 name = "value-bag"
