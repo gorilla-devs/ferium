@@ -23,7 +23,8 @@ Simply specify the mods you use through the CLI, and in just one command you can
 
 ## Installation
 
-Ferium is a compiled, statically linked program that does not require any external dependencies.
+Ferium is a compiled, statically linked program that does not require external dependencies.
+However, Rust programs in general do require `gcc-libs` to be installed.
 On Linux the regular version requires GTK, but the `no-gui` version does not need this.
 
 Ferium is coming to more package managers soon!
@@ -31,9 +32,10 @@ Ferium is coming to more package managers soon!
 
 ### AUR (Arch Linux)
 
-- [No GUI version](https://aur.archlinux.org/packages/ferium-bin)
-- [GUI file dialog](https://aur.archlinux.org/packages/ferium-gui-bin) (depends on GTK)
-- [From Source](https://aur.archlinux.org/packages/ferium-git) (installs the Rust toolchain)
+- [No GUI](https://aur.archlinux.org/packages/ferium-bin)
+- [No GUI from Source](https://aur.archlinux.org/packages/ferium-git) (installs the Rust toolchain)
+- [GUI File Dialogue](https://aur.archlinux.org/packages/ferium-gui-bin) (depends on GTK)
+- [GUI File Dialogue from Source](https://aur.archlinux.org/packages/ferium-gui-git) (install the Rust toolchain and depends on GTK)
 
 ### Scoop (Windows)
 
