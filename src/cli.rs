@@ -160,6 +160,9 @@ pub enum ModpackSubCommands {
         #[clap(value_hint(ValueHint::DirPath))]
         #[clap(help("The Minecraft instance directory to install the modpack to"))]
         output_dir: Option<PathBuf>,
+        #[clap(long)]
+        #[clap(help("Whether to install the modpack's overrides to the output directory.\nThis will override existing files"))]
+        install_overrides: Option<bool>,
     },
     #[clap(about("Add a CurseForge modpack to the config"))]
     AddCurseforge {
@@ -169,6 +172,9 @@ pub enum ModpackSubCommands {
         #[clap(value_hint(ValueHint::DirPath))]
         #[clap(help("The Minecraft instance directory to install the modpack to"))]
         output_dir: Option<PathBuf>,
+        #[clap(long)]
+        #[clap(help("Whether to install the modpack's overrides to the output directory.\nThis will override existing files"))]
+        install_overrides: Option<bool>,
     },
     #[clap(about(
         "Configure the current modpack's output directory\nOptionally, provide the output directory as an option"

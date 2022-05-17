@@ -1152,9 +1152,9 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 
 [[package]]
 name = "libium"
-version = "1.15.3"
+version = "1.15.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4f6fb7aa489c2a20d368defe02c7763987e9d17aa56a3e046af2cdda9bd5613"
+checksum = "c33a07b61bf283358be80a1d7b7d946e212e896fe5567abce175b088f766eaaa"
 dependencies = [
  "bytes",
  "clap",

@@ -10,11 +10,7 @@ use ferinth::Ferinth;
 use furse::Furse;
 use indicatif::ProgressStyle;
 use lazy_static::lazy_static;
-use libium::{
-    config::{self, structs::ModIdentifier},
-    file_picker,
-    misc::get_minecraft_dir,
-};
+use libium::config::{self, structs::ModIdentifier};
 use octocrab::OctocrabBuilder;
 use std::sync::Arc;
 use subcommands::{add, upgrade};
@@ -102,20 +98,16 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         if let ModpackSubCommands::AddCurseforge {
             project_id,
             output_dir,
+            install_overrides,
         } = subcommand
         {
             check_internet().await?;
-            let output_dir = match output_dir {
-                Some(some) => some.clone(),
-                None => file_picker::pick_folder(&get_minecraft_dir(), "Pick an output directory")
-                    .await
-                    .ok_or_else(|| anyhow!("Please pick an output directory"))?,
-            };
             subcommands::modpack::add::curseforge(
                 curseforge.clone(),
                 &mut config,
                 *project_id,
                 output_dir,
+                *install_overrides,
             )
             .await?;
 
@@ -125,21 +117,16 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         } else if let ModpackSubCommands::AddModrinth {
             project_id,
             output_dir,
+            install_overrides,
         } = subcommand
         {
             check_internet().await?;
-            println!("Where should the modpack be installed to?");
-            let output_dir = match output_dir {
-                Some(some) => some.clone(),
-                None => file_picker::pick_folder(&get_minecraft_dir(), "Pick an output directory")
-                    .await
-                    .ok_or_else(|| anyhow!("Please pick an output directory"))?,
-            };
             subcommands::modpack::add::modrinth(
                 modrinth.clone(),
                 &mut config,
                 project_id,
                 output_dir,
+                *install_overrides,
             )
             .await?;
 

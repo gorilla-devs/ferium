@@ -52,6 +52,7 @@ lint:
         -D clippy::cargo \
         -D clippy::suspicious \
         -D clippy::complexity \
+        -D clippy::dbg_macro \
         -W clippy::nursery \
         -W clippy::pedantic \
         -A clippy::too-many-lines \
@@ -72,4 +73,5 @@ clean:
     cargo clean
     rm -rf out
     rm -rf tests/mods
+    rm -rf tests/modpacks
     rm -rf tests/configs/running

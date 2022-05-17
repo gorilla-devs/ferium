@@ -6,6 +6,12 @@ use util::run_command;
 
 type Result = std::io::Result<()>;
 
+fn output_dir() -> String {
+    let mut home = HOME.clone();
+    home.push("mods");
+    home.to_string_lossy().to_string()
+}
+
 #[test]
 fn argparse() -> Result {
     run_command(vec!["help"], None)?;
@@ -20,8 +26,6 @@ fn create_config_file_when_none() {
 
 #[test]
 fn create_profile() -> Result {
-    let mut home = HOME.clone();
-    home.push("mods");
     run_command(
         vec![
             "profile",
@@ -33,7 +37,7 @@ fn create_profile() -> Result {
             "--mod-loader",
             "forge",
             "--output-dir",
-            home.to_str().unwrap(),
+            &output_dir(),
         ],
         Some("empty"),
     )
@@ -41,8 +45,6 @@ fn create_profile() -> Result {
 
 #[test]
 fn create_profile_import_mods() -> Result {
-    let mut home = HOME.clone();
-    home.push("mods");
     run_command(
         vec![
             "profile",
@@ -54,7 +56,7 @@ fn create_profile_import_mods() -> Result {
             "--mod-loader",
             "forge",
             "--output-dir",
-            home.to_str().unwrap(),
+            &output_dir(),
             "--import",
             "Default Modded",
         ],
@@ -84,8 +86,6 @@ fn create_profile_output_dir_not_absolute() {
 
 #[test]
 fn create_profile_missing_args() {
-    let mut home = HOME.clone();
-    home.push("mods");
     assert!(run_command(
         vec![
             "profile",
@@ -96,7 +96,7 @@ fn create_profile_missing_args() {
             "--mod-loader",
             "forge",
             "--output-dir",
-            home.to_str().unwrap(),
+            &output_dir(),
         ],
         Some("empty")
     )
@@ -105,8 +105,6 @@ fn create_profile_missing_args() {
 
 #[test]
 fn create_profile_name_already_exists() {
-    let mut home = HOME.clone();
-    home.push("mods");
     assert!(run_command(
         vec![
             "profile",
@@ -118,7 +116,7 @@ fn create_profile_name_already_exists() {
             "--mod-loader",
             "forge",
             "--output-dir",
-            home.to_str().unwrap(),
+            &output_dir(),
         ],
         Some("empty_profile")
     )
@@ -155,7 +153,9 @@ fn modpack_add_modrinth() -> Result {
             "add-modrinth",
             "1KVo5zza",
             "--output-dir",
-            "../tests/modpacks",
+            &output_dir(),
+            "--install-overrides",
+            "true",
         ],
         Some("empty_profile"),
     )
@@ -170,7 +170,9 @@ fn modpack_add_curseforge() -> Result {
             "add-curseforge",
             "452013",
             "--output-dir",
-            "../tests/modpacks",
+            &output_dir(),
+            "--install-overrides",
+            "true",
         ],
         Some("empty_profile"),
     )
@@ -205,9 +207,15 @@ fn upgrade() -> Result {
 }
 
 #[test]
-fn modpack_upgrade() -> Result {
+fn cf_modpack_upgrade() -> Result {
     let _ = remove_dir("./tests/modpacks");
-    run_command(vec!["modpack", "upgrade"], Some("two_modpacks"))
+    run_command(vec!["modpack", "upgrade"], Some("two_modpacks_cfactive"))
+}
+
+#[test]
+fn md_modpack_upgrade() -> Result {
+    let _ = remove_dir("./tests/modpacks");
+    run_command(vec!["modpack", "upgrade"], Some("two_modpacks_mdactive"))
 }
 
 #[test]
@@ -222,7 +230,7 @@ fn profile_switch() -> Result {
 fn modpack_switch() -> Result {
     run_command(
         vec!["modpack", "switch", "--modpack-name", "RLCraft"],
-        Some("two_modpacks"),
+        Some("two_modpacks_mdactive"),
     )
 }
 
@@ -281,6 +289,6 @@ fn delete_profile() -> Result {
 fn delete_modpack() -> Result {
     run_command(
         vec!["modpack", "delete", "--modpack-name", "RLCraft"],
-        Some("two_modpacks"),
+        Some("two_modpacks_mdactive"),
     )
 }

@@ -1,7 +1,10 @@
 use crate::{STYLE_BYTE, TICK};
-use anyhow::{Error, Result};
+use anyhow::{bail, Error, Result};
 use colored::Colorize;
-use fs_extra::file::{move_file, CopyOptions};
+use fs_extra::{
+    dir::{copy as copy_dir, CopyOptions as DirCopyOptions},
+    file::{move_file, CopyOptions as FileCopyOptions},
+};
 use indicatif::ProgressBar;
 use libium::{mutex_ext::MutexExt, upgrade::Downloadable};
 use std::{
@@ -53,7 +56,7 @@ pub async fn clean(
                 || move_file(
                     file.path(),
                     directory.join(".old").join(filename),
-                    &CopyOptions::new(),
+                    &FileCopyOptions::new(),
                 )
                 .is_err()
             {
@@ -62,6 +65,16 @@ pub async fn clean(
         }
     }
     Ok(())
+}
+
+/// Construct a `to_install` vector from the `overrides_dir`
+pub fn read_overrides(overrides_dir: &Path) -> Result<Vec<(OsString, PathBuf)>> {
+    let mut to_install = Vec::new();
+    for file in read_dir(overrides_dir)? {
+        let file = file?;
+        to_install.push((file.file_name(), file.path()));
+    }
+    Ok(to_install)
 }
 
 pub async fn download(
@@ -120,12 +133,20 @@ pub async fn download(
         .into_inner()?
         .finish_and_clear();
     for installable in to_install {
-        eprint!(
-            "Installing  {}... ",
+        if installable.1.is_file() {
+            copy(installable.1, output_dir.join(&installable.0)).await?;
+        } else if installable.1.is_dir() {
+            let mut copy_options = DirCopyOptions::new();
+            copy_options.overwrite = true;
+            copy_dir(installable.1, &*output_dir, &copy_options)?;
+        } else {
+            bail!("Could not determine whether installable is file/folder")
+        }
+        println!(
+            "{} Installed          {}",
+            &*TICK,
             installable.0.to_string_lossy().dimmed()
         );
-        copy(installable.1, output_dir.join(installable.0)).await?;
-        println!("{}", &*TICK);
     }
 
     Ok(())
