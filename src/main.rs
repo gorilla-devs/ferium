@@ -10,7 +10,11 @@ use ferinth::Ferinth;
 use furse::Furse;
 use indicatif::ProgressStyle;
 use lazy_static::lazy_static;
-use libium::config::{self, structs::ModIdentifier};
+use libium::{
+    config::{self, structs::ModIdentifier},
+    file_picker,
+    misc::get_minecraft_dir,
+};
 use octocrab::OctocrabBuilder;
 use std::sync::Arc;
 use subcommands::{add, upgrade};
@@ -95,10 +99,49 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
     }
 
     if let SubCommands::Modpack { subcommand } = &cli_app.subcommand {
-        if let ModpackSubCommands::AddCurseforge { project_id } = subcommand {
+        if let ModpackSubCommands::AddCurseforge {
+            project_id,
+            output_dir,
+        } = subcommand
+        {
             check_internet().await?;
-            subcommands::modpack::add::curseforge(curseforge.clone(), &mut config, *project_id)
-                .await?;
+            let output_dir = match output_dir {
+                Some(some) => some.clone(),
+                None => file_picker::pick_folder(&get_minecraft_dir(), "Pick an output directory")
+                    .await
+                    .ok_or_else(|| anyhow!("Please pick an output directory"))?,
+            };
+            subcommands::modpack::add::curseforge(
+                curseforge.clone(),
+                &mut config,
+                *project_id,
+                output_dir,
+            )
+            .await?;
+
+            // Update config file and quit
+            config::write_file(&mut config_file, &config).await?;
+            return Ok(());
+        } else if let ModpackSubCommands::AddModrinth {
+            project_id,
+            output_dir,
+        } = subcommand
+        {
+            check_internet().await?;
+            println!("Where should the modpack be installed to?");
+            let output_dir = match output_dir {
+                Some(some) => some.clone(),
+                None => file_picker::pick_folder(&get_minecraft_dir(), "Pick an output directory")
+                    .await
+                    .ok_or_else(|| anyhow!("Please pick an output directory"))?,
+            };
+            subcommands::modpack::add::modrinth(
+                modrinth.clone(),
+                &mut config,
+                project_id,
+                output_dir,
+            )
+            .await?;
 
             // Update config file and quit
             config::write_file(&mut config_file, &config).await?;
@@ -118,7 +161,9 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         };
 
         match subcommand {
-            ModpackSubCommands::AddCurseforge { .. } => unreachable!(),
+            ModpackSubCommands::AddCurseforge { .. } | ModpackSubCommands::AddModrinth { .. } => {
+                unreachable!()
+            },
             ModpackSubCommands::Configure { output_dir } => {
                 subcommands::modpack::configure(modpack, output_dir).await?;
             },
@@ -126,12 +171,13 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 subcommands::modpack::delete(&mut config, modpack_name)?;
             },
             ModpackSubCommands::List => subcommands::modpack::list(&config),
-            ModpackSubCommands::Switch { profile_name } => {
-                subcommands::modpack::switch(&mut config, profile_name)?;
+            ModpackSubCommands::Switch { modpack_name } => {
+                subcommands::modpack::switch(&mut config, modpack_name)?;
             },
             ModpackSubCommands::Upgrade => {
                 check_internet().await?;
-                subcommands::modpack::upgrade(curseforge.clone(), modpack).await?;
+                subcommands::modpack::upgrade(modrinth.clone(), curseforge.clone(), modpack)
+                    .await?;
             },
         }
 
@@ -231,20 +277,19 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             } else {
                 for mod_ in &profile.mods {
                     println!(
-                        "{:45} {:10} {}",
+                        "{:45} {}",
                         mod_.name.bold(),
                         match &mod_.identifier {
-                            ModIdentifier::CurseForgeProject(_) => "CurseForge".red(),
-                            ModIdentifier::ModrinthProject(_) => "Modrinth".green(),
-                            ModIdentifier::GitHubRepository(_) => "GitHub".purple(),
+                            ModIdentifier::CurseForgeProject(id) =>
+                                format!("{:10} {}", "CurseForge".red(), id.to_string().dimmed()),
+                            ModIdentifier::ModrinthProject(id) =>
+                                format!("{:10} {}", "Modrinth".green(), id.dimmed()),
+                            ModIdentifier::GitHubRepository(name) => format!(
+                                "{:10} {}",
+                                "GitHub".purple(),
+                                format!("{}/{}", name.0, name.1).dimmed()
+                            ),
                         },
-                        match &mod_.identifier {
-                            ModIdentifier::CurseForgeProject(id) => id.to_string(),
-                            ModIdentifier::ModrinthProject(id) => id.into(),
-                            ModIdentifier::GitHubRepository(name) =>
-                                format!("{}/{}", name.0, name.1),
-                        }
-                        .dimmed()
                     );
                 }
             }

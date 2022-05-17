@@ -3,4 +3,5 @@
 /tests/configs/.json
 /tests/configs/running
 /tests/mods
+/tests/modpacks
 .DS_Store

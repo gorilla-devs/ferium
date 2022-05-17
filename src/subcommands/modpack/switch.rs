@@ -21,7 +21,7 @@ pub fn switch(config: &mut config::structs::Config, modpack_name: &Option<String
         let modpack_names = config
             .modpacks
             .iter()
-            .map(|mospack| &mospack.name)
+            .map(|modpack| &modpack.name)
             .collect::<Vec<_>>();
 
         let selection = Select::with_theme(&*crate::THEME)

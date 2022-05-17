@@ -15,34 +15,38 @@ use anyhow::{bail, Result};
 use dialoguer::Confirm;
 use fs_extra::dir::{copy, CopyOptions};
 use libium::{file_picker, HOME};
-use std::path::PathBuf;
+use std::path::Path;
 
-pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
+pub async fn check_output_directory(output_dir: &Path) -> Result<()> {
     if output_dir.is_relative() {
         bail!("The provided output directory is not absolute, i.e. it is a relative path");
     }
-    let mut backup = false;
-    if output_dir.exists() {
-        for file in std::fs::read_dir(output_dir.join("mods"))? {
-            let file = file?;
-            if file.path().is_file() && file.file_name() != ".DS_Store" {
-                backup = true;
-                break;
+    for check_dir in [output_dir.join("mods"), output_dir.join("resourcepacks")] {
+        let mut backup = false;
+        if check_dir.exists() {
+            for file in std::fs::read_dir(&check_dir)? {
+                let file = file?;
+                if file.path().is_file() && file.file_name() != ".DS_Store" {
+                    backup = true;
+                    break;
+                }
             }
         }
-    }
-    if backup {
-        println!(
-            "There are files in your output directory, these will be deleted when you upgrade."
+        if backup {
+            println!(
+            "There are files in the {} folder in your output directory, these will be deleted when you upgrade.",
+            check_dir.file_name().unwrap().to_string_lossy()
         );
-        if Confirm::with_theme(&*THEME)
-            .with_prompt("Would like to create a backup?")
-            .interact()?
-        {
-            let backup_dir = file_picker::pick_folder(&*HOME, "Where should the backup be made?")
-                .await
-                .unwrap();
-            copy(output_dir, backup_dir, &CopyOptions::new())?;
+            if Confirm::with_theme(&*THEME)
+                .with_prompt("Would like to create a backup?")
+                .interact()?
+            {
+                let backup_dir =
+                    file_picker::pick_folder(&*HOME, "Where should the backup be made?")
+                        .await
+                        .unwrap();
+                copy(check_dir, backup_dir, &CopyOptions::new())?;
+            }
         }
     }
     Ok(())

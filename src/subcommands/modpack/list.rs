@@ -6,19 +6,16 @@ pub fn list(config: &Config) {
         println!(
             "{}{}
         \r  Output directory:   {}
-        \r  Identifier:         {:10} {}\n",
+        \r  Identifier:         {}\n",
             modpack.name.bold(),
             if i == config.active_modpack { " *" } else { "" },
             modpack.output_dir.display().to_string().blue().underline(),
             match &modpack.identifier {
-                ModpackIdentifier::CurseForgeModpack(_) => "CurseForge".red(),
-                // ModpackIdentifier::ModrinthModpack(_) => "Modrinth".green(),
+                ModpackIdentifier::CurseForgeModpack(id) =>
+                    format!("{:10} {}", "CurseForge".red(), id.to_string().dimmed()),
+                ModpackIdentifier::ModrinthModpack(id) =>
+                    format!("{:10} {}", "Modrinth".green(), id.dimmed()),
             },
-            match &modpack.identifier {
-                ModpackIdentifier::CurseForgeModpack(id) => id.to_string(),
-                // ModpackIdentifier::ModrinthModpack(id) => id.into(),
-            }
-            .dimmed(),
         );
     }
 }

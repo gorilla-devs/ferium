@@ -1,0 +1,21 @@
+{
+    "active_profile": 0,
+    "active_modpack": 0,
+    "profiles": [],
+    "modpacks": [
+        {
+            "name": "RLCraft",
+            "output_dir": "./tests/modpacks",
+            "identifier": {
+                "CurseForgeModpack": 285109
+            }
+        },
+        {
+            "name": "Fabulously Optimized",
+            "output_dir": "./tests/modpacks",
+            "identifier": {
+                "ModrinthModpack": "1KVo5zza"
+            }
+        }
+    ]
+}

@@ -1,11 +1,12 @@
-use crate::{download::download, CROSS, STYLE_NO, TICK, YELLOW_TICK};
+use crate::{
+    download::{clean, download},
+    CROSS, STYLE_NO, TICK, YELLOW_TICK,
+};
 use anyhow::{bail, Result};
 use colored::Colorize;
 use ferinth::Ferinth;
-use fs_extra::file::{move_file, CopyOptions};
 use furse::Furse;
 use indicatif::ProgressBar;
-use itertools::Itertools;
 use libium::{config::structs::Profile, mutex_ext::MutexExt, upgrade::mod_downloadable};
 use octocrab::Octocrab;
 use std::{
@@ -15,7 +16,7 @@ use std::{
         Arc, Mutex,
     },
 };
-use tokio::{fs::remove_file, spawn};
+use tokio::spawn;
 
 pub async fn upgrade(
     modrinth: Arc<Ferinth>,
@@ -68,7 +69,7 @@ pub async fn upgrade(
                             TICK.clone()
                         },
                         mod_.name,
-                        downloadable.filename.dimmed()
+                        downloadable.filename().dimmed()
                     ));
                     {
                         let mut to_download = to_download.force_lock();
@@ -123,38 +124,22 @@ pub async fn upgrade(
         }
     }
 
-    for file in read_dir(&profile.output_dir)? {
-        let file = file?;
-        if file.file_type()?.is_file() {
-            let filename = file.file_name();
-            let filename = filename.to_str().unwrap();
-            if let Some((index, _)) = to_download
-                .iter()
-                .find_position(|thing| filename == thing.filename)
-            {
-                to_download.swap_remove(index);
-            } else if let Some((index, _)) =
-                to_install.iter().find_position(|thing| filename == thing.0)
-            {
-                to_install.swap_remove(index);
-            } else if move_file(
-                file.path(),
-                profile.output_dir.join(".old").join(filename),
-                &CopyOptions::new(),
-            )
-            .is_err()
-            {
-                remove_file(file.path()).await?;
-            }
-        }
+    clean(&profile.output_dir, &mut to_download, &mut to_install).await?;
+    to_download
+        .iter_mut()
+        .map(|thing| thing.output = thing.filename().into())
+        .for_each(drop);
+    if to_download.is_empty() {
+        println!("\n{}", "All up to date!".bold());
+    } else {
+        println!("\n{}\n", "Downloading Mod Files".bold());
+        download(
+            Arc::new(profile.output_dir.clone()),
+            to_download,
+            to_install,
+        )
+        .await?;
     }
-
-    download(
-        Arc::new(profile.output_dir.clone()),
-        to_download,
-        to_install,
-    )
-    .await?;
 
     if error.load(Ordering::Relaxed) {
         bail!("\nCould not get the latest compatible version of some mods")

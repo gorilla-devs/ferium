@@ -147,6 +147,36 @@ fn add_github() -> Result {
 }
 
 #[test]
+fn modpack_add_modrinth() -> Result {
+    // Add Fabulously Optimised
+    run_command(
+        vec![
+            "modpack",
+            "add-modrinth",
+            "1KVo5zza",
+            "--output-dir",
+            "../tests/modpacks",
+        ],
+        Some("empty_profile"),
+    )
+}
+
+#[test]
+fn modpack_add_curseforge() -> Result {
+    // Add RLCraft
+    run_command(
+        vec![
+            "modpack",
+            "add-curseforge",
+            "452013",
+            "--output-dir",
+            "../tests/modpacks",
+        ],
+        Some("empty_profile"),
+    )
+}
+
+#[test]
 fn already_added() {
     assert!(run_command(vec!["add-modrinth", "StArLiGhT"], Some("one_profile_full")).is_err());
     assert!(run_command(vec!["add-curseforge", "591388"], Some("one_profile_full")).is_err());
@@ -175,13 +205,25 @@ fn upgrade() -> Result {
 }
 
 #[test]
-fn switch() -> Result {
-    // Switch to the fabric profile and check that it contains the mods added before
+fn modpack_upgrade() -> Result {
+    let _ = remove_dir("./tests/modpacks");
+    run_command(vec!["modpack", "upgrade"], Some("two_modpacks"))
+}
+
+#[test]
+fn profile_switch() -> Result {
     run_command(
-        vec!["switch", "--profile-name", "Profile Two"],
+        vec!["profile", "switch", "--profile-name", "Profile Two"],
         Some("two_profiles_one_empty"),
-    )?;
-    run_command(vec!["list"], Some("two_profiles_one_empty"))
+    )
+}
+
+#[test]
+fn modpack_switch() -> Result {
+    run_command(
+        vec!["modpack", "switch", "--modpack-name", "RLCraft"],
+        Some("two_modpacks"),
+    )
 }
 
 #[test]
@@ -232,5 +274,13 @@ fn delete_profile() -> Result {
     run_command(
         vec!["profile", "delete", "--profile-name", "Profile Two"],
         Some("two_profiles_one_empty"),
+    )
+}
+
+#[test]
+fn delete_modpack() -> Result {
+    run_command(
+        vec!["modpack", "delete", "--modpack-name", "RLCraft"],
+        Some("two_modpacks"),
     )
 }

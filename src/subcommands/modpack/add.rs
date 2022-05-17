@@ -1,20 +1,30 @@
 use crate::TICK;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
+use ferinth::Ferinth;
 use furse::Furse;
-use libium::{config::structs::Config, file_picker, misc::get_minecraft_dir, modpack::add};
-use std::sync::Arc;
+use libium::{config::structs::Config, modpack::add};
+use std::{path::PathBuf, sync::Arc};
 
 pub async fn curseforge(
     curseforge: Arc<Furse>,
     config: &mut Config,
     project_id: i32,
+    output_dir: PathBuf,
 ) -> Result<()> {
-    println!("Where should the modpack be installed to?");
-    let output_dir = file_picker::pick_folder(&get_minecraft_dir(), "Pick an output directory")
-        .await
-        .ok_or_else(|| anyhow!("Please pick an output directory"))?;
     eprint!("Adding modpack... ");
-    let (project, _) = add::curseforge(curseforge, config, project_id, output_dir).await?;
+    let project = add::curseforge(curseforge, config, project_id, output_dir).await?;
     println!("{} ({})", *TICK, project.name);
+    Ok(())
+}
+
+pub async fn modrinth(
+    modrinth: Arc<Ferinth>,
+    config: &mut Config,
+    project_id: &str,
+    output_dir: PathBuf,
+) -> Result<()> {
+    eprint!("Adding modpack... ");
+    let project = add::modrinth(modrinth, config, project_id, output_dir).await?;
+    println!("{} ({})", *TICK, project.title);
     Ok(())
 }

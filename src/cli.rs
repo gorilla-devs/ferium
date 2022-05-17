@@ -69,12 +69,13 @@ pub enum SubCommands {
         verbose: bool,
     },
     #[clap(arg_required_else_help = true)]
+    #[clap(about("Add, configure, delete, switch, list, or upgrade modpacks"))]
     Modpack {
         #[clap(subcommand)]
         subcommand: ModpackSubCommands,
     },
     #[clap(arg_required_else_help = true)]
-    #[clap(about("Create, configure, or remove the current profile"))]
+    #[clap(about("Create, configure, delete, switch, or list profiles"))]
     Profile {
         #[clap(subcommand)]
         subcommand: ProfileSubCommands,
@@ -151,15 +152,23 @@ pub enum ProfileSubCommands {
 
 #[derive(Subcommand)]
 pub enum ModpackSubCommands {
-    // #[clap(about("Add a Modrinth modpack to the config"))]
-    // AddModrinth {
-    //     #[clap(help("The project ID is specified at the bottom of the left sidebar under 'Technical information'\nYou can also use the project slug for this"))]
-    //     project_id: String,
-    // },
+    #[clap(about("Add a Modrinth modpack to the config"))]
+    AddModrinth {
+        #[clap(help("The project ID is specified at the bottom of the left sidebar under 'Technical information'\nYou can also use the project slug for this"))]
+        project_id: String,
+        #[clap(long)]
+        #[clap(value_hint(ValueHint::DirPath))]
+        #[clap(help("The Minecraft instance directory to install the modpack to"))]
+        output_dir: Option<PathBuf>,
+    },
     #[clap(about("Add a CurseForge modpack to the config"))]
     AddCurseforge {
         #[clap(help("The project ID is specified at the right sidebar under 'About Project'"))]
         project_id: i32,
+        #[clap(long)]
+        #[clap(value_hint(ValueHint::DirPath))]
+        #[clap(help("The Minecraft instance directory to install the modpack to"))]
+        output_dir: Option<PathBuf>,
     },
     #[clap(about(
         "Configure the current modpack's output directory\nOptionally, provide the output directory as an option"
@@ -178,11 +187,11 @@ pub enum ModpackSubCommands {
     },
     #[clap(about("List all the modpacks"))]
     List,
-    #[clap(about("Switch between different profiles\nOptionally, provide the name of the profile to switch to"))]
+    #[clap(about("Switch between different modpacks\nOptionally, provide the name of the modpack to switch to"))]
     Switch {
         #[clap(long)]
-        #[clap(help("The name of the profile to switch to"))]
-        profile_name: Option<String>,
+        #[clap(help("The name of the modpack to switch to"))]
+        modpack_name: Option<String>,
     },
     #[clap(about("Download and install the latest version of the modpack"))]
     Upgrade,

@@ -1,17 +1,68 @@
 use crate::{STYLE_BYTE, TICK};
 use anyhow::{Error, Result};
 use colored::Colorize;
+use fs_extra::file::{move_file, CopyOptions};
 use indicatif::ProgressBar;
 use libium::{mutex_ext::MutexExt, upgrade::Downloadable};
 use std::{
     ffi::OsString,
-    path::PathBuf,
+    fs::read_dir,
+    path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
     },
 };
-use tokio::{fs::copy, spawn, sync::Semaphore};
+use tokio::{
+    fs::{copy, create_dir_all, remove_file},
+    spawn,
+    sync::Semaphore,
+};
+
+/// Check the given `directory`
+///
+/// - If there are files there that are not in `to_download` or `to_install`, they will be moved to `directory`/.old
+/// - If a file in `to_download` or `to_install` is already there, it will be removed from the respective vector
+/// - If the file is a `.part` file or if the move failed, the file will be deleted
+pub async fn clean(
+    directory: &Path,
+    to_download: &mut Vec<Downloadable>,
+    to_install: &mut Vec<(OsString, PathBuf)>,
+) -> Result<()> {
+    create_dir_all(directory.join(".old")).await?;
+    for file in read_dir(&directory)? {
+        let file = file?;
+        // If it's a file
+        if file.file_type()?.is_file() {
+            let filename = file.file_name();
+            let filename = filename.to_str().unwrap();
+            // If it is already downloaded
+            if let Some(index) = to_download
+                .iter()
+                .position(|thing| filename == thing.filename())
+            {
+                // Don't download it
+                to_download.swap_remove(index);
+            // Likewise, if it is already installed
+            } else if let Some(index) = to_install.iter().position(|thing| filename == thing.0) {
+                // Don't install it
+                to_install.swap_remove(index);
+            // Or else, move the file to `directory`/.old
+            // If the file is a `.part` file or if the move failed, delete the file
+            } else if filename.ends_with("part")
+                || move_file(
+                    file.path(),
+                    directory.join(".old").join(filename),
+                    &CopyOptions::new(),
+                )
+                .is_err()
+            {
+                remove_file(file.path()).await?;
+            }
+        }
+    }
+    Ok(())
+}
 
 pub async fn download(
     output_dir: Arc<PathBuf>,
@@ -21,9 +72,7 @@ pub async fn download(
     let progress_bar = Arc::new(Mutex::new(
         ProgressBar::new(to_download.len() as u64).with_style(STYLE_BYTE.clone()),
     ));
-    {
-        progress_bar.force_lock().enable_steady_tick(100);
-    }
+    progress_bar.force_lock().enable_steady_tick(100);
     let mut tasks = Vec::new();
     let semaphore = Arc::new(Semaphore::new(75));
     for downloadable in to_download {
@@ -53,7 +102,10 @@ pub async fn download(
             progress_bar.println(format!(
                 "{} Downloaded {:7} {}",
                 &*TICK,
-                size.to_string(size::Base::Base10, size::Style::Smart),
+                match size {
+                    Some(size) => size.to_string(size::Base::Base10, size::Style::Smart),
+                    None => String::new(),
+                },
                 filename.dimmed(),
             ));
             progress_bar.set_position(progress_bar.position() + 1);
