@@ -80,11 +80,11 @@ When you first start up Ferium, you will have to create a new profile by running
     - You can find the project id at the top of the right sidebar under 'About Project'
   - So to add [Terralith](https://www.curseforge.com/minecraft/mc-mods/terralith), you should run `ferium add-curseforge 513688`
 - GitHub 'Mods'
-  - `ferium add-github owner name`
+  - `ferium add-github owner/name`
   - Where `owner` is the username of the owner of the repository and `name` is the name of the repository (both case-insensitive)
     - For example [Sodium's repository](https://github.com/CaffeineMC/sodium-fabric) has the id `CaffeineMC` and `sodium-fabric`
     - You can find these at the top left part of the repository's page as a big 'owner / name'
-  - So to add [Sodium](https://github.com/CaffeineMC/sodium-fabric), you should run `ferium add-github CaffeineMC sodium-fabric` (again, case-insensitive)
+  - So to add [Sodium](https://github.com/CaffeineMC/sodium-fabric), you should run `ferium add-github CaffeineMC/sodium-fabric` (again, case-insensitive)
   - Note: The GitHub repository has to release JAR files in their Releases for Ferium to download, or else it will refuse to be added
 - External mods
   - If you want to use files that are not downloadable by Ferium, place them in the `user` folder in the output directory. Files here will be copied to the output directory when upgrading
