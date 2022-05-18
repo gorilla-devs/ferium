@@ -4,6 +4,7 @@ use colored::Colorize;
 use dialoguer::Confirm;
 use ferinth::Ferinth;
 use furse::Furse;
+use itertools::Itertools;
 use libium::{
     config::structs::{Config, Modpack, ModpackIdentifier},
     file_picker,
@@ -87,9 +88,18 @@ pub async fn modrinth(
                 .yellow()
         );
     }
+    if let Some(donation_urls) = project.donation_urls {
+        println!(
+            "Consider supporting the mod creator on {}",
+            donation_urls
+                .iter()
+                .map(|this| format!("{} ({})", this.platform.bold(), this.url.blue().underline()))
+                .format(", ")
+        );
+    }
     config.modpacks.push(Modpack {
-        name: project.title.clone(),
-        identifier: ModpackIdentifier::ModrinthModpack(project.id.clone()),
+        name: project.title,
+        identifier: ModpackIdentifier::ModrinthModpack(project.id),
         output_dir,
         install_overrides,
     });

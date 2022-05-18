@@ -1,9 +1,11 @@
 use crate::{THEME, TICK};
 use anyhow::{bail, Result};
+use colored::Colorize;
 use dialoguer::Confirm;
 use ferinth::structures::version_structs::DependencyType;
 use ferinth::Ferinth;
 use furse::{structures::file_structs::FileRelationType, Furse};
+use itertools::Itertools;
 use libium::{
     add,
     config::{self, structs::ModIdentifier},
@@ -92,13 +94,14 @@ pub async fn modrinth(
         }
     }
 
-    if let Some(donations) = project.donation_urls {
-        for donation in donations {
-            println!(
-                "Consider supporting the mod creator on {}: {}",
-                donation.platform, donation.url
-            );
-        }
+    if let Some(donation_urls) = project.donation_urls {
+        println!(
+            "Consider supporting the mod creator on {}",
+            donation_urls
+                .iter()
+                .map(|this| format!("{} ({})", this.platform.bold(), this.url.blue().underline()))
+                .format(" or ")
+        );
     }
 
     Ok(())

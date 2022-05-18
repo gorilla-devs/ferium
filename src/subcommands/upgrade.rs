@@ -2,7 +2,7 @@ use crate::{
     download::{clean, download},
     CROSS, STYLE_NO, TICK, YELLOW_TICK,
 };
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use colored::Colorize;
 use ferinth::Ferinth;
 use furse::Furse;
@@ -100,11 +100,11 @@ pub async fn upgrade(
         handle.await??;
     }
     Arc::try_unwrap(progress_bar)
-        .expect("Failed to run threads to completion")
+        .map_err(|_| anyhow!("Failed to run threads to completion"))?
         .into_inner()?
         .finish_and_clear();
     let mut to_download = Arc::try_unwrap(to_download)
-        .expect("Failed to run threads to completion")
+        .map_err(|_| anyhow!("Failed to run threads to completion"))?
         .into_inner()?;
     if backwards_compat_msg.load(Ordering::Relaxed) {
         println!(

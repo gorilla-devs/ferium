@@ -5,14 +5,12 @@
 
 Support for modpacks! (not ready for use as of now)
 
+- **_BREAKING_** The profile has two new fields, `active_modpack` and `modpacks`
+  - Add `, "active_modpack": 0, "modpack": []` to migrate the config
 - Add `modpack` subcommand
   - It's quite similar to the `profile` subcommand
 - Move `switch` subcommand to `profile switch`
-- Add `download` that will download and/or install the files provided
-- Removed `mutex_ext`, now uses the one in Libium
-- Add donations to the `add-modrinth` subcommand
-- The profile has two new fields, `active_modpack` and `modpacks`
-  - Again, they work very similarly to profiles
+- Add donations suggestion to the `add-modrinth` subcommands
 
 ## `v3.28.7`
 ### 12.05.2022

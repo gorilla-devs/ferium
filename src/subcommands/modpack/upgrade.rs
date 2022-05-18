@@ -2,7 +2,7 @@ use crate::{
     download::{clean, download, read_overrides},
     CROSS, STYLE_BYTE, STYLE_NO, TICK,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use colored::Colorize;
 use ferinth::Ferinth;
 use furse::Furse;
@@ -102,11 +102,11 @@ pub async fn upgrade(
             );
 
             Arc::try_unwrap(progress_bar)
-                .expect("Failed to run threads to completion")
+                .map_err(|_| anyhow!("Failed to run threads to completion"))?
                 .into_inner()?
                 .finish_and_clear();
             to_download = Arc::try_unwrap(local_to_download)
-                .expect("Failed to run threads to completion")
+            .map_err(|_| anyhow!("Failed to run threads to completion"))?
                 .into_inner()?;
 
             if modpack.install_overrides {

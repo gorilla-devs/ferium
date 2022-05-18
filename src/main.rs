@@ -10,10 +10,7 @@ use ferinth::Ferinth;
 use furse::Furse;
 use indicatif::ProgressStyle;
 use lazy_static::lazy_static;
-use libium::{
-    config::{self, structs::ModIdentifier},
-    HOME,
-};
+use libium::config::{self, structs::ModIdentifier};
 use octocrab::OctocrabBuilder;
 use std::sync::Arc;
 use subcommands::{add, upgrade};
@@ -41,6 +38,7 @@ fn main() {
     if let Some(threads) = cli.threads {
         builder.max_blocking_threads(threads);
     }
+    #[allow(clippy::expect_used)] // No error handling yet
     let runtime = builder.build().expect("Could not initialise Tokio runtime");
     if let Err(err) = runtime.block_on(actual_main(cli)) {
         eprintln!("{}", err.to_string().red().bold());
@@ -169,9 +167,6 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             },
             ModpackSubCommands::Upgrade => {
                 check_internet().await?;
-                create_dir_all(&modpack.output_dir).await?;
-                create_dir_all(HOME.join(".config").join("ferium").join(".tmp")).await?;
-                create_dir_all(HOME.join(".config").join("ferium").join(".cache")).await?;
                 subcommands::modpack::upgrade(modrinth.clone(), curseforge.clone(), modpack)
                     .await?;
             },

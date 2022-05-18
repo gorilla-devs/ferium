@@ -1,5 +1,5 @@
 use crate::{STYLE_BYTE, TICK};
-use anyhow::{bail, Error, Result};
+use anyhow::{anyhow, bail, Error, Result};
 use colored::Colorize;
 use fs_extra::{
     dir::{copy as copy_dir, CopyOptions as DirCopyOptions},
@@ -82,6 +82,7 @@ pub async fn download(
     to_download: Vec<Downloadable>,
     to_install: Vec<(OsString, PathBuf)>,
 ) -> Result<()> {
+    create_dir_all(&*output_dir).await?;
     let progress_bar = Arc::new(Mutex::new(
         ProgressBar::new(to_download.len() as u64).with_style(STYLE_BYTE.clone()),
     ));
@@ -129,7 +130,7 @@ pub async fn download(
         handle.await??;
     }
     Arc::try_unwrap(progress_bar)
-        .expect("Failed to run threads to completion")
+        .map_err(|_| anyhow!("Failed to run threads to completion"))?
         .into_inner()?
         .finish_and_clear();
     for installable in to_install {
