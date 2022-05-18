@@ -6,7 +6,8 @@ pub fn list(config: &Config) {
         println!(
             "{}{}
         \r  Output directory:   {}
-        \r  Identifier:         {}\n",
+        \r  Identifier:         {}
+        \r  Install Overrides:  {}\n",
             modpack.name.bold(),
             if i == config.active_modpack { " *" } else { "" },
             modpack.output_dir.display().to_string().blue().underline(),
@@ -16,6 +17,7 @@ pub fn list(config: &Config) {
                 ModpackIdentifier::ModrinthModpack(id) =>
                     format!("{:10} {}", "Modrinth".green(), id.dimmed()),
             },
+            modpack.install_overrides
         );
     }
 }
