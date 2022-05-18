@@ -173,7 +173,7 @@ pub enum ModpackSubCommands {
         #[clap(help("The Minecraft instance directory to install the modpack to"))]
         output_dir: Option<PathBuf>,
         #[clap(long)]
-        #[clap(help("Whether to install the modpack's overrides to the output directory.\nThis will override existing files"))]
+        #[clap(help("Whether to install the modpack's overrides to the output directory.\nThis may overwrite existing files"))]
         install_overrides: Option<bool>,
     },
     #[clap(about(
@@ -184,6 +184,9 @@ pub enum ModpackSubCommands {
         #[clap(value_hint(ValueHint::DirPath))]
         #[clap(help("The Minecraft instance directory to install the modpack to"))]
         output_dir: Option<PathBuf>,
+        #[clap(long)]
+        #[clap(help("Whether to install the modpack's overrides to the output directory.\nThis may overwrite existing files"))]
+        install_overrides: Option<bool>,
     },
     #[clap(about("Delete a modpack\nOptionally, provide the name of the modpack to delete"))]
     Delete {

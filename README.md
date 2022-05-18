@@ -5,26 +5,34 @@
 [![copyleft badge](https://img.shields.io/static/v1?label=&message=Copyleft&style=for-the-badge&labelColor=silver&color=silver&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAQAAAC0NkA6AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QA/4ePzL8AAAAHdElNRQfjAxYBNgYPa+9oAAAEM0lEQVRYw6WYb0zVVRjHP9wQW7umA0xoKNSC+6bSNkzetKZbaVu19aLpfOGcbcw/S+uNbikuNwMsVyE3XVsro7VEXjS3ylmLxkRtC9crHGjCAv9AATK4CoZye8Hl/J7n/M7v8rvX57w55/lznt/583yf5/xyCEOlrKaSCp6ggCiQYJheLvMHv9HHA1MZ++kmmaZ1UUNZ9g6eo4X7aR3Mtvs0syJzB0U0MR3KgddOsiQTFxsZzdDBTLvFetd0OT5OHo1U+7j9tNJBN4MkgChFVLCS1Sz1aR7jHf5Lv4Yov1hfN8YRKgP1V9LIuGVxhmg6Fwv4XalPcJD8OTe3gA+YVHYXgt3kWato46nQp1jOWWs1eW7Fz5VaLbkZ3cdc6pX9UfeNkvd+a1aRtV3Fle+mLeGWEO/0mT/EWo7SxhBjjNDPKfbxtMPNVjHLKMVa+I0Q1lmG89nDTWdctPGqz80hIT+uAWRaGOqzeJEraQOw2YrzXNqNbJrlnqDFsCeJKZO3uDtnnN+wNq6cCSM74SGtd1wHlfrOkHAyyDPKrk5codIZ1n7DSlAoVF9iKjRq/cVCYZnPmJHsnWF1GcYRobiQf3yA3sr7VPM2cXp9br5Va2k0/EsAy4SixKh6a5LT6rQibGBAyaeV9SohWQabzeBvhUcTaoqPHHhdTKfSOaWk1wx/E8TN4CuhssW6pjnOCF/KiNrOxULWZPgNEbEJF4VKFT2mdbGLpNNJPzVqC9eKkTdbDK4ajy9ngVaPiHuU5AshWWe4VyIsMuwbWTi5Q7sYlYj+TdNbFBHpJZEV8vao8sOjMS8VRh64MkumrRhSh5UQ+T278s+jQdF/1PTGI4yaweNZuHiYF1RsyCiapdFcengyNajgZyP4RBhP8RpDAU42KcxqE30vNK7KYJQpploFY1NgnfmvApYiZxpskLAi6/PFVh454HBRyJ9K5yclvS5hJQggP7YA8vvZzJCi1+m3NKoUYnj8Eg31jSonDFuTTPEju9nIZuq55IP6FvUJ3iF0zjBqApLWOu6FTlp9FCgM90rX9/zpt1Z9z56QLkasatnLRfe8TT5pmHetQqI6RAoesB5A5aIy/s5jrxAl0VmrJHqFvrQuflCwCPM4Jy71s1L0tTA75IPzAyo5ea3D8eg5LORf2mWqnGaXz3Q+b3CcDm6nCtBfqeV5R+xsUyf1mC3eoBLp9qzAcocquN90qRxTW/Fhxk+Hw8o+HvQIOqPU2qkI7SLGeauAmhf8YrygVCepU0HmpkLqLaQ7nz43Ra3VJBknzqpA/SrivofpaduF64n9Kdt83OupJ/YA48ACiolRyRpHovuMd5kKs8PrA+JirjbsvlFBlE9DyP8qXnQ3+eNiblpOc+gfOCc0gGRGpeyzymq7dbLXSmch/q24qIQ1VBKjjMLUT7UheunmIq2qQgmg/wHquM6d9tIV7AAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxOS0wMy0yMlQwMTo1NDowNiswMDowMOIizoUAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTktMDMtMjJUMDE6NTQ6MDYrMDA6MDCTf3Y5AAAAAElFTkSuQmCC)](https://en.wikipedia.org/wiki/Copyleft)
 
 > Check out Ferium's sister projects [Ferinth](https://github.com/theRookieCoder/ferinth) and [Furse](https://github.com/theRookieCoder/furse).
-> They're Rust wrappers for the Modrinth and CurseForge APIs respectively
+> They are Rust wrappers for the Modrinth and CurseForge APIs respectively
 
-Ferium is a fast and feature rich CLI program for downloading and updating Minecraft mods from [Modrinth](https://modrinth.com/mods), [CurseForge](https://curseforge.com/minecraft/mc-mods), and [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases).
-Simply specify the mods you use through the CLI, and in just one command you can download all the mods you configured.
+Ferium is a fast and feature rich CLI program for downloading and updating Minecraft mods from [Modrinth](https://modrinth.com/mods), [CurseForge](https://curseforge.com/minecraft/mc-mods), and [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) and modpacks from [Modrinth](https://modrinth.com/modpacks), [CurseForge](https://curseforge.com/minecraft/modpacks).
+Simply specify the mods or modpacks you use through the CLI, and in just one command you can the download all the mods or the modpack you configured.
 
 ## Features
 
 - Download mods from multiple sources, namely [Modrinth](https://modrinth.com/mods), [CurseForge](https://curseforge.com/minecraft/mc-mods), and [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases)
+- Download modpacks from multiple sources, namely [Modrinth](https://modrinth.com/modpacks), [CurseForge](https://curseforge.com/minecraft/modpacks)
 - Pleasing and beautiful UI
-- Super fast downloads due to multi-threading for network intensive tasks
+  - Listing mods `ferium list`
+    ![Listing Mods `ferium list`](media/list.png)
+  - Listing mods verbosely `ferium list --verbose` / `ferium list -v`
+    ![Listing Mods Verbosely `ferium list --verbose` / `ferium list -v`](media/list%20verbose.png)
+  - Upgrading mods/modpacks `ferium upgrade` / `ferium modpack upgrade`
+    ![Upgrading Mods/Modpacks `ferium upgrade` / `ferium modpack upgrade`](media/upgrade.png)
+- [It's super fast](https://www.reddit.com/r/rust/comments/umcu1j/media_ferium_the_cli_minecraft_mod_manager) due to multi-threading for network intensive tasks
   - You can configure the maximum number of additional threads using the `--threads` options
 - Upgrade all your mods in one command, `ferium upgrade`
   - Ferium checks that the version being downloaded is the latest one compatible with the chosen mod loader and Minecraft version
   - You can configure overrides for mods that are not specified as compatible but still work
+- Download and install your modpack in one command, `ferium modpack upgrade`
 - Create multiple profiles and configure different mod loaders, Minecraft versions, output directories, and mods for each
 
 ## Installation
 
 Ferium is a compiled, statically linked program that does not require external dependencies.
-However, Rust programs in general do require `gcc-libs` to be installed.
+However, Rust programs in general require `gcc-libs` to be installed on Linux.
 On Linux the regular version requires GTK, but the `no-gui` version does not need this.
 
 Ferium is coming to more package managers soon!
@@ -39,7 +47,8 @@ Ferium is coming to more package managers soon!
 
 ### Scoop (Windows)
 
-Ferium is available [here](https://scoop.sh/#/apps?q=ferium) in Scoop's official games bucket.
+Available [here](https://scoop.sh/#/apps?q=ferium) in Scoop's official games bucket.
+
 Run `scoop bucket add games` then `scoop install ferium` to install.
 
 ### Cargo Install (Cross Platform)
@@ -57,13 +66,16 @@ Remember to use an add-on like [cargo-update](https://crates.io/crates/cargo-upd
 ## Overview / Help Page
 
 > Note! A lot of Ferium's backend is in a seperate project [Libium](https://github.com/theRookieCoder/libium).
-> It deals with things such as the config, adding mods, upgrading mods, file pickers, etc
+> It deals with things such as the config, adding mod(pack)s, upgrading, file pickers, etc
 
 > The config file is located at `~/.config/ferium/config.json` if you're interested in manually editing it
 
 ### First Startup
 
-When you first start up Ferium, you will have to create a new profile by running  `ferium profile create` and entering the details for your profile.
+When you first start up Ferium, you will have to either
+
+- Create a new profile by running `ferium profile create` and entering the details for your profile
+- Add a modpack by running `ferium modpack add-curseforge <project-id>` or `ferium modpack add-modrinth <project-id>`
 
 ### Adding Mods
 
@@ -82,12 +94,27 @@ When you first start up Ferium, you will have to create a new profile by running
 - GitHub 'Mods'
   - `ferium add-github owner/name`
   - Where `owner` is the username of the owner of the repository and `name` is the name of the repository (both case-insensitive)
-    - For example [Sodium's repository](https://github.com/CaffeineMC/sodium-fabric) has the id `CaffeineMC` and `sodium-fabric`
+    - For example [Sodium's repository](https://github.com/CaffeineMC/sodium-fabric) has the id `CaffeineMC/sodium-fabric`
     - You can find these at the top left part of the repository's page as a big 'owner / name'
   - So to add [Sodium](https://github.com/CaffeineMC/sodium-fabric), you should run `ferium add-github CaffeineMC/sodium-fabric` (again, case-insensitive)
   - Note: The GitHub repository has to release JAR files in their Releases for Ferium to download, or else it will refuse to be added
 - External mods
   - If you want to use files that are not downloadable by Ferium, place them in the `user` folder in the output directory. Files here will be copied to the output directory when upgrading
+
+### Adding Modpacks
+
+- Modrinth Modpacks
+  - `ferium modpack add-modrinth project_id`
+  - Where `project_id` is the slug or project id of the modpack
+    - For example, [Better Minecraft](https://modrinth.com/modpack/better-minecraft) has the slug `better-minecraft` and a project id `shFhR8Vx`
+    - You can find the slug in the website url (`modrinth.com/modpack/<slug>`), and the project id at the bottom of the left sidebar under 'Technical information'
+  - So to add [Better Minecraft](https://modrinth.com/modpack/better-minecraft), you should run `ferium modpack add-modrinth better-minecraft` or `ferium add-modrinth shFhR8Vx`
+- CurseForge Mods
+  - `ferium modpack add-curseforge project_id`
+  - Where `project_id` is the project id of the modpack
+    - For example, [RLCraft](https://www.curseforge.com/minecraft/modpacks/rlcraft) has a project id `285109`
+    - You can find the project id at the top of the right sidebar under 'About Project'
+  - So to add [RLCraft](https://www.curseforge.com/minecraft/modpacks/rlcraft), you should run `ferium modpack add-curseforge 285109`
 
 ### Upgrading Mods
 
@@ -100,6 +127,18 @@ You can choose to pick a custom output directory during profile creation or [cha
 If Ferium fails to download a mod, it will print it's name in red and give the reason. It will continue downloading the rest of the mods and will exit with an error.
 
 **WARNING:** _When upgrading, any files not downloaded by Ferium will be moved to the `.old` folder in the output directory_
+
+### Upgrading Modpacks
+
+> If your output directory's `mods` and `resourcepacks` sre not empty when setting it, Ferium will offer to create a backup. Please do so if it contains any files you would like to keep
+
+Now after adding all your mods, run `ferium modpack upgrade` to download the modpack to your output directory.
+This defaults to `.minecraft`, which is the default Minecraft resources directory. You don't need to worry about this if you play with Mojang's launcher (unless you changed the resources directory).
+You can choose to pick a custom output directory when adding modpacks or [change it later](#managing-modpacks).
+
+If Ferium fails to download a mod, it will print it's name in red and give the reason. It will continue downloading the rest of the mods and will exit with an error.
+
+**WARNING:** _If you choose to install modpack overrides, your existing configs may be overwritten_
 
 ### Managing Mods
 
@@ -124,6 +163,29 @@ You can also manually disable the mod loader (and/or game version) check(s) in t
 }
 ```
 
+### Managing Modpacks
+
+#### Add
+When adding a modpack, you will configure the following:
+
+- Output directory
+  - This defaults to `.minecraft`, which is the default Minecraft resources directory. You don't need to worry about this if you play with Mojang's launcher (unless you changed the resources directory)
+- Whether to install modpack overrides
+
+You can also provide these settings as flags.
+Ferium will automatically switch to the newly added modpack.
+
+#### Configure
+
+You can configure these same settings afterwards by running `ferium modpack configure`.
+Again, you can provide these settings as flags.
+
+#### Manage
+
+You can see all the modpack you have configured by running `ferium modpack list`.
+Switch between your modpacks using `ferium modpack switch`.
+Delete a profile by running `ferium modpack delete` and selecting the modpack you want to delete.
+
 ### Profiles
 
 #### Create
@@ -147,7 +209,7 @@ Again, you can provide these settings as flags.
 #### Manage
 
 You can see all the profiles you have by running `ferium profile list`.
-Switch between your profiles using `ferium switch`.
+Switch between your profiles using `ferium profile switch`.
 Delete a profile by running `ferium profile delete` and selecting the profile you want to delete.
 
 ## Feature Requests
@@ -161,6 +223,6 @@ You'll also need the [Just](https://github.com/casey/just#installation) command 
 
 To build the project and install it to your Cargo binary directory, clone the project and run `just install`. If you want to install it for testing a developement version, run `just` (alias for `just install-dev`).
 
-If you want to obtain executables for a specific OS, you can run `just build-<OS>` and replace `<OS>` with `mac`, `win`, or `linux`. The produced binaries will be zipped and moved to `out/`. There is also `just build-linux-nogui` for building binaries that don't need GTK, they will not have a GUI file dialogue.
+If you want to obtain executables for specific targets, you can run `just build-<target>` and replace `<target>` with `mac-intel`, `mac-arm` `win`, `win-gnu`, `linux`, or `linux-nogui`. The produced binaries will be zipped and moved to `out/`. `just build-linux-nogui` is for building binaries that don't need GTK, but they will not have a GUI file dialogue.
 
 You can run clippy lints using `just lint`, integration tests using `cargo test`, and delete all the build and test artefacts using `just clean`.

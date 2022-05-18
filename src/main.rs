@@ -10,7 +10,10 @@ use ferinth::Ferinth;
 use furse::Furse;
 use indicatif::ProgressStyle;
 use lazy_static::lazy_static;
-use libium::config::{self, structs::ModIdentifier};
+use libium::{
+    config::{self, structs::ModIdentifier},
+    HOME,
+};
 use octocrab::OctocrabBuilder;
 use std::sync::Arc;
 use subcommands::{add, upgrade};
@@ -151,8 +154,11 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             ModpackSubCommands::AddCurseforge { .. } | ModpackSubCommands::AddModrinth { .. } => {
                 unreachable!()
             },
-            ModpackSubCommands::Configure { output_dir } => {
-                subcommands::modpack::configure(modpack, output_dir).await?;
+            ModpackSubCommands::Configure {
+                output_dir,
+                install_overrides,
+            } => {
+                subcommands::modpack::configure(modpack, output_dir, *install_overrides).await?;
             },
             ModpackSubCommands::Delete { modpack_name } => {
                 subcommands::modpack::delete(&mut config, modpack_name)?;
@@ -163,6 +169,9 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             },
             ModpackSubCommands::Upgrade => {
                 check_internet().await?;
+                create_dir_all(&modpack.output_dir).await?;
+                create_dir_all(HOME.join(".config").join("ferium").join(".tmp")).await?;
+                create_dir_all(HOME.join(".config").join("ferium").join(".cache")).await?;
                 subcommands::modpack::upgrade(modrinth.clone(), curseforge.clone(), modpack)
                     .await?;
             },
