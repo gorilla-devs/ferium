@@ -70,9 +70,11 @@ install:
 install-dev:
     cargo install --debug --force --path .
 
+# Delete all build and test artefacts
 clean:
     cargo clean
     rm -rf out
     rm -rf tests/mods
-    rm -rf tests/modpacks
+    rm -rf tests/md_modpack
+    rm -rf tests/cf_modpack
     rm -rf tests/configs/running

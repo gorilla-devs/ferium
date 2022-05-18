@@ -1,16 +1,22 @@
 # Changelog for Ferium
 
 ## `v4.0.0`
-### ???
+### 19.05.2022
 
-Support for modpacks! (not ready for use as of now)
+Support for Modrinth and CurseForge modpacks!
 
-- **_BREAKING_** The profile has two new fields, `active_modpack` and `modpacks`
-  - Add `, "active_modpack": 0, "modpack": []` to migrate the config
-- Add `modpack` subcommand
-  - It's quite similar to the `profile` subcommand
-- Move `switch` subcommand to `profile switch`
-- Add donations suggestion to the `add-modrinth` subcommands
+Add `, "active_modpack": 0, "modpack": []` to the end of your config file to migrate it
+
+- Build workflow now runs when `Cargo.lock` is changed
+- Improve `README.md` and add information about modpack subcommands
+- Update clippy lints to be stricter
+- Added `modpack` subcommand
+  - Added integration tests for these too
+- Moved `switch` subcommand to `profile switch`
+- Added donation hints after adding a Modrinth mod
+  - This is to sort of compensate for the fact that no ad revenue is given to mod authors if you use Ferium
+- Downloading now shows the file size rather than the number of mods
+  - _The progress bar is a liiiieeeeee_ (at first, but it stabilises later)
 
 ## `v3.28.7`
 ### 12.05.2022

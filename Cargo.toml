@@ -18,7 +18,7 @@ keywords = [
 ]
 
 [features]
-# default = ["gui"]
+default = ["gui"]
 gui = ["libium/gui"]
 
 [dependencies]
