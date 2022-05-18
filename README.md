@@ -15,12 +15,12 @@ Simply specify the mods or modpacks you use through the CLI, and in just one com
 - Download mods from multiple sources, namely [Modrinth](https://modrinth.com/mods), [CurseForge](https://curseforge.com/minecraft/mc-mods), and [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases)
 - Download modpacks from multiple sources, namely [Modrinth](https://modrinth.com/modpacks), [CurseForge](https://curseforge.com/minecraft/modpacks)
 - Pleasing and beautiful UI
-  - Listing mods `ferium list`
-    ![Listing Mods `ferium list`](media/list.png)
-  - Listing mods verbosely `ferium list --verbose` / `ferium list -v`
-    ![Listing Mods Verbosely `ferium list --verbose` / `ferium list -v`](media/list%20verbose.png)
-  - Upgrading mods/modpacks `ferium upgrade` / `ferium modpack upgrade`
-    ![Upgrading Mods/Modpacks `ferium upgrade` / `ferium modpack upgrade`](media/upgrade.png)
+  - Listing mods
+    ![Listing Mods](media/list.png)
+  - Listing mods verbosely
+    ![Listing Mods Verbosely](media/list%20verbose.png)
+  - Upgrading mods/modpacks
+    ![Upgrading Mods/Modpacks](media/upgrade.png)
 - [It's super fast](https://www.reddit.com/r/rust/comments/umcu1j/media_ferium_the_cli_minecraft_mod_manager) due to multi-threading for network intensive tasks
   - You can configure the maximum number of additional threads using the `--threads` options
 - Upgrade all your mods in one command, `ferium upgrade`

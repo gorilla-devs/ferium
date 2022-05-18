@@ -208,13 +208,13 @@ fn upgrade() -> Result {
 
 #[test]
 fn cf_modpack_upgrade() -> Result {
-    let _ = remove_dir("./tests/modpacks");
+    let _ = remove_dir("./tests/cf_modpack");
     run_command(vec!["modpack", "upgrade"], Some("two_modpacks_cfactive"))
 }
 
 #[test]
 fn md_modpack_upgrade() -> Result {
-    let _ = remove_dir("./tests/modpacks");
+    let _ = remove_dir("./tests/md_modpack");
     run_command(vec!["modpack", "upgrade"], Some("two_modpacks_mdactive"))
 }
 

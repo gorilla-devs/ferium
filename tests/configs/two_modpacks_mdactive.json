@@ -5,7 +5,7 @@
     "modpacks": [
         {
             "name": "RLCraft",
-            "output_dir": "./tests/modpacks",
+            "output_dir": "./tests/cf_modpack",
             "install_overrides": true,
             "identifier": {
                 "CurseForgeModpack": 285109
@@ -13,7 +13,7 @@
         },
         {
             "name": "Better Minecraft",
-            "output_dir": "./tests/modpacks",
+            "output_dir": "./tests/md_modpack",
             "install_overrides": true,
             "identifier": {
                 "ModrinthModpack": "shFhR8Vx"
