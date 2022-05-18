@@ -47,6 +47,7 @@ fn main() {
     }
 }
 
+#[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
 async fn actual_main(cli_app: Ferium) -> Result<()> {
     let github = Arc::new(
         cli_app

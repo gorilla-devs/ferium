@@ -25,6 +25,7 @@ use libium::{
 use std::sync::{Arc, Mutex};
 use tokio::spawn;
 
+#[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
 pub async fn upgrade(
     modrinth: Arc<Ferinth>,
     curseforge: Arc<Furse>,
