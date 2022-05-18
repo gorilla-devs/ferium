@@ -6,18 +6,18 @@
         {
             "name": "RLCraft",
             "output_dir": "./tests/modpacks",
+            "install_overrides": true,
             "identifier": {
                 "CurseForgeModpack": 285109
-            },
-            "install_overrides": true
+            }
         },
         {
-            "name": "Fabulously Optimized",
+            "name": "Better Minecraft",
             "output_dir": "./tests/modpacks",
+            "install_overrides": true,
             "identifier": {
-                "ModrinthModpack": "1KVo5zza"
-            },
-            "install_overrides": true
+                "ModrinthModpack": "shFhR8Vx"
+            }
         }
     ]
 }

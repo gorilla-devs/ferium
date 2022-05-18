@@ -1,9 +1,15 @@
 use crate::{subcommands::modpack::check_output_directory, THEME, TICK};
 use anyhow::{anyhow, Result};
+use colored::Colorize;
 use dialoguer::Confirm;
 use ferinth::Ferinth;
 use furse::Furse;
-use libium::{config::structs::Config, file_picker, misc::get_minecraft_dir, modpack::add};
+use libium::{
+    config::structs::{Config, Modpack, ModpackIdentifier},
+    file_picker,
+    misc::get_minecraft_dir,
+    modpack::add,
+};
 use std::{path::PathBuf, sync::Arc};
 
 pub async fn curseforge(
@@ -13,6 +19,9 @@ pub async fn curseforge(
     output_dir: &Option<PathBuf>,
     install_overrides: Option<bool>,
 ) -> Result<()> {
+    eprint!("Checking modpack... ");
+    let project = add::curseforge(curseforge, config, project_id).await?;
+    println!("{} ({})", *TICK, project.name);
     println!("Where should the modpack be installed to?");
     let output_dir = match output_dir {
         Some(some) => some.clone(),
@@ -28,18 +37,21 @@ pub async fn curseforge(
             .with_prompt("Should overrides be installed?")
             .interact()?,
     };
-    eprint!("Adding modpack... ");
-    let project = add::curseforge(
-        curseforge,
-        config,
-        project_id,
+    if install_overrides {
+        println!(
+            "{}",
+            "WARNING: Configs in your output directory may be overwritten by modpack overrides"
+                .yellow()
+        );
+    }
+    config.modpacks.push(Modpack {
+        name: project.name.clone(),
+        identifier: ModpackIdentifier::CurseForgeModpack(project.id),
         output_dir,
         install_overrides,
-    )
-    .await?;
+    });
     // Make added modpack active
     config.active_modpack = config.modpacks.len() - 1;
-    println!("{} ({})", *TICK, project.name);
     Ok(())
 }
 
@@ -50,6 +62,9 @@ pub async fn modrinth(
     output_dir: &Option<PathBuf>,
     install_overrides: Option<bool>,
 ) -> Result<()> {
+    eprint!("Checking modpack... ");
+    let project = add::modrinth(modrinth, config, project_id).await?;
+    println!("{} ({})", *TICK, project.title);
     println!("Where should the modpack be installed to?");
     let output_dir = match output_dir {
         Some(some) => some.clone(),
@@ -65,11 +80,20 @@ pub async fn modrinth(
             .with_prompt("Should overrides be installed?")
             .interact()?,
     };
-    eprint!("Adding modpack... ");
-    let project =
-        add::modrinth(modrinth, config, project_id, output_dir, install_overrides).await?;
+    if install_overrides {
+        println!(
+            "{}",
+            "WARNING: Configs in your output directory may be overwritten by modpack overrides"
+                .yellow()
+        );
+    }
+    config.modpacks.push(Modpack {
+        name: project.title.clone(),
+        identifier: ModpackIdentifier::ModrinthModpack(project.id.clone()),
+        output_dir,
+        install_overrides,
+    });
     // Make added modpack active
     config.active_modpack = config.modpacks.len() - 1;
-    println!("{} ({})", *TICK, project.title);
     Ok(())
 }

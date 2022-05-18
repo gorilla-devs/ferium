@@ -35,7 +35,7 @@ pub async fn upgrade(
     let install_msg;
     match &modpack.identifier {
         ModpackIdentifier::CurseForgeModpack(project_id) => {
-            println!("{}", "Getting modpack manifest".bold());
+            println!("{}", "Downloading modpack".bold());
             let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
             progress_bar.enable_steady_tick(100);
             let modpack_file = download_curseforge_modpack(
@@ -120,11 +120,20 @@ pub async fn upgrade(
             }
         },
         ModpackIdentifier::ModrinthModpack(project_id) => {
-            eprint!("Getting modpack metadata... ");
-            let modpack_file =
-                download_modrinth_modpack(modrinth.clone(), project_id, |_| (), |_| ()).await?;
+            println!("{}", "Downloading modpack".bold());
+            let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
+            progress_bar.enable_steady_tick(100);
+            let modpack_file = download_modrinth_modpack(
+                modrinth.clone(),
+                project_id,
+                |total| progress_bar.set_length(total),
+                |additional| {
+                    progress_bar.set_position(progress_bar.position() + additional as u64);
+                },
+            )
+            .await?;
             let metadata = deser_metadata(&read_metadata_file(&modpack_file)?)?;
-            println!("{}", &*TICK);
+            progress_bar.finish_and_clear();
 
             for file in metadata.files {
                 to_download.push(file.into());
