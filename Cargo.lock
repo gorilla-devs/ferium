@@ -665,9 +665,9 @@ checksum = "2022715d62ab30faffd124d40b76f4134a550a87792276512b18d63272333394"
 
 [[package]]
 name = "furse"
-version = "1.1.2"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0932f2ba3f86789536e36e94607347bf2606007fab506b17fd288b76a2f5310"
+checksum = "d9ee90483bb466dcdc838cde52104237de5c2b93c679a5e8c50d17715ac56fdd"
 dependencies = [
  "bytes",
  "chrono",
@@ -1152,9 +1152,9 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 
 [[package]]
 name = "libium"
-version = "1.15.5"
+version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d026d531919e314f2fdae4f81b6ac2d188dbe506d66a10407443985e7abeaf6c"
+checksum = "52a22ad1678e44931e0fec29ebac47ee2f9ec1520997874ae19e4872ac09f4c5"
 dependencies = [
  "bytes",
  "clap",
@@ -1680,9 +1680,9 @@ checksum = "7ef03e0a2b150c7a90d01faf6254c9c48a41e95fb2a8c2ac1c6f0d2b9aefc342"
 
 [[package]]
 name = "rustls"
-version = "0.20.4"
+version = "0.20.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4fbfeb8d0ddb84706bc597a5574ab8912817c52a397f819e5b614e2265206921"
+checksum = "5aab8ee6c7097ed6057f43c187a62418d0c05a4bd5f18b3571db50ee0f9ce033"
 dependencies = [
  "log",
  "ring",

@@ -129,7 +129,7 @@ pub async fn upgrade(
         .iter_mut()
         .map(|thing| thing.output = thing.filename().into())
         .for_each(drop);
-    if to_download.is_empty() {
+    if to_download.is_empty() && to_install.is_empty() {
         println!("\n{}", "All up to date!".bold());
     } else {
         println!("\n{}\n", "Downloading Mod Files".bold());

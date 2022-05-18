@@ -106,7 +106,7 @@ pub async fn upgrade(
                 .into_inner()?
                 .finish_and_clear();
             to_download = Arc::try_unwrap(local_to_download)
-            .map_err(|_| anyhow!("Failed to run threads to completion"))?
+                .map_err(|_| anyhow!("Failed to run threads to completion"))?
                 .into_inner()?;
 
             if modpack.install_overrides {
@@ -115,7 +115,7 @@ pub async fn upgrade(
                     .join("ferium")
                     .join(".tmp")
                     .join(manifest.name);
-                extract_modpack(modpack_file, &tmp_dir)?;
+                extract_modpack(modpack_file, &tmp_dir).await?;
                 to_install = read_overrides(&tmp_dir.join(manifest.overrides))?;
             }
         },
@@ -154,7 +154,7 @@ pub async fn upgrade(
                     .join("ferium")
                     .join(".tmp")
                     .join(metadata.name);
-                extract_modpack(modpack_file, &tmp_dir)?;
+                extract_modpack(modpack_file, &tmp_dir).await?;
                 to_install = read_overrides(&tmp_dir.join("overrides"))?;
             }
         },

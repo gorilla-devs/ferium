@@ -30,7 +30,7 @@ pub async fn configure(
         Some(install_overrides) => modpack.install_overrides = install_overrides,
         None => {
             let install_overrides = Confirm::with_theme(&*THEME)
-                .default(true)
+                .default(modpack.install_overrides)
                 .with_prompt("Should overrides be installed?")
                 .interact()?;
             if install_overrides {
