@@ -11,10 +11,7 @@ use std::{
     ffi::OsString,
     fs::read_dir,
     path::{Path, PathBuf},
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc, Mutex,
-    },
+    sync::{Arc, Mutex},
 };
 use tokio::{
     fs::{copy, create_dir_all, remove_file},
@@ -67,16 +64,17 @@ pub async fn clean(
     Ok(())
 }
 
-/// Construct a `to_install` vector from the `overrides_dir`
-pub fn read_overrides(overrides_dir: &Path) -> Result<Vec<(OsString, PathBuf)>> {
+/// Construct a `to_install` vector from the `directory`
+pub fn read_overrides(directory: &Path) -> Result<Vec<(OsString, PathBuf)>> {
     let mut to_install = Vec::new();
-    for file in read_dir(overrides_dir)? {
+    for file in read_dir(directory)? {
         let file = file?;
         to_install.push((file.file_name(), file.path()));
     }
     Ok(to_install)
 }
 
+/// Download and install the files in `to_download` and `to_install` to `output_dir`
 pub async fn download(
     output_dir: Arc<PathBuf>,
     to_download: Vec<Downloadable>,
@@ -95,16 +93,12 @@ pub async fn download(
         let output_dir = output_dir.clone();
         tasks.push(spawn(async move {
             let _permit = permit;
-            let total_added = AtomicBool::new(false);
             let (size, filename) = downloadable
                 .download(
                     &output_dir,
                     |total| {
-                        if !total_added.load(Ordering::Relaxed) {
-                            let progress_bar = progress_bar.force_lock();
-                            progress_bar.set_length(progress_bar.length() + total);
-                            total_added.store(true, Ordering::Relaxed);
-                        }
+                        let progress_bar = progress_bar.force_lock();
+                        progress_bar.set_length(progress_bar.length() + total);
                     },
                     |additional| {
                         let progress_bar = progress_bar.force_lock();
@@ -122,7 +116,6 @@ pub async fn download(
                 },
                 filename.dimmed(),
             ));
-            progress_bar.set_position(progress_bar.position() + 1);
             Ok::<(), Error>(())
         }));
     }

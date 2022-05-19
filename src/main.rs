@@ -14,7 +14,7 @@ use libium::config::{self, structs::ModIdentifier};
 use octocrab::OctocrabBuilder;
 use std::sync::Arc;
 use subcommands::{add, upgrade};
-use tokio::{fs::create_dir_all, runtime, spawn};
+use tokio::{runtime, spawn};
 
 const CROSS: &str = "×";
 lazy_static! {
@@ -26,7 +26,9 @@ lazy_static! {
         .template("{spinner} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
         .progress_chars("#>-");
     pub static ref STYLE_BYTE: ProgressStyle = ProgressStyle::default_bar()
-        .template("{spinner} [{bytes_per_sec}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes}",)
+        .template(
+            "{spinner} [{bytes_per_sec}] [{wide_bar:.cyan/blue}] {bytes:.cyan}/{total_bytes:.blue}",
+        )
         .progress_chars("#>-");
 }
 
@@ -68,7 +70,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         config::get_file(cli_app.config_file.unwrap_or_else(config::file_path)).await?;
     let mut config = config::deserialise(&config::read_file(&mut config_file).await?)?;
 
-    // The create command must run before getting the profile so that configs without profiles can have profiles added to them
+    // The create command must run before getting the profile so that configs without profiles can have profiles added
     if let SubCommands::Profile {
         subcommand:
             ProfileSubCommands::Create {
@@ -97,6 +99,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
     }
 
     if let SubCommands::Modpack { subcommand } = &cli_app.subcommand {
+        // Similarly, the add commands must run before getting the modpack so that configs without modpacks can have modpacks added
         if let ModpackSubCommands::AddCurseforge {
             project_id,
             output_dir,
@@ -324,7 +327,6 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         SubCommands::Upgrade => {
             check_internet().await?;
             check_empty_profile(profile)?;
-            create_dir_all(&profile.output_dir.join(".old")).await?;
             upgrade(modrinth, curseforge, github, profile).await?;
         },
     };

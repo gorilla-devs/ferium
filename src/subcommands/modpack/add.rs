@@ -41,12 +41,13 @@ pub async fn curseforge(
     if install_overrides {
         println!(
             "{}",
-            "WARNING: Configs in your output directory may be overwritten by modpack overrides"
+            "WARNING: Files in your output directory may be overwritten by modpack overrides"
                 .yellow()
+                .bold()
         );
     }
     config.modpacks.push(Modpack {
-        name: project.name.clone(),
+        name: project.name,
         identifier: ModpackIdentifier::CurseForgeModpack(project.id),
         output_dir,
         install_overrides,
@@ -86,6 +87,7 @@ pub async fn modrinth(
             "{}",
             "WARNING: Configs in your output directory may be overwritten by modpack overrides"
                 .yellow()
+                .bold()
         );
     }
     if let Some(donation_urls) = project.donation_urls {

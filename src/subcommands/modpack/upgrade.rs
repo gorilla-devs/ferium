@@ -38,11 +38,13 @@ pub async fn upgrade(
         ModpackIdentifier::CurseForgeModpack(project_id) => {
             println!("{}", "Downloading modpack".bold());
             let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
-            progress_bar.enable_steady_tick(100);
             let modpack_file = download_curseforge_modpack(
                 curseforge.clone(),
                 *project_id,
-                |total| progress_bar.set_length(total),
+                |total| {
+                    progress_bar.enable_steady_tick(100);
+                    progress_bar.set_length(total);
+                },
                 |additional| {
                     progress_bar.set_position(progress_bar.position() + additional as u64);
                 },
@@ -123,11 +125,13 @@ pub async fn upgrade(
         ModpackIdentifier::ModrinthModpack(project_id) => {
             println!("{}", "Downloading modpack".bold());
             let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
-            progress_bar.enable_steady_tick(100);
             let modpack_file = download_modrinth_modpack(
                 modrinth.clone(),
                 project_id,
-                |total| progress_bar.set_length(total),
+                |total| {
+                    progress_bar.enable_steady_tick(100);
+                    progress_bar.set_length(total);
+                },
                 |additional| {
                     progress_bar.set_position(progress_bar.position() + additional as u64);
                 },

@@ -38,6 +38,7 @@ pub async fn configure(
                     "{}",
                     "WARNING: Configs in your output directory may be overwritten by modpack overrides"
                         .yellow()
+                        .bold()
                 );
             }
             modpack.install_overrides = install_overrides;

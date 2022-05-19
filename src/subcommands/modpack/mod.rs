@@ -11,7 +11,7 @@ pub use switch::switch;
 pub use upgrade::upgrade;
 
 use crate::THEME;
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use dialoguer::Confirm;
 use fs_extra::dir::{copy, CopyOptions};
 use libium::{file_picker, HOME};
@@ -34,9 +34,9 @@ pub async fn check_output_directory(output_dir: &Path) -> Result<()> {
         }
         if backup {
             println!(
-            "There are files in the {} folder in your output directory, these will be deleted when you upgrade.",
-            check_dir.file_name().unwrap().to_string_lossy()
-        );
+                "There are files in the {} folder in your output directory, these will be deleted when you upgrade.",
+                check_dir.file_name().unwrap().to_string_lossy()
+            );
             if Confirm::with_theme(&*THEME)
                 .with_prompt("Would like to create a backup?")
                 .interact()?
@@ -44,7 +44,7 @@ pub async fn check_output_directory(output_dir: &Path) -> Result<()> {
                 let backup_dir =
                     file_picker::pick_folder(&*HOME, "Where should the backup be made?")
                         .await
-                        .unwrap();
+                        .ok_or_else(|| anyhow!("Please pick an output directory"))?;
                 copy(check_dir, backup_dir, &CopyOptions::new())?;
             }
         }
