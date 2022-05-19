@@ -45,20 +45,22 @@ build-linux-nogui:
 
 # Run clippy lints
 lint:
-    cargo clippy -- \
+    cargo clippy --   \
         -D clippy::all \
-        -D clippy::perf \
-        -D clippy::style \
-        -D clippy::cargo \
-        -D clippy::suspicious \
-        -D clippy::complexity \
-        -W clippy::nursery \
-        -W clippy::pedantic \
-        -A clippy::too-many-lines \
-        -A clippy::non-ascii-literal \
-        -A clippy::single-match-else \
-        -A clippy::let-underscore-drop \
-        -A clippy::multiple-crate-versions
+        -D clippy::exit \
+        -D clippy::perf  \
+        -D clippy::cargo  \
+        -D clippy::style   \
+        -D clippy::nursery  \
+        -D clippy::pedantic  \
+        -D clippy::dbg_macro  \
+        -D clippy::suspicious  \
+        -D clippy::complexity   \
+        -D clippy::create_dir    \
+        -D clippy::correctness    \
+        -D clippy::expect_used     \
+        -A clippy::too-many-lines   \
+        -A clippy::multiple-crate-versions \
 
 # Install Ferium to cargo's binary folder
 install:
@@ -68,8 +70,11 @@ install:
 install-dev:
     cargo install --debug --force --path .
 
+# Delete all build and test artefacts
 clean:
     cargo clean
     rm -rf out
     rm -rf tests/mods
+    rm -rf tests/md_modpack
+    rm -rf tests/cf_modpack
     rm -rf tests/configs/running

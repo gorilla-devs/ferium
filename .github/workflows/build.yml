@@ -6,6 +6,7 @@ on:
     paths:
       - "**.rs"
       - "**.yml"
+      - "Cargo.lock"
   workflow_dispatch:
 
 jobs:

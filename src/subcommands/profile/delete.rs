@@ -1,4 +1,4 @@
-use crate::subcommands::switch::switch;
+use super::switch;
 use anyhow::{bail, Result};
 use dialoguer::Select;
 use libium::config;

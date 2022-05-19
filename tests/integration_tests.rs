@@ -6,6 +6,12 @@ use util::run_command;
 
 type Result = std::io::Result<()>;
 
+fn output_dir() -> String {
+    let mut home = HOME.clone();
+    home.push("mods");
+    home.to_string_lossy().to_string()
+}
+
 #[test]
 fn argparse() -> Result {
     run_command(vec!["help"], None)?;
@@ -20,8 +26,6 @@ fn create_config_file_when_none() {
 
 #[test]
 fn create_profile() -> Result {
-    let mut home = HOME.clone();
-    home.push("mods");
     run_command(
         vec![
             "profile",
@@ -33,7 +37,7 @@ fn create_profile() -> Result {
             "--mod-loader",
             "forge",
             "--output-dir",
-            home.to_str().unwrap(),
+            &output_dir(),
         ],
         Some("empty"),
     )
@@ -41,8 +45,6 @@ fn create_profile() -> Result {
 
 #[test]
 fn create_profile_import_mods() -> Result {
-    let mut home = HOME.clone();
-    home.push("mods");
     run_command(
         vec![
             "profile",
@@ -54,7 +56,7 @@ fn create_profile_import_mods() -> Result {
             "--mod-loader",
             "forge",
             "--output-dir",
-            home.to_str().unwrap(),
+            &output_dir(),
             "--import",
             "Default Modded",
         ],
@@ -84,8 +86,6 @@ fn create_profile_output_dir_not_absolute() {
 
 #[test]
 fn create_profile_missing_args() {
-    let mut home = HOME.clone();
-    home.push("mods");
     assert!(run_command(
         vec![
             "profile",
@@ -96,7 +96,7 @@ fn create_profile_missing_args() {
             "--mod-loader",
             "forge",
             "--output-dir",
-            home.to_str().unwrap(),
+            &output_dir(),
         ],
         Some("empty")
     )
@@ -105,8 +105,6 @@ fn create_profile_missing_args() {
 
 #[test]
 fn create_profile_name_already_exists() {
-    let mut home = HOME.clone();
-    home.push("mods");
     assert!(run_command(
         vec![
             "profile",
@@ -118,7 +116,7 @@ fn create_profile_name_already_exists() {
             "--mod-loader",
             "forge",
             "--output-dir",
-            home.to_str().unwrap(),
+            &output_dir(),
         ],
         Some("empty_profile")
     )
@@ -142,6 +140,40 @@ fn add_github() -> Result {
     // Add Sodium to config
     run_command(
         vec!["add-github", "CaffeineMC/sodium-fabric"],
+        Some("empty_profile"),
+    )
+}
+
+#[test]
+fn modpack_add_modrinth() -> Result {
+    // Add Fabulously Optimised
+    run_command(
+        vec![
+            "modpack",
+            "add-modrinth",
+            "1KVo5zza",
+            "--output-dir",
+            &output_dir(),
+            "--install-overrides",
+            "true",
+        ],
+        Some("empty_profile"),
+    )
+}
+
+#[test]
+fn modpack_add_curseforge() -> Result {
+    // Add RLCraft
+    run_command(
+        vec![
+            "modpack",
+            "add-curseforge",
+            "452013",
+            "--output-dir",
+            &output_dir(),
+            "--install-overrides",
+            "true",
+        ],
         Some("empty_profile"),
     )
 }
@@ -175,13 +207,31 @@ fn upgrade() -> Result {
 }
 
 #[test]
-fn switch() -> Result {
-    // Switch to the fabric profile and check that it contains the mods added before
+fn cf_modpack_upgrade() -> Result {
+    let _ = remove_dir("./tests/cf_modpack");
+    run_command(vec!["modpack", "upgrade"], Some("two_modpacks_cfactive"))
+}
+
+#[test]
+fn md_modpack_upgrade() -> Result {
+    let _ = remove_dir("./tests/md_modpack");
+    run_command(vec!["modpack", "upgrade"], Some("two_modpacks_mdactive"))
+}
+
+#[test]
+fn profile_switch() -> Result {
     run_command(
-        vec!["switch", "--profile-name", "Profile Two"],
+        vec!["profile", "switch", "--profile-name", "Profile Two"],
         Some("two_profiles_one_empty"),
-    )?;
-    run_command(vec!["list"], Some("two_profiles_one_empty"))
+    )
+}
+
+#[test]
+fn modpack_switch() -> Result {
+    run_command(
+        vec!["modpack", "switch", "--modpack-name", "RLCraft"],
+        Some("two_modpacks_mdactive"),
+    )
 }
 
 #[test]
@@ -232,5 +282,13 @@ fn delete_profile() -> Result {
     run_command(
         vec!["profile", "delete", "--profile-name", "Profile Two"],
         Some("two_profiles_one_empty"),
+    )
+}
+
+#[test]
+fn delete_modpack() -> Result {
+    run_command(
+        vec!["modpack", "delete", "--modpack-name", "RLCraft"],
+        Some("two_modpacks_mdactive"),
     )
 }

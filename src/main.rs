@@ -1,10 +1,10 @@
 mod cli;
-mod mutex_ext;
+mod download;
 mod subcommands;
 
 use anyhow::{anyhow, bail, Result};
 use clap::StructOpt;
-use cli::{Ferium, ProfileSubCommands, SubCommands};
+use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
 use ferinth::Ferinth;
 use furse::Furse;
@@ -14,7 +14,7 @@ use libium::config::{self, structs::ModIdentifier};
 use octocrab::OctocrabBuilder;
 use std::sync::Arc;
 use subcommands::{add, upgrade};
-use tokio::{fs::create_dir_all, runtime, spawn};
+use tokio::{runtime, spawn};
 
 const CROSS: &str = "×";
 lazy_static! {
@@ -22,8 +22,13 @@ lazy_static! {
     pub static ref YELLOW_TICK: ColoredString = "✓".yellow();
     pub static ref THEME: dialoguer::theme::ColorfulTheme =
         dialoguer::theme::ColorfulTheme::default();
-    pub static ref STYLE: ProgressStyle = ProgressStyle::default_bar()
+    pub static ref STYLE_NO: ProgressStyle = ProgressStyle::default_bar()
         .template("{spinner} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
+        .progress_chars("#>-");
+    pub static ref STYLE_BYTE: ProgressStyle = ProgressStyle::default_bar()
+        .template(
+            "{spinner} [{bytes_per_sec}] [{wide_bar:.cyan/blue}] {bytes:.cyan}/{total_bytes:.blue}",
+        )
         .progress_chars("#>-");
 }
 
@@ -35,6 +40,7 @@ fn main() {
     if let Some(threads) = cli.threads {
         builder.max_blocking_threads(threads);
     }
+    #[allow(clippy::expect_used)] // No error handling yet
     let runtime = builder.build().expect("Could not initialise Tokio runtime");
     if let Err(err) = runtime.block_on(actual_main(cli)) {
         eprintln!("{}", err.to_string().red().bold());
@@ -43,6 +49,7 @@ fn main() {
     }
 }
 
+#[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
 async fn actual_main(cli_app: Ferium) -> Result<()> {
     let github = Arc::new(
         cli_app
@@ -63,7 +70,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         config::get_file(cli_app.config_file.unwrap_or_else(config::file_path)).await?;
     let mut config = config::deserialise(&config::read_file(&mut config_file).await?)?;
 
-    // The create command must run before getting the profile so that configs without profiles can have profiles added to them
+    // The create command must run before getting the profile so that configs without profiles can have profiles added
     if let SubCommands::Profile {
         subcommand:
             ProfileSubCommands::Create {
@@ -85,6 +92,89 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             output_dir,
         )
         .await?;
+
+        // Update config file and quit
+        config::write_file(&mut config_file, &config).await?;
+        return Ok(());
+    }
+
+    if let SubCommands::Modpack { subcommand } = &cli_app.subcommand {
+        // Similarly, the add commands must run before getting the modpack so that configs without modpacks can have modpacks added
+        if let ModpackSubCommands::AddCurseforge {
+            project_id,
+            output_dir,
+            install_overrides,
+        } = subcommand
+        {
+            check_internet().await?;
+            subcommands::modpack::add::curseforge(
+                curseforge.clone(),
+                &mut config,
+                *project_id,
+                output_dir,
+                *install_overrides,
+            )
+            .await?;
+
+            // Update config file and quit
+            config::write_file(&mut config_file, &config).await?;
+            return Ok(());
+        } else if let ModpackSubCommands::AddModrinth {
+            project_id,
+            output_dir,
+            install_overrides,
+        } = subcommand
+        {
+            check_internet().await?;
+            subcommands::modpack::add::modrinth(
+                modrinth.clone(),
+                &mut config,
+                project_id,
+                output_dir,
+                *install_overrides,
+            )
+            .await?;
+
+            // Update config file and quit
+            config::write_file(&mut config_file, &config).await?;
+            return Ok(());
+        }
+        // Get a mutable reference to the active modpack
+        let modpack = if let Some(modpack) = config.modpacks.get_mut(config.active_modpack) {
+            modpack
+        } else {
+            if config.modpacks.is_empty() {
+                bail!("There are no modpacks configured! Run `ferium modpack help` to see how to add modpacks")
+            }
+            // Default to first modpack if index is set incorrectly
+            config.active_modpack = 0;
+            config::write_file(&mut config_file, &config).await?;
+            bail!("Active modpack specified incorrectly. Switched to first modpack")
+        };
+
+        match subcommand {
+            ModpackSubCommands::AddCurseforge { .. } | ModpackSubCommands::AddModrinth { .. } => {
+                unreachable!()
+            },
+            ModpackSubCommands::Configure {
+                output_dir,
+                install_overrides,
+            } => {
+                subcommands::modpack::configure(modpack, output_dir, *install_overrides).await?;
+            },
+            ModpackSubCommands::Delete { modpack_name } => {
+                subcommands::modpack::delete(&mut config, modpack_name)?;
+            },
+            ModpackSubCommands::List => subcommands::modpack::list(&config),
+            ModpackSubCommands::Switch { modpack_name } => {
+                subcommands::modpack::switch(&mut config, modpack_name)?;
+            },
+            ModpackSubCommands::Upgrade => {
+                check_internet().await?;
+                subcommands::modpack::upgrade(modrinth.clone(), curseforge.clone(), modpack)
+                    .await?;
+            },
+        }
 
         // Update config file and quit
         config::write_file(&mut config_file, &config).await?;
@@ -182,24 +272,24 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             } else {
                 for mod_ in &profile.mods {
                     println!(
-                        "{:45} {:10} {}",
+                        "{:45} {}",
                         mod_.name.bold(),
                         match &mod_.identifier {
-                            ModIdentifier::CurseForgeProject(_) => "CurseForge".red(),
-                            ModIdentifier::ModrinthProject(_) => "Modrinth".green(),
-                            ModIdentifier::GitHubRepository(_) => "GitHub".purple(),
+                            ModIdentifier::CurseForgeProject(id) =>
+                                format!("{:10} {}", "CurseForge".red(), id.to_string().dimmed()),
+                            ModIdentifier::ModrinthProject(id) =>
+                                format!("{:10} {}", "Modrinth".green(), id.dimmed()),
+                            ModIdentifier::GitHubRepository(name) => format!(
+                                "{:10} {}",
+                                "GitHub".purple(),
+                                format!("{}/{}", name.0, name.1).dimmed()
+                            ),
                         },
-                        match &mod_.identifier {
-                            ModIdentifier::CurseForgeProject(id) => id.to_string(),
-                            ModIdentifier::ModrinthProject(id) => id.into(),
-                            ModIdentifier::GitHubRepository(name) =>
-                                format!("{}/{}", name.0, name.1),
-                        }
-                        .dimmed()
                     );
                 }
             }
         },
+        SubCommands::Modpack { .. } => unreachable!(),
         SubCommands::Profile { subcommand } => match subcommand {
             ProfileSubCommands::Configure {
                 game_version,
@@ -223,19 +313,20 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 subcommands::profile::delete(&mut config, profile_name)?;
             },
             ProfileSubCommands::List => subcommands::profile::list(&config),
+            ProfileSubCommands::Switch { profile_name } => {
+                subcommands::profile::switch(&mut config, profile_name)?;
+            },
         },
         SubCommands::Remove { mod_names } => {
             check_empty_profile(profile)?;
             subcommands::remove(profile, mod_names)?;
         },
-        SubCommands::Switch { profile_name } => subcommands::switch(&mut config, profile_name)?,
         SubCommands::Sort => profile
             .mods
             .sort_by_cached_key(|mod_| mod_.name.to_lowercase()),
         SubCommands::Upgrade => {
             check_internet().await?;
             check_empty_profile(profile)?;
-            create_dir_all(&profile.output_dir.join(".old")).await?;
             upgrade(modrinth, curseforge, github, profile).await?;
         },
     };

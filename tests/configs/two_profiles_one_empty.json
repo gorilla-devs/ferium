@@ -1,5 +1,6 @@
 {
     "active_profile": 0,
+    "active_modpack": 0,
     "profiles": [
         {
             "name": "Profile One",
@@ -37,5 +38,6 @@
             "mod_loader": "Fabric",
             "mods": []
         }
-    ]
+    ],
+    "modpacks": []
 }

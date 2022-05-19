@@ -69,7 +69,13 @@ pub enum SubCommands {
         verbose: bool,
     },
     #[clap(arg_required_else_help = true)]
-    #[clap(about("Create, configure, or remove the current profile"))]
+    #[clap(about("Add, configure, delete, switch, list, or upgrade modpacks"))]
+    Modpack {
+        #[clap(subcommand)]
+        subcommand: ModpackSubCommands,
+    },
+    #[clap(arg_required_else_help = true)]
+    #[clap(about("Create, configure, delete, switch, or list profiles"))]
     Profile {
         #[clap(subcommand)]
         subcommand: ProfileSubCommands,
@@ -79,12 +85,6 @@ pub enum SubCommands {
         #[clap(name("mod-name"))]
         #[clap(help("A case-insensitive list of names of a mods to remove\nIf one or more of the mod names provided does not exist, the program will error out without changing anything in the config"))]
         mod_names: Vec<String>,
-    },
-    #[clap(about("Switch between different profiles\nOptionally, provide the name of the profile to switch to"))]
-    Switch {
-        #[clap(long)]
-        #[clap(help("The name of the profile to switch to"))]
-        profile_name: Option<String>,
     },
     #[clap(about("Sort all your mods in alphabetical order"))]
     Sort,
@@ -142,4 +142,66 @@ pub enum ProfileSubCommands {
     },
     #[clap(about("List all the profiles with their data"))]
     List,
+    #[clap(about("Switch between different profiles\nOptionally, provide the name of the profile to switch to"))]
+    Switch {
+        #[clap(long)]
+        #[clap(help("The name of the profile to switch to"))]
+        profile_name: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum ModpackSubCommands {
+    #[clap(about("Add a Modrinth modpack to the config"))]
+    AddModrinth {
+        #[clap(help("The project ID is specified at the bottom of the left sidebar under 'Technical information'\nYou can also use the project slug for this"))]
+        project_id: String,
+        #[clap(long)]
+        #[clap(value_hint(ValueHint::DirPath))]
+        #[clap(help("The Minecraft instance directory to install the modpack to"))]
+        output_dir: Option<PathBuf>,
+        #[clap(long)]
+        #[clap(help("Whether to install the modpack's overrides to the output directory.\nThis will override existing files"))]
+        install_overrides: Option<bool>,
+    },
+    #[clap(about("Add a CurseForge modpack to the config"))]
+    AddCurseforge {
+        #[clap(help("The project ID is specified at the right sidebar under 'About Project'"))]
+        project_id: i32,
+        #[clap(long)]
+        #[clap(value_hint(ValueHint::DirPath))]
+        #[clap(help("The Minecraft instance directory to install the modpack to"))]
+        output_dir: Option<PathBuf>,
+        #[clap(long)]
+        #[clap(help("Whether to install the modpack's overrides to the output directory.\nThis may overwrite existing files"))]
+        install_overrides: Option<bool>,
+    },
+    #[clap(about(
+        "Configure the current modpack's output directory\nOptionally, provide the output directory as an option"
+    ))]
+    Configure {
+        #[clap(long)]
+        #[clap(value_hint(ValueHint::DirPath))]
+        #[clap(help("The Minecraft instance directory to install the modpack to"))]
+        output_dir: Option<PathBuf>,
+        #[clap(long)]
+        #[clap(help("Whether to install the modpack's overrides to the output directory.\nThis may overwrite existing files"))]
+        install_overrides: Option<bool>,
+    },
+    #[clap(about("Delete a modpack\nOptionally, provide the name of the modpack to delete"))]
+    Delete {
+        #[clap(long)]
+        #[clap(help("The name of the modpack to delete"))]
+        modpack_name: Option<String>,
+    },
+    #[clap(about("List all the modpacks"))]
+    List,
+    #[clap(about("Switch between different modpacks\nOptionally, provide the name of the modpack to switch to"))]
+    Switch {
+        #[clap(long)]
+        #[clap(help("The name of the modpack to switch to"))]
+        modpack_name: Option<String>,
+    },
+    #[clap(about("Download and install the latest version of the modpack"))]
+    Upgrade,
 }
