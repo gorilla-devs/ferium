@@ -6,7 +6,7 @@
 Support for Modrinth and CurseForge modpacks!
 
 **_WARNING_**: The config file has had breaking changes.
-Add the following to the top of your config file to migrate it:
+Add the following to the top of your config file at `~/.config/ferium/config.json` to migrate it:
 ```json
 "active_modpack": 0,
 "modpacks": [],
