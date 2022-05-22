@@ -1,11 +1,11 @@
 [package]
 name = "ferium"
-version = "4.0.0"
+version = "4.0.1"
 edition = "2021"
 authors = ["Ilesh Thiada (theRookieCoder) <ileshkt@gmail.com>", "薛詠謙 (KyleUltimate)", "Daniel Hauck (SolidTux)"]
 description = "Fast CLI program for managing Minecraft mods and modpacks from Modrinth, CurseForge, and Github Releases"
 exclude = ["tests"] # Don't need tests for installing using crates.io
-repository = "https://github.com/theRookieCoder/ferium"
+repository = "https://github.com/gorilla-devs/ferium"
 categories = ["command-line-utilities"]
 readme = "README.md"
 license = "MPL-2.0"
@@ -18,8 +18,9 @@ keywords = [
 ]
 
 [features]
-default = ["gui"]
-gui = ["libium/gui"]
+# default = ["gtk"]
+gtk = ["libium/gtk"]
+xdg = ["libium/xdg"]
 
 [dependencies]
 tokio = { version = "1.18.2", default-features = false, features = ["rt-multi-thread", "macros"] }
@@ -35,11 +36,11 @@ fs_extra = "1.2.0"
 anyhow = "1.0.57"
 colored = "2.0.0"
 ferinth = "2.2.2"
-libium = "1.16.0"
+libium = "1.17.0"
 online = "3.0.1"
 semver = "1.0.9"
 bytes = "1.1.0"
-furse = "1.2.0"
+furse = "1.2.2"
 size = "0.1.2"
 url = "2.2.2"
 

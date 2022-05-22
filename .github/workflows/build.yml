@@ -65,8 +65,9 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           just build-linux-nogui
+          just build-linux-gtk
+          just build-linux-xdg
           just build-win-gnu
-          just build-linux
 
       - name: Upload build artefacts
         uses: actions/upload-artifact@v3

@@ -16,7 +16,7 @@ use std::{
         Arc, Mutex,
     },
 };
-use tokio::spawn;
+use tokio::{spawn, sync::Semaphore};
 
 pub async fn upgrade(
     modrinth: Arc<Ferinth>,
@@ -34,10 +34,10 @@ pub async fn upgrade(
     let mut tasks = Vec::new();
 
     println!("{}\n", "Determining the Latest Compatible Versions".bold());
-    {
-        progress_bar.force_lock().enable_steady_tick(100);
-    }
+    let semaphore = Arc::new(Semaphore::new(75));
+    progress_bar.force_lock().enable_steady_tick(100);
     for mod_ in &profile.mods {
+        let permit = semaphore.clone().acquire_owned().await?;
         let backwards_compat_msg = backwards_compat_msg.clone();
         let to_download = to_download.clone();
         let progress_bar = progress_bar.clone();
@@ -48,6 +48,7 @@ pub async fn upgrade(
         let github = github.clone();
         let mod_ = mod_.clone();
         tasks.push(spawn(async move {
+            let _permit = permit;
             let result = mod_downloadable::get_latest_compatible_downloadable(
                 modrinth.clone(),
                 curseforge.clone(),

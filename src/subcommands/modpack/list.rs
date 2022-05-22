@@ -5,9 +5,9 @@ pub fn list(config: &Config) {
     for (i, modpack) in config.modpacks.iter().enumerate() {
         println!(
             "{}{}
-        \r  Output directory:   {}
-        \r  Identifier:         {}
-        \r  Install Overrides:  {}\n",
+        \r  Output directory:  {}
+        \r  Identifier:        {}
+        \r  Install Overrides: {}\n",
             modpack.name.bold(),
             if i == config.active_modpack { " *" } else { "" },
             modpack.output_dir.display().to_string().blue().underline(),

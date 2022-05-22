@@ -1,8 +1,8 @@
 use crate::{
     download::{clean, download, read_overrides},
-    CROSS, STYLE_BYTE, STYLE_NO, TICK,
+    CROSS, STYLE_BYTE, TICK,
 };
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use colored::Colorize;
 use ferinth::Ferinth;
 use furse::Furse;
@@ -15,14 +15,13 @@ use libium::{
         extract_modpack,
         modrinth::{deser_metadata, read_metadata_file},
     },
-    mutex_ext::MutexExt,
     upgrade::{
         modpack_downloadable::{download_curseforge_modpack, download_modrinth_modpack},
         Downloadable,
     },
     HOME,
 };
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use tokio::spawn;
 
 #[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
@@ -36,7 +35,7 @@ pub async fn upgrade(
     let install_msg;
     match &modpack.identifier {
         ModpackIdentifier::CurseForgeModpack(project_id) => {
-            println!("{}", "Downloading modpack".bold());
+            println!("{}", "Downloading Modpack".bold());
             let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
             let modpack_file = download_curseforge_modpack(
                 curseforge.clone(),
@@ -53,44 +52,41 @@ pub async fn upgrade(
             let manifest = deser_manifest(&read_manifest_file(&modpack_file)?)?;
             progress_bar.finish_and_clear();
 
-            println!("\n{}\n", "Determining Files to Download".bold());
-            let progress_bar = Arc::new(Mutex::new(
-                ProgressBar::new(manifest.files.len() as u64).with_style(STYLE_NO.clone()),
-            ));
-            progress_bar.force_lock().enable_steady_tick(100);
-            let mut tasks = Vec::new();
-            let local_to_download = Arc::new(Mutex::new(to_download));
+            eprint!("\n{}", "Determining files to download... ".bold());
 
-            for file in &manifest.files {
-                let to_download = local_to_download.clone();
-                let progress_bar = progress_bar.clone();
-                let curseforge = curseforge.clone();
-                let file = file.clone();
-                tasks.push(spawn(async move {
-                    let result =
-                        Downloadable::from_file_id(curseforge, file.project_id, file.file_id).await;
-                    let progress_bar = progress_bar.force_lock();
-                    match result {
-                        Ok(downloadable) => {
-                            progress_bar.println(format!("{} {}", &*TICK, downloadable.filename()));
-                            to_download.force_lock().push(downloadable);
-                        },
-                        Err(err) => {
-                            progress_bar.println(format!(
-                                "{}",
+            let file_ids = manifest.files.iter().map(|file| file.file_id).collect();
+            let files = curseforge.get_files(file_ids).await?;
+            println!("{} Fetched {} mods", &*TICK, files.len());
+
+            let mut tasks = Vec::new();
+            for file in files {
+                let mod_id = file.mod_id;
+                let file_id = file.id;
+                match file.try_into() {
+                    Ok(downloadable) => to_download.push(downloadable),
+                    Err(_) => {
+                        let curseforge = curseforge.clone();
+                        tasks.push(spawn(async move {
+                            let project = curseforge.get_mod(mod_id).await?;
+                            eprintln!(
+                                "\n{}\n  Manual download: {}",
                                 format!(
-                                    "{} {:6} of {:6} {}",
-                                    CROSS, file.file_id, file.project_id, err
-                                )
+                                "{} {} has denied third parties like Ferium from downloading it",
+                                CROSS, project.name
+                            )
                                 .red()
-                            ));
-                        },
-                    }
-                    progress_bar.set_position(progress_bar.position() + 1);
-                }));
+                                .bold(),
+                                format!("{}/files/{}", project.links.website_url, file_id)
+                                    .blue()
+                                    .underline(),
+                            );
+                            Ok::<(), furse::Error>(())
+                        }));
+                    },
+                }
             }
-            for handle in tasks {
-                handle.await?;
+            for task in tasks {
+                task.await??;
             }
 
             install_msg = format!(
@@ -104,14 +100,6 @@ pub async fn upgrade(
                     .format(", or ")
             );
 
-            Arc::try_unwrap(progress_bar)
-                .map_err(|_| anyhow!("Failed to run threads to completion"))?
-                .into_inner()?
-                .finish_and_clear();
-            to_download = Arc::try_unwrap(local_to_download)
-                .map_err(|_| anyhow!("Failed to run threads to completion"))?
-                .into_inner()?;
-
             if modpack.install_overrides {
                 let tmp_dir = HOME
                     .join(".config")
@@ -123,7 +111,7 @@ pub async fn upgrade(
             }
         },
         ModpackIdentifier::ModrinthModpack(project_id) => {
-            println!("{}", "Downloading modpack".bold());
+            println!("{}", "Downloading Modpack".bold());
             let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
             let modpack_file = download_modrinth_modpack(
                 modrinth.clone(),

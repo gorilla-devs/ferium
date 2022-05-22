@@ -15,8 +15,9 @@ pub struct Ferium {
     #[clap(help("A GitHub personal access token for increasing the rate limit"))]
     pub github_token: Option<String>,
     #[clap(long)]
-    #[clap(hide = true)]
-    #[clap(help("Only for testing"))]
+    #[clap(help(
+        "Set the file to read the config from. Does not change the cache and tmp directories"
+    ))]
     #[clap(value_hint(ValueHint::FilePath))]
     pub config_file: Option<PathBuf>,
 }

@@ -12,7 +12,7 @@ use indicatif::ProgressStyle;
 use lazy_static::lazy_static;
 use libium::config::{self, structs::ModIdentifier};
 use octocrab::OctocrabBuilder;
-use std::sync::Arc;
+use std::{process::ExitCode, sync::Arc};
 use subcommands::{add, upgrade};
 use tokio::{runtime, spawn};
 
@@ -32,7 +32,7 @@ lazy_static! {
         .progress_chars("#>-");
 }
 
-fn main() {
+fn main() -> ExitCode {
     let cli = Ferium::parse();
     let mut builder = runtime::Builder::new_multi_thread();
     builder.enable_all();
@@ -44,8 +44,9 @@ fn main() {
     let runtime = builder.build().expect("Could not initialise Tokio runtime");
     if let Err(err) = runtime.block_on(actual_main(cli)) {
         eprintln!("{}", err.to_string().red().bold());
-        runtime.shutdown_background();
-        std::process::exit(1);
+        ExitCode::FAILURE
+    } else {
+        ExitCode::SUCCESS
     }
 }
 
