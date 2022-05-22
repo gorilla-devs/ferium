@@ -40,7 +40,7 @@ build-linux-gtk:
 build-linux-xdg:
     rm -f out/ferium-linux-gnu-xdg.zip
     mkdir -p out
-    cargo build --target=x86_64-unknown-linux-gnu --release --no-default-features --features
+    cargo build --target=x86_64-unknown-linux-gnu --release --no-default-features --features xdg
     zip -r out/ferium-linux-gnu-xdg.zip -j target/x86_64-unknown-linux-gnu/release/ferium
 
 # Build for GNU Linux without a GUI backend
