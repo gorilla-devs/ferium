@@ -62,29 +62,29 @@ pub async fn upgrade(
             for file in files {
                 let mod_id = file.mod_id;
                 let file_id = file.id;
-                match file.try_into() {
-                    Ok(downloadable) => to_download.push(downloadable),
-                    Err(_) => {
-                        let curseforge = curseforge.clone();
-                        tasks.push(spawn(async move {
-                            let project = curseforge.get_mod(mod_id).await?;
-                            eprintln!(
-                                "\n{}\n  Manual download: {}",
-                                format!(
+                if let Ok(downloadable) = file.try_into() {
+                    to_download.push(downloadable)
+                } else {
+                    let curseforge = curseforge.clone();
+                    tasks.push(spawn(async move {
+                        let project = curseforge.get_mod(mod_id).await?;
+                        eprintln!(
+                            "\n{}\n  Manual download: {}",
+                            format!(
                                 "{} {} has denied third parties like Ferium from downloading it",
                                 CROSS, project.name
                             )
-                                .red()
-                                .bold(),
-                                format!("{}/files/{}", project.links.website_url, file_id)
-                                    .blue()
-                                    .underline(),
-                            );
-                            Ok::<(), furse::Error>(())
-                        }));
-                    },
+                            .red()
+                            .bold(),
+                            format!("{}/files/{}", project.links.website_url, file_id)
+                                .blue()
+                                .underline(),
+                        );
+                        Ok::<(), furse::Error>(())
+                    }));
                 }
             }
+
             for task in tasks {
                 task.await??;
             }
