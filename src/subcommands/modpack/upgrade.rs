@@ -63,7 +63,7 @@ pub async fn upgrade(
                 let mod_id = file.mod_id;
                 let file_id = file.id;
                 if let Ok(downloadable) = file.try_into() {
-                    to_download.push(downloadable)
+                    to_download.push(downloadable);
                 } else {
                     let curseforge = curseforge.clone();
                     tasks.push(spawn(async move {
