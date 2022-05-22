@@ -1,6 +1,6 @@
 use crate::{
     download::{clean, download, read_overrides},
-    CROSS, STYLE_BYTE, TICK,
+    STYLE_BYTE, TICK,
 };
 use anyhow::Result;
 use colored::Colorize;
@@ -59,24 +59,25 @@ pub async fn upgrade(
             println!("{} Fetched {} mods", &*TICK, files.len());
 
             let mut tasks = Vec::new();
+            let mut msg_shown = false;
             for file in files {
                 let mod_id = file.mod_id;
                 let file_id = file.id;
                 if let Ok(downloadable) = file.try_into() {
                     to_download.push(downloadable);
                 } else {
+                    if !msg_shown {
+                        println!("\n{}", "The following mod(s) have denied 3rd parties such as Ferium from downloading it".red().bold());
+                    }
+                    msg_shown = true;
                     let curseforge = curseforge.clone();
                     tasks.push(spawn(async move {
                         let project = curseforge.get_mod(mod_id).await?;
                         eprintln!(
-                            "\n{}\n  Manual download: {}",
-                            format!(
-                                "{} {} has denied third parties like Ferium from downloading it",
-                                CROSS, project.name
-                            )
-                            .red()
-                            .bold(),
-                            format!("{}/files/{}", project.links.website_url, file_id)
+                            "- {}
+                           \r  {}",
+                            project.name.bold(),
+                            format!("{}/download/{}", project.links.website_url, file_id)
                                 .blue()
                                 .underline(),
                         );

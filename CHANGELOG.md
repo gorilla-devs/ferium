@@ -6,9 +6,10 @@
 - [#77](https://github.com/gorilla-devs/ferium/issues/77) Implement Libium's new XDG gui backend
 - [#91](https://github.com/gorilla-devs/ferium/issues/91) Unhide the `--config-file` flag
 - Use Rust 1.61's newly stabilised `std::process::ExitCode`
-- Use semaphore in mods upgrade to hopedully fix [#89](https://github.com/gorilla-devs/ferium/issues/89)
+- Use semaphore in mods upgrade to fix [#89](https://github.com/gorilla-devs/ferium/issues/89)
 - Batch request all the files in a CurseForge modpack at once
 - Show an error message when a file in a modpack can't be downloaded because of the monopolistic dystopia that has become the largest Minecraft mod distribution website
+- Improve third party restricted mods message when downloading a modpack
 
 ## `v4.0.0`
 ### 19.05.2022
