@@ -95,13 +95,19 @@ pub async fn modrinth(
     }
 
     if let Some(donation_urls) = project.donation_urls {
-        println!(
-            "Consider supporting the mod creator on {}",
-            donation_urls
-                .iter()
-                .map(|this| format!("{} ({})", this.platform.bold(), this.url.blue().underline()))
-                .format(" or ")
-        );
+        if !donation_urls.is_empty() {
+            println!(
+                "Consider supporting the mod creator on {}",
+                donation_urls
+                    .iter()
+                    .map(|this| format!(
+                        "{} ({})",
+                        this.platform.bold(),
+                        this.url.blue().underline()
+                    ))
+                    .format(" or ")
+            );
+        }
     }
 
     Ok(())
