@@ -1,5 +1,10 @@
 # Changelog for Ferium
 
+## `v4.0.2`
+### 24.05.2022
+
+Bug, change the default feature to GTK
+
 ## `v4.0.1`
 ### 22.05.2022
 
