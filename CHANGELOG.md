@@ -3,7 +3,8 @@
 ## `v4.0.2`
 ### 24.05.2022
 
-Bug, change the default feature to GTK
+- Change the default feature to GTK (bug)
+- The donation suggestion will only pop up if the vector is not empty
 
 ## `v4.0.1`
 ### 22.05.2022
