@@ -699,6 +699,7 @@ dependencies = [
  "reqwest",
  "semver",
  "serde_json",
+ "sha1 0.10.1",
  "size",
  "tokio",
  "url",

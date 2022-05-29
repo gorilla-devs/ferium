@@ -43,6 +43,7 @@ bytes = "1.1.0"
 furse = "1.2.2"
 size = "0.1.2"
 url = "2.2.2"
+sha1 = "0.10"
 
 [dev-dependencies]
 rand = "0.8.5"
