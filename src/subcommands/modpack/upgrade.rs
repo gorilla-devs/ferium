@@ -17,7 +17,7 @@ use libium::{
     },
     upgrade::{
         modpack_downloadable::{download_curseforge_modpack, download_modrinth_modpack},
-        Downloadable,
+        DistributionDeniedError, Downloadable,
     },
     HOME,
 };
@@ -61,28 +61,29 @@ pub async fn upgrade(
             let mut tasks = Vec::new();
             let mut msg_shown = false;
             for file in files {
-                let mod_id = file.mod_id;
-                let file_id = file.id;
-                if let Ok(downloadable) = file.try_into() {
-                    to_download.push(downloadable);
-                } else {
-                    if !msg_shown {
-                        println!("\n{}", "The following mod(s) have denied 3rd parties such as Ferium from downloading it".red().bold());
-                    }
-                    msg_shown = true;
-                    let curseforge = curseforge.clone();
-                    tasks.push(spawn(async move {
-                        let project = curseforge.get_mod(mod_id).await?;
-                        eprintln!(
-                            "- {}
+                match file.try_into() {
+                    Ok(downloadable) => {
+                        to_download.push(downloadable);
+                    },
+                    Err(DistributionDeniedError(mod_id, file_id)) => {
+                        if !msg_shown {
+                            println!("\n{}", "The following mod(s) have denied 3rd parties such as Ferium from downloading it".red().bold());
+                        }
+                        msg_shown = true;
+                        let curseforge = curseforge.clone();
+                        tasks.push(spawn(async move {
+                            let project = curseforge.get_mod(mod_id).await?;
+                            eprintln!(
+                                "- {}
                            \r  {}",
-                            project.name.bold(),
-                            format!("{}/download/{}", project.links.website_url, file_id)
-                                .blue()
-                                .underline(),
-                        );
-                        Ok::<(), furse::Error>(())
-                    }));
+                                project.name.bold(),
+                                format!("{}/download/{}", project.links.website_url, file_id)
+                                    .blue()
+                                    .underline(),
+                            );
+                            Ok::<(), furse::Error>(())
+                        }));
+                    },
                 }
             }
 
