@@ -1,5 +1,11 @@
 # Changelog for Ferium
 
+## `v4.0.3`
+### 30.05.2022
+
+- Improve add commands' output
+- Implement Libium's changed distribution denied error handling
+
 ## `v4.0.2`
 ### 24.05.2022
 
