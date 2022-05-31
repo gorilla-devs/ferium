@@ -1,5 +1,10 @@
 # Changelog for Ferium
 
+## `v4.1.1`
+### 31.05.2022
+
+Fix [#103](https://github.com/gorilla-devs/ferium/issues/103) by updating furse
+
 ## `v4.1.0`
 ### 31.05.2022
 

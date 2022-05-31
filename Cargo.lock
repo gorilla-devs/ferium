@@ -678,7 +678,7 @@ dependencies = [
 
 [[package]]
 name = "ferium"
-version = "4.1.0"
+version = "4.1.1"
 dependencies = [
  "anyhow",
  "bytes",
@@ -738,9 +738,9 @@ checksum = "2022715d62ab30faffd124d40b76f4134a550a87792276512b18d63272333394"
 
 [[package]]
 name = "furse"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba4d8dd911a82e2ffcfa90c3c4f194b6de69ed0b1bf3affddf17b90c59b871bc"
+checksum = "f1f15162933caa3f7cb5bcd7f64d2d3f3e9be05e38ddcaca2588126d3761a5f4"
 dependencies = [
  "bytes",
  "chrono",
