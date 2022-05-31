@@ -32,7 +32,7 @@ pub async fn github(
     .await?;
     println!("{} {}", *TICK, repo.name.bold());
     profile.mods.push(Mod {
-        name: repo.name.clone(),
+        name: repo.name.trim().into(),
         identifier: ModIdentifier::GitHubRepository((repo.owner.unwrap().login, repo.name)),
         check_game_version: if should_check_game_version == Some(true) {
             None
@@ -67,7 +67,7 @@ pub async fn modrinth(
     .await?;
     println!("{} {}", *TICK, project.title.bold());
     profile.mods.push(Mod {
-        name: project.title,
+        name: project.title.trim().into(),
         identifier: ModIdentifier::ModrinthProject(project.id),
         check_game_version: if should_check_game_version == Some(true) {
             None
@@ -96,7 +96,7 @@ pub async fn modrinth(
                         println!("{} {}", *TICK, project.title.bold());
                         // If it's required, add it without asking
                         profile.mods.push(Mod {
-                            name: project.title,
+                            name: project.title.trim().into(),
                             identifier: ModIdentifier::ModrinthProject(project.id),
                             check_game_version: if should_check_game_version == Some(true) {
                                 None
@@ -135,7 +135,7 @@ pub async fn modrinth(
                             .interact()?
                         {
                             profile.mods.push(Mod {
-                                name: project.title,
+                                name: project.title.trim().into(),
                                 identifier: ModIdentifier::ModrinthProject(project.id),
                                 check_game_version: if should_check_game_version == Some(true) {
                                     None
@@ -200,7 +200,7 @@ pub async fn curseforge(
     .await?;
     println!("{} {}", *TICK, project.name.bold());
     profile.mods.push(Mod {
-        name: project.name,
+        name: project.name.trim().into(),
         identifier: ModIdentifier::CurseForgeProject(project.id),
         check_game_version: if should_check_game_version == Some(true) {
             None
@@ -223,7 +223,7 @@ pub async fn curseforge(
                         println!("{} {}", *TICK, project.name.bold());
                         // If it's required, add it without asking
                         profile.mods.push(Mod {
-                            name: project.name,
+                            name: project.name.trim().into(),
                             identifier: ModIdentifier::CurseForgeProject(project.id),
                             check_game_version: if should_check_game_version == Some(true) {
                                 None
@@ -260,7 +260,7 @@ pub async fn curseforge(
                             .interact()?
                         {
                             profile.mods.push(Mod {
-                                name: project.name,
+                                name: project.name.trim().into(),
                                 identifier: ModIdentifier::CurseForgeProject(project.id),
                                 check_game_version: if should_check_game_version == Some(true) {
                                     None

@@ -75,28 +75,28 @@ Remember to use an add-on like [cargo-update](https://crates.io/crates/cargo-upd
 When you first start up Ferium, you will have to either
 
 - Create a new profile by running `ferium profile create` and entering the details for your profile
-- Add a modpack by running `ferium modpack add-curseforge <project-id>` or `ferium modpack add-modrinth <project-id>`
+- Add a modpack by running `ferium modpack add <project_id>`
 
 ### Adding Mods
 
 - Modrinth Mods
-  - `ferium add-modrinth project_id`
+  - `ferium add project_id`
   - Where `project_id` is the slug or project id of the mod
     - For example, [Sodium](https://modrinth.com/mod/sodium) has the slug `sodium` and a project id `AANobbMI`
     - You can find the slug in the website url (`modrinth.com/mod/<slug>`), and the project id at the bottom of the left sidebar under 'Technical information'
-  - So to add [Sodium](https://modrinth.com/mod/sodium), you should run `ferium add-modrinth sodium` or `ferium add-modrinth AANobbMI`
+  - So to add [Sodium](https://modrinth.com/mod/sodium), you should run `ferium add sodium` or `ferium add AANobbMI`
 - CurseForge Mods
-  - `ferium add-curseforge project_id`
+  - `ferium add project_id`
   - Where `project_id` is the project id of the mod
     - For example, [Terralith](https://www.curseforge.com/minecraft/mc-mods/terralith) has a project id `513688`
     - You can find the project id at the top of the right sidebar under 'About Project'
-  - So to add [Terralith](https://www.curseforge.com/minecraft/mc-mods/terralith), you should run `ferium add-curseforge 513688`
+  - So to add [Terralith](https://www.curseforge.com/minecraft/mc-mods/terralith), you should run `ferium add 513688`
 - GitHub 'Mods'
-  - `ferium add-github owner/name`
+  - `ferium add owner/name`
   - Where `owner` is the username of the owner of the repository and `name` is the name of the repository (both case-insensitive)
     - For example [Sodium's repository](https://github.com/CaffeineMC/sodium-fabric) has the id `CaffeineMC/sodium-fabric`
     - You can find these at the top left part of the repository's page as a big 'owner / name'
-  - So to add [Sodium](https://github.com/CaffeineMC/sodium-fabric), you should run `ferium add-github CaffeineMC/sodium-fabric` (again, case-insensitive)
+  - So to add [Sodium](https://github.com/CaffeineMC/sodium-fabric), you should run `ferium add CaffeineMC/sodium-fabric` (again, case-insensitive)
   - Note: The GitHub repository has to release JAR files in their Releases for Ferium to download, or else it will refuse to be added
 - External mods
   - If you want to use files that are not downloadable by Ferium, place them in the `user` folder in the output directory. Files here will be copied to the output directory when upgrading
@@ -104,17 +104,17 @@ When you first start up Ferium, you will have to either
 ### Adding Modpacks
 
 - Modrinth Modpacks
-  - `ferium modpack add-modrinth project_id`
+  - `ferium modpack add project_id`
   - Where `project_id` is the slug or project id of the modpack
     - For example, [Better Minecraft](https://modrinth.com/modpack/better-minecraft) has the slug `better-minecraft` and a project id `shFhR8Vx`
     - You can find the slug in the website url (`modrinth.com/modpack/<slug>`), and the project id at the bottom of the left sidebar under 'Technical information'
-  - So to add [Better Minecraft](https://modrinth.com/modpack/better-minecraft), you should run `ferium modpack add-modrinth better-minecraft` or `ferium add-modrinth shFhR8Vx`
+  - So to add [Better Minecraft](https://modrinth.com/modpack/better-minecraft), you should run `ferium modpack add better-minecraft` or `ferium modpack add shFhR8Vx`
 - CurseForge Mods
-  - `ferium modpack add-curseforge project_id`
+  - `ferium modpack add project_id`
   - Where `project_id` is the project id of the modpack
     - For example, [RLCraft](https://www.curseforge.com/minecraft/modpacks/rlcraft) has a project id `285109`
     - You can find the project id at the top of the right sidebar under 'About Project'
-  - So to add [RLCraft](https://www.curseforge.com/minecraft/modpacks/rlcraft), you should run `ferium modpack add-curseforge 285109`
+  - So to add [RLCraft](https://www.curseforge.com/minecraft/modpacks/rlcraft), you should run `ferium modpack add 285109`
 
 ### Upgrading Mods
 
@@ -151,7 +151,7 @@ You can also provide the names of the mods to remove as arguments. Mod names wit
 
 If some mod is compatible with your profile but Ferium does not download it, [create an issue]((https://github.com/theRookieCoder/ferium/issues/new)) if you think it's a bug. You can disable the game version or mod loader checks by using the `--dont-check-game-version` and/or `--dont-check-mod-loader` flags when adding the mod, or manually setting `check_game_version` or `check_mod_loader` to false for the specific mod in the config.
 
-For example, [Just Enough Items](https://www.curseforge.com/minecraft/mc-mods/jei) does not specify the mod loader for older minecraft versions such as `1.12.2`. In this case, you would add JEI by running `ferium add-curseforge 238222 --dont-check-mod-loader` so that the mod loader check is disabled.
+For example, [Just Enough Items](https://www.curseforge.com/minecraft/mc-mods/jei) does not specify the mod loader for older minecraft versions such as `1.12.2`. In this case, you would add JEI by running `ferium add 238222 --dont-check-mod-loader` so that the mod loader check is disabled.
 You can also manually disable the mod loader (and/or game version) check(s) in the config like so
 ```json
 {

@@ -427,6 +427,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap_complete"
+version = "3.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da92e6facd8d73c22745a5d3cbb59bdf8e46e3235c923e516527d8e81eec14a4"
+dependencies = [
+ "clap",
+]
+
+[[package]]
 name = "clap_derive"
 version = "3.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -669,11 +678,12 @@ dependencies = [
 
 [[package]]
 name = "ferium"
-version = "4.0.3"
+version = "4.1.0"
 dependencies = [
  "anyhow",
  "bytes",
  "clap",
+ "clap_complete",
  "colored",
  "dialoguer",
  "ferinth",
@@ -1347,9 +1357,9 @@ checksum = "2a60c7ce501c71e03a9c9c0d35b861413ae925bd979cc7a4e30d060069aaac8d"
 
 [[package]]
 name = "miniz_oxide"
-version = "0.5.1"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2b29bd4bc3f33391105ebee3589c19197c4271e3e5a9ec9bfe8127eeff8f082"
+checksum = "6f5c75688da582b8ffc1f1799e9db273f32133c49e048f614d22ec3256773ccc"
 dependencies = [
  "adler",
 ]

@@ -3,7 +3,7 @@ mod download;
 mod subcommands;
 
 use anyhow::{anyhow, bail, Result};
-use clap::StructOpt;
+use clap::{IntoApp, StructOpt};
 use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
 use ferinth::Ferinth;
@@ -101,45 +101,46 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
 
     if let SubCommands::Modpack { subcommand } = &cli_app.subcommand {
         // Similarly, the add commands must run before getting the modpack so that configs without modpacks can have modpacks added
-        if let ModpackSubCommands::AddCurseforge {
-            project_id,
+        if let ModpackSubCommands::Add {
+            identifier,
             output_dir,
             install_overrides,
         } = subcommand
         {
             check_internet().await?;
-            subcommands::modpack::add::curseforge(
-                curseforge.clone(),
-                &mut config,
-                *project_id,
-                output_dir,
-                *install_overrides,
-            )
-            .await?;
 
-            // Update config file and quit
-            config::write_file(&mut config_file, &config).await?;
-            return Ok(());
-        } else if let ModpackSubCommands::AddModrinth {
-            project_id,
-            output_dir,
-            install_overrides,
-        } = subcommand
-        {
-            check_internet().await?;
-            subcommands::modpack::add::modrinth(
+            if let Ok(project_id) = identifier.parse::<i32>() {
+                subcommands::modpack::add::curseforge(
+                    curseforge.clone(),
+                    &mut config,
+                    project_id,
+                    output_dir,
+                    *install_overrides,
+                )
+                .await?;
+            } else if let Err(err) = subcommands::modpack::add::modrinth(
                 modrinth.clone(),
                 &mut config,
-                project_id,
+                identifier,
                 output_dir,
                 *install_overrides,
             )
-            .await?;
+            .await
+            {
+                return Err(
+                    if err.to_string() == ferinth::Error::NotBase62.to_string() {
+                        anyhow!("Invalid indentifier")
+                    } else {
+                        err
+                    },
+                );
+            }
 
             // Update config file and quit
             config::write_file(&mut config_file, &config).await?;
             return Ok(());
         }
+
         // Get a mutable reference to the active modpack
         let modpack = if let Some(modpack) = config.modpacks.get_mut(config.active_modpack) {
             modpack
@@ -154,7 +155,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         };
 
         match subcommand {
-            ModpackSubCommands::AddCurseforge { .. } | ModpackSubCommands::AddModrinth { .. } => {
+            ModpackSubCommands::Add { .. } => {
                 unreachable!()
             },
             ModpackSubCommands::Configure {
@@ -197,58 +198,57 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
 
     // Run function(s) based on the sub(sub)command to be executed
     match cli_app.subcommand {
-        SubCommands::AddModrinth {
-            project_id,
+        SubCommands::Add {
+            identifier,
             dont_check_game_version,
             dont_check_mod_loader,
             dont_add_dependencies,
         } => {
             check_internet().await?;
-            add::modrinth(
+            if let Ok(project_id) = identifier.parse::<i32>() {
+                add::curseforge(
+                    curseforge,
+                    project_id,
+                    profile,
+                    Some(!dont_check_game_version),
+                    Some(!dont_check_mod_loader),
+                    !dont_add_dependencies,
+                )
+                .await?;
+            } else if identifier.split('/').count() == 2 {
+                let split = identifier.split('/').collect::<Vec<_>>();
+                add::github(
+                    github.repos(split[0], split[1]),
+                    profile,
+                    Some(!dont_check_game_version),
+                    Some(!dont_check_mod_loader),
+                )
+                .await?;
+            } else if let Err(err) = add::modrinth(
                 modrinth,
-                &project_id,
+                &identifier,
                 profile,
                 Some(!dont_check_game_version),
                 Some(!dont_check_mod_loader),
                 !dont_add_dependencies,
             )
-            .await?;
-        },
-        SubCommands::AddGithub {
-            name,
-            dont_check_game_version,
-            dont_check_mod_loader,
-        } => {
-            check_internet().await?;
-            let name = name.split('/').collect::<Vec<_>>();
-            if name.len() != 2 {
-                bail!("Invalid repository name")
+            .await
+            {
+                return Err(
+                    if err.to_string() == ferinth::Error::NotBase62.to_string() {
+                        anyhow!("Invalid indentifier")
+                    } else {
+                        err
+                    },
+                );
             }
-            add::github(
-                github.repos(name[0], name[1]),
-                profile,
-                Some(!dont_check_game_version),
-                Some(!dont_check_mod_loader),
-            )
-            .await?;
         },
-        SubCommands::AddCurseforge {
-            project_id,
-            dont_check_game_version,
-            dont_check_mod_loader,
-            dont_add_dependencies,
-        } => {
-            check_internet().await?;
-            add::curseforge(
-                curseforge,
-                project_id,
-                profile,
-                Some(!dont_check_game_version),
-                Some(!dont_check_mod_loader),
-                !dont_add_dependencies,
-            )
-            .await?;
-        },
+        SubCommands::Complete { shell } => clap_complete::generate(
+            shell,
+            &mut Ferium::command(),
+            "ferium",
+            &mut std::io::stdout(),
+        ),
         SubCommands::List { verbose } => {
             check_empty_profile(profile)?;
             if verbose {

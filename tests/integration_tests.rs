@@ -126,20 +126,20 @@ fn create_profile_name_already_exists() {
 #[test]
 fn add_modrinth() -> Result {
     // Add Sodium to config
-    run_command(vec!["add-modrinth", "starlight"], Some("empty_profile"))
+    run_command(vec!["add", "starlight"], Some("empty_profile"))
 }
 
 #[test]
 fn add_curseforge() -> Result {
     // Add Terralith to the config
-    run_command(vec!["add-curseforge", "591388"], Some("empty_profile"))
+    run_command(vec!["add", "591388"], Some("empty_profile"))
 }
 
 #[test]
 fn add_github() -> Result {
     // Add Sodium to config
     run_command(
-        vec!["add-github", "CaffeineMC/sodium-fabric"],
+        vec!["add", "CaffeineMC/sodium-fabric"],
         Some("empty_profile"),
     )
 }
@@ -150,7 +150,7 @@ fn modpack_add_modrinth() -> Result {
     run_command(
         vec![
             "modpack",
-            "add-modrinth",
+            "add",
             "1KVo5zza",
             "--output-dir",
             &output_dir(),
@@ -167,7 +167,7 @@ fn modpack_add_curseforge() -> Result {
     run_command(
         vec![
             "modpack",
-            "add-curseforge",
+            "add",
             "452013",
             "--output-dir",
             &output_dir(),
@@ -180,10 +180,10 @@ fn modpack_add_curseforge() -> Result {
 
 #[test]
 fn already_added() {
-    assert!(run_command(vec!["add-modrinth", "StArLiGhT"], Some("one_profile_full")).is_err());
-    assert!(run_command(vec!["add-curseforge", "591388"], Some("one_profile_full")).is_err());
+    assert!(run_command(vec!["add", "StArLiGhT"], Some("one_profile_full")).is_err());
+    assert!(run_command(vec!["add", "591388"], Some("one_profile_full")).is_err());
     assert!(run_command(
-        vec!["add-github", "caffeinemc", "Sodium-Fabric"],
+        vec!["add", "caffeinemc", "Sodium-Fabric"],
         Some("one_profile_full")
     )
     .is_err());

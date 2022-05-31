@@ -1,5 +1,13 @@
 # Changelog for Ferium
 
+## `v4.1.0`
+### 31.05.2022
+
+- [#65](https://github.com/gorilla-devs/ferium/issues/65) Adding mods and modpacks is now done with one command
+- Fixed [#102](https://github.com/gorilla-devs/ferium/issues/102)
+- [#74](https://github.com/gorilla-devs/ferium/issues/74) Added `complete` command to generate shell auto completions
+- Improved command help messages
+
 ## `v4.0.3`
 ### 30.05.2022
 
