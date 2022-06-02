@@ -44,6 +44,24 @@ pub fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
     }
 }
 
+pub async fn pick_mods_directory() -> Result<PathBuf> {
+    let mut selected_mods_dir = misc::get_minecraft_dir().join("mods");
+    println!("The default mods directory is {:?}", selected_mods_dir);
+    if Confirm::with_theme(&*crate::THEME)
+        .with_prompt("Would you like to specify a custom mods directory?")
+        .interact()?
+    {
+        if let Some(dir) =
+            file_picker::pick_folder(&selected_mods_dir, "Pick an output directory").await
+        {
+            check_output_directory(&dir).await?;
+            selected_mods_dir = dir;
+        };
+    }
+
+    Ok(selected_mods_dir)
+}
+
 pub async fn pick_minecraft_version() -> Result<String> {
     let mut latest_versions: Vec<String> = misc::get_major_mc_versions(10).await?;
     let selected_version = Select::with_theme(&*THEME)

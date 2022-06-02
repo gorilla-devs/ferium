@@ -1,7 +1,8 @@
-use super::{check_output_directory, check_profile_name, pick_minecraft_version};
+use super::{check_profile_name, pick_minecraft_version};
+use crate::subcommands::profile::pick_mods_directory;
 use anyhow::{bail, Result};
-use dialoguer::{Confirm, Input, Select};
-use libium::{config, file_picker, misc};
+use dialoguer::{Input, Select};
+use libium::config;
 use std::path::PathBuf;
 
 #[allow(clippy::option_option)]
@@ -32,19 +33,7 @@ pub async fn create(
             println!("Please enter the details for the new profile");
 
             // Let user pick mods directory
-            let mut selected_mods_dir = misc::get_minecraft_dir().join("mods");
-            println!("The default mods directory is {:?}", selected_mods_dir);
-            if Confirm::with_theme(&*crate::THEME)
-                .with_prompt("Would you like to specify a custom mods directory?")
-                .interact()?
-            {
-                if let Some(dir) =
-                    file_picker::pick_folder(&selected_mods_dir, "Pick an output directory").await
-                {
-                    check_output_directory(&dir).await?;
-                    selected_mods_dir = dir;
-                };
-            }
+            let selected_mods_dir = pick_mods_directory().await?;
 
             let name = loop {
                 let name: String = Input::with_theme(&*crate::THEME)

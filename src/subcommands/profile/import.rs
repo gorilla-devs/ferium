@@ -3,9 +3,11 @@ use dialoguer::Confirm;
 use libium::config::structs::{Config, Profile};
 use std::{fs::File, path::PathBuf};
 
+use crate::subcommands::profile::pick_mods_directory;
+
 use super::check_profile_name;
 
-pub fn import(config: &mut Config, input_path: Option<PathBuf>) -> Result<()> {
+pub async fn import(config: &mut Config, input_path: Option<PathBuf>) -> Result<()> {
     let path = if let Some(path) = input_path {
         path
     } else {
@@ -13,7 +15,7 @@ pub fn import(config: &mut Config, input_path: Option<PathBuf>) -> Result<()> {
         bail!("File picker doesn't work yet, specify a path manually");
     };
 
-    let profile: Profile = serde_json::de::from_reader(File::open(path)?)?;
+    let mut profile: Profile = serde_json::de::from_reader(File::open(path)?)?;
 
     match check_profile_name(config, &profile.name) {
         Ok(_) => {},
@@ -28,6 +30,7 @@ pub fn import(config: &mut Config, input_path: Option<PathBuf>) -> Result<()> {
                     .position(|item| item.name == profile.name)
                 {
                     Some(index) => {
+                        profile.output_dir = config.profiles[index].output_dir.clone();
                         config.profiles[index] = profile;
                         println!("Profile replaced");
                         return Ok(());
@@ -41,6 +44,8 @@ pub fn import(config: &mut Config, input_path: Option<PathBuf>) -> Result<()> {
             }
         },
     };
+
+    profile.output_dir = pick_mods_directory().await?;
 
     config.profiles.push(profile);
     config.active_profile = config.profiles.len() - 1; // Make created profile active

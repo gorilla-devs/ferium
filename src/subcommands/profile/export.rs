@@ -10,6 +10,10 @@ pub async fn export(profile: &Profile, output_path: Option<PathBuf>) -> Result<(
         bail!("File picker doesn't work yet, specify a path manually");
     };
 
+    // Don't export output directory
+    let mut profile = profile.clone();
+    profile.output_dir = "".into();
+
     serde_json::ser::to_writer_pretty(File::create(path)?, &profile)?;
     println!("Profile exported");
 
