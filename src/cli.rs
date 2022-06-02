@@ -141,6 +141,18 @@ Optionally, provide the name of the profile to delete"
     },
     #[clap(about("List all the profiles with their data"))]
     List,
+    #[clap(about("Export a profile"))]
+    Export {
+        #[clap(long)]
+        #[clap(help("The location to export to"))]
+        output_path: Option<PathBuf>,
+    },
+    #[clap(about("Import a profile"))]
+    Import {
+        #[clap(long)]
+        #[clap(help("The location to import from"))]
+        input_path: Option<PathBuf>,
+    },
     #[clap(about(
         "Switch between different profiles
 Optionally, provide the name of the profile to switch to"

@@ -313,6 +313,12 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             ProfileSubCommands::Delete { profile_name } => {
                 subcommands::profile::delete(&mut config, profile_name)?;
             },
+            ProfileSubCommands::Import { input_path } => {
+                subcommands::profile::import(&mut config, input_path)?;
+            },
+            ProfileSubCommands::Export { output_path } => {
+                subcommands::profile::export(&profile, output_path).await?;
+            },
             ProfileSubCommands::List => subcommands::profile::list(&config),
             ProfileSubCommands::Switch { profile_name } => {
                 subcommands::profile::switch(&mut config, profile_name)?;
