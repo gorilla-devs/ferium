@@ -15,6 +15,12 @@ readme = "README.md"
 license = "MPL-2.0"
 keywords = ["minecraft", "mod-manager", "modrinth", "curseforge", "github"]
 
+# Optimize for speed and binary size on release builds
+[profile.release]
+codegen-units = 1
+lto = true
+strip = true
+
 [features]
 default = ["gtk"]
 gtk = ["libium/gtk"]
