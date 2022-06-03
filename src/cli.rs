@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand, ValueHint};
+use clap_complete::Shell;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -12,7 +13,7 @@ pub struct Ferium {
     #[clap(help("The limit for additional threads spawned by the Tokio runtime"))]
     pub threads: Option<usize>,
     #[clap(long)]
-    #[clap(help("A GitHub personal access token for increasing the rate limit"))]
+    #[clap(help("A GitHub personal access token for increasing the GitHub API rate limit"))]
     pub github_token: Option<String>,
     #[clap(long)]
     #[clap(help(
@@ -24,44 +25,27 @@ pub struct Ferium {
 
 #[derive(Subcommand)]
 pub enum SubCommands {
-    #[clap(about("Add a Modrinth mod to the profile"))]
-    AddModrinth {
-        #[clap(help("The project ID is specified at the bottom of the left sidebar under 'Technical information'\nYou can also use the project slug for this"))]
-        project_id: String,
+    #[clap(about("Add a mod to the profile"))]
+    Add {
+        #[clap(help("The identifier of the mod/project/repository
+The Modrinth project ID is specified at the bottom of the left sidebar under 'Technical information'. You can also use the project slug in the URL
+The CurseForge mod ID is specified at the top of the right sidebar under 'About Project'
+The GitHub identifier is the repository's full name, e.g. `gorilla-devs/ferium`"))]
+        identifier: String,
         #[clap(long)]
-        #[clap(help("Whether the game version should be checked for this mod"))]
+        #[clap(help("The game version will not be checked for this mod"))]
         dont_check_game_version: bool,
         #[clap(long)]
-        #[clap(help("Whether the mod loader should be checked for this mod"))]
+        #[clap(help("The mod loader will not be checked for this mod"))]
         dont_check_mod_loader: bool,
         #[clap(long)]
-        #[clap(help("Do not add any of the mod's dependencies"))]
+        #[clap(help("The mod's dependencies will not be added"))]
         dont_add_dependencies: bool,
     },
-    #[clap(about("Add a GitHub repository to the profile"))]
-    AddGithub {
-        #[clap(help("The full name of the repository, e.g. `theRookieCoder/ferium`"))]
-        name: String,
-        #[clap(long)]
-        #[clap(help("Whether the game version should be checked for this mod"))]
-        dont_check_game_version: bool,
-        #[clap(long)]
-        #[clap(help("Whether the mod loader should be checked for this mod"))]
-        dont_check_mod_loader: bool,
-    },
-    #[clap(about("Add a CurseForge mod to the profile"))]
-    AddCurseforge {
-        #[clap(help("The project ID is specified at the right sidebar under 'About Project'"))]
-        project_id: i32,
-        #[clap(long)]
-        #[clap(help("Whether the game version should be checked for this mod"))]
-        dont_check_game_version: bool,
-        #[clap(long)]
-        #[clap(help("Whether the mod loader should be checked for this mod"))]
-        dont_check_mod_loader: bool,
-        #[clap(long)]
-        #[clap(help("Do not add any of the mod's dependencies"))]
-        dont_add_dependencies: bool,
+    #[clap(about("Generate shell auto completions to stdout for the specified shell"))]
+    Complete {
+        #[clap(help("The shell to generate auto completions for"))]
+        shell: Shell,
     },
     #[clap(about("List all the mods in the profile, and with some their metadata if verbose"))]
     List {
@@ -81,10 +65,13 @@ pub enum SubCommands {
         #[clap(subcommand)]
         subcommand: ProfileSubCommands,
     },
-    #[clap(about("Remove a mod or repository from the profile\nOptionally, provide a list of names of the mods to remove"))]
+    #[clap(about(
+        "Remove a mod or repository from the profile
+Optionally, provide a list of names of the mods to remove"
+    ))]
     Remove {
         #[clap(name("mod-name"))]
-        #[clap(help("A case-insensitive list of names of a mods to remove\nIf one or more of the mod names provided does not exist, the program will error out without changing anything in the config"))]
+        #[clap(help("A case-insensitive list of names of a mods to remove"))]
         mod_names: Vec<String>,
     },
     #[clap(about("Sort all your mods in alphabetical order"))]
@@ -103,7 +90,8 @@ pub enum SubCommands {
 #[derive(Subcommand)]
 pub enum ProfileSubCommands {
     #[clap(about(
-        "Configure the current profile's Minecraft version, mod loader, and output directory\nOptionally, provide setting(s) to change as option(s)"
+        "Configure the current profile's Minecraft version, mod loader, and output directory
+Optionally, provide setting(s) to change as option(s)"
     ))]
     Configure {
         #[clap(long)]
@@ -121,11 +109,18 @@ pub enum ProfileSubCommands {
         #[clap(help("The directory to output mods to"))]
         output_dir: Option<PathBuf>,
     },
-    #[clap(about("Create a new profile\nOptionally, provide ALL the options to create the profile without the UI"))]
+    #[clap(about(
+        "Create a new profile
+Optionally provide all the options, to create the profile without the UI
+Use the import flag to import mods from another profile"
+    ))]
     Create {
         #[clap(long)]
         #[allow(clippy::option_option)]
-        #[clap(help("Copy over the mods from an existing profile\nOptionally, provide the name of the profile to import mods from"))]
+        #[clap(help(
+            "Copy over the mods from an existing profile
+Optionally, provide the name of the profile to import mods from"
+        ))]
         import: Option<Option<String>>,
         #[clap(long)]
         #[clap(help("The Minecraft version to check compatibility for"))]
@@ -142,7 +137,10 @@ pub enum ProfileSubCommands {
         #[clap(help("The directory to output mods to"))]
         output_dir: Option<PathBuf>,
     },
-    #[clap(about("Delete a profile\nOptionally, provide the name of the profile to delete\nAfter deletion, the first profile will be selected"))]
+    #[clap(about(
+        "Delete a profile
+Optionally, provide the name of the profile to delete"
+    ))]
     Delete {
         #[clap(long)]
         #[clap(help("The name of the profile to delete"))]
@@ -150,7 +148,10 @@ pub enum ProfileSubCommands {
     },
     #[clap(about("List all the profiles with their data"))]
     List,
-    #[clap(about("Switch between different profiles\nOptionally, provide the name of the profile to switch to"))]
+    #[clap(about(
+        "Switch between different profiles
+Optionally, provide the name of the profile to switch to"
+    ))]
     Switch {
         #[clap(long)]
         #[clap(help("The name of the profile to switch to"))]
@@ -160,32 +161,26 @@ pub enum ProfileSubCommands {
 
 #[derive(Subcommand)]
 pub enum ModpackSubCommands {
-    #[clap(about("Add a Modrinth modpack to the config"))]
-    AddModrinth {
-        #[clap(help("The project ID is specified at the bottom of the left sidebar under 'Technical information'\nYou can also use the project slug for this"))]
-        project_id: String,
+    #[clap(about("Add a modpack to the config"))]
+    Add {
+        #[clap(help("The identifier of the modpack/project
+The Modrinth project ID is specified at the bottom of the left sidebar under 'Technical information'. You can also use the project slug for this
+The CurseForge mod ID is specified at the top of the right sidebar under 'About Project'"))]
+        identifier: String,
         #[clap(long)]
         #[clap(value_hint(ValueHint::DirPath))]
         #[clap(help("The Minecraft instance directory to install the modpack to"))]
         output_dir: Option<PathBuf>,
         #[clap(long)]
-        #[clap(help("Whether to install the modpack's overrides to the output directory.\nThis will override existing files"))]
-        install_overrides: Option<bool>,
-    },
-    #[clap(about("Add a CurseForge modpack to the config"))]
-    AddCurseforge {
-        #[clap(help("The project ID is specified at the right sidebar under 'About Project'"))]
-        project_id: i32,
-        #[clap(long)]
-        #[clap(value_hint(ValueHint::DirPath))]
-        #[clap(help("The Minecraft instance directory to install the modpack to"))]
-        output_dir: Option<PathBuf>,
-        #[clap(long)]
-        #[clap(help("Whether to install the modpack's overrides to the output directory.\nThis may overwrite existing files"))]
+        #[clap(help(
+            "Whether to install the modpack's overrides to the output directory
+This will override existing files"
+        ))]
         install_overrides: Option<bool>,
     },
     #[clap(about(
-        "Configure the current modpack's output directory\nOptionally, provide the output directory as an option"
+        "Configure the current modpack's output directory
+Optionally, provide the output directory as an option"
     ))]
     Configure {
         #[clap(long)]
@@ -193,10 +188,16 @@ pub enum ModpackSubCommands {
         #[clap(help("The Minecraft instance directory to install the modpack to"))]
         output_dir: Option<PathBuf>,
         #[clap(long)]
-        #[clap(help("Whether to install the modpack's overrides to the output directory.\nThis may overwrite existing files"))]
+        #[clap(help(
+            "Whether to install the modpack's overrides to the output directory
+This may overwrite existing files"
+        ))]
         install_overrides: Option<bool>,
     },
-    #[clap(about("Delete a modpack\nOptionally, provide the name of the modpack to delete"))]
+    #[clap(about(
+        "Delete a modpack
+Optionally, provide the name of the modpack to delete"
+    ))]
     Delete {
         #[clap(long)]
         #[clap(help("The name of the modpack to delete"))]
@@ -204,7 +205,10 @@ pub enum ModpackSubCommands {
     },
     #[clap(about("List all the modpacks"))]
     List,
-    #[clap(about("Switch between different modpacks\nOptionally, provide the name of the modpack to switch to"))]
+    #[clap(about(
+        "Switch between different modpacks
+Optionally, provide the name of the modpack to switch to"
+    ))]
     Switch {
         #[clap(long)]
         #[clap(help("The name of the modpack to switch to"))]
