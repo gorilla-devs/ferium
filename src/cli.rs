@@ -78,6 +78,13 @@ Optionally, provide a list of names of the mods to remove"
     Sort,
     #[clap(about("Download and install the latest version of the mods specified"))]
     Upgrade,
+    #[clap(about("Scan profile for mods"))]
+    Scan {
+        #[clap(long)]
+        #[clap(arg_enum)]
+        #[clap(help("Preferred platform to scan mods from (default: modrinth)"))]
+        preferred_platform: Option<libium::config::structs::ModPlatform>
+    }
 }
 
 #[derive(Subcommand)]
