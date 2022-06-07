@@ -14,8 +14,9 @@ pub async fn create(
     output_dir: Option<PathBuf>,
 ) -> Result<()> {
     let mut profile = match (game_version, mod_loader, name, output_dir) {
-        (Some(game_version), Some(mod_loader), Some(name), Some(output_dir)) => {
+        (Some(game_version), Some(mod_loader), Some(name), output_dir) => {
             check_profile_name(config, &name)?;
+            let output_dir = output_dir.unwrap_or_else(|| misc::get_minecraft_dir().join("mods"));
             if !output_dir.is_absolute() {
                 bail!("The provided output directory is not absolute, i.e. it is a relative path")
             }
@@ -68,7 +69,7 @@ pub async fn create(
             }
         },
         _ => {
-            bail!("Provide all four arguments to create a profile using options")
+            bail!("Provide at least the name, game version, and mod loader options to create a profile")
         },
     };
 
