@@ -1,5 +1,10 @@
 # Changelog for Ferium
 
+## `v4.2.0`
+### 08.06.2022
+
+- Fix [#113](https://github.com/gorilla-devs/ferium/issues/113), compiling from source won't result in errors when dependencies are updated
+
 ## `v4.1.1`
 ### 31.05.2022
 

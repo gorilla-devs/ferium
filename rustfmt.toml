@@ -1,5 +1,4 @@
 format_code_in_doc_comments = true
-group_imports = "StdExternalCrate"
 enum_discrim_align_threshold = 20
 struct_field_align_threshold = 20
 condense_wildcard_suffixes = true
@@ -9,6 +8,7 @@ use_field_init_shorthand = true
 overflow_delimited_expr = true
 imports_granularity = "Crate"
 spaces_around_ranges = true
+group_imports = "Preserve"
 hex_literal_case = "Upper"
 normalize_comments = true
 unstable_features = true
