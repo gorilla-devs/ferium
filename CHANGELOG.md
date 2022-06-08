@@ -7,6 +7,7 @@
 - Fix [#118](https://github.com/gorilla-devs/ferium/issues/118), the `--output-dir` flag is now optional
 - Fix [#111](https://github.com/gorilla-devs/ferium/issues/111)
 - Fix [#121](https://github.com/gorilla-devs/ferium/issues/121), the add command just shows a warning for optional mods that are incompatible
+- Fix [#120](https://github.com/gorilla-devs/ferium/issues/120), duplicate files are no longer downloaded. Also, a warning so that you remove the duplicate mod
 
 ## `v4.1.1`
 ### 31.05.2022

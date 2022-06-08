@@ -29,6 +29,20 @@ pub async fn clean(
     to_download: &mut Vec<Downloadable>,
     to_install: &mut Vec<(OsString, PathBuf)>,
 ) -> Result<()> {
+    let len = to_download.len();
+    to_download.sort_unstable_by_key(|downloadable| downloadable.output.clone());
+    to_download.dedup_by_key(|downloadable| downloadable.output.clone());
+    if to_download.len() < len {
+        println!(
+            "{}",
+            format!(
+                "Warning: {} duplicate files were found, please check your mods for duplicates!",
+                len - to_download.len()
+            )
+            .yellow()
+            .bold()
+        );
+    }
     create_dir_all(directory.join(".old")).await?;
     for file in read_dir(&directory)? {
         let file = file?;
