@@ -3,8 +3,9 @@
 ## `v4.1.2`
 ### 08.06.2022
 
-- Fix [#113](https://github.com/gorilla-devs/ferium/issues/113), compiling from source won't result in errors when dependencies are updated
+- Fix [#113](https://github.com/gorilla-devs/ferium/issues/113), dependencies will no longer be auto updated to minor versions
 - Fix [#118](https://github.com/gorilla-devs/ferium/issues/118), the `--output-dir` flag is now optional
+- Fix [#111](https://github.com/gorilla-devs/ferium/issues/111)
 
 ## `v4.1.1`
 ### 31.05.2022

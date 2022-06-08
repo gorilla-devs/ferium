@@ -72,10 +72,13 @@ Remember to use an add-on like [cargo-update](https://crates.io/crates/cargo-upd
 
 ### First Startup
 
-When you first start up Ferium, you will have to either
+You can either have your own set of mods in what is called a 'profile', or install a modpack.
 
 - Create a new profile by running `ferium profile create` and entering the details for your profile
+  - Then, add your mods using `ferium add`
+  - Finally, download your mods using `ferium upgrade`
 - Add a modpack by running `ferium modpack add <project_id>`
+  - After which, run `ferium modpack upgrade` to download and install the modpack
 
 ### Adding Mods
 

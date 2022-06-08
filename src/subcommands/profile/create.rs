@@ -1,5 +1,6 @@
 use super::{check_output_directory, check_profile_name, pick_minecraft_version};
 use anyhow::{bail, Result};
+use colored::Colorize;
 use dialoguer::{Confirm, Input, Select};
 use libium::{config, file_picker, misc};
 use std::path::PathBuf;
@@ -29,12 +30,11 @@ pub async fn create(
             }
         },
         (None, None, None, None) => {
-            // Create profile using a UI
-            println!("Please enter the details for the new profile");
-
-            // Let user pick mods directory
             let mut selected_mods_dir = misc::get_minecraft_dir().join("mods");
-            println!("The default mods directory is {:?}", selected_mods_dir);
+            println!(
+                "The default mods directory is {}",
+                selected_mods_dir.display()
+            );
             if Confirm::with_theme(&*crate::THEME)
                 .with_prompt("Would you like to specify a custom mods directory?")
                 .interact()?
@@ -54,7 +54,15 @@ pub async fn create(
 
                 match check_profile_name(config, &name) {
                     Ok(_) => break name,
-                    Err(_) => continue,
+                    Err(_) => {
+                        println!(
+                            "{}",
+                            "Please provide a name that is not already being used"
+                                .red()
+                                .bold()
+                        );
+                        continue;
+                    },
                 }
             };
 
@@ -104,6 +112,11 @@ pub async fn create(
         };
         profile.mods = config.profiles[selection].mods.clone();
     }
+
+    println!(
+        "{}",
+        "After adding your mods, remember to run `ferium upgrade` to download them!".yellow()
+    );
 
     config.profiles.push(profile);
     config.active_profile = config.profiles.len() - 1; // Make created profile active
