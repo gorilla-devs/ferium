@@ -52,6 +52,7 @@ pub async fn create(
                     .with_prompt("What should this profile be called?")
                     .interact_text()?;
 
+                #[allow(clippy::single_match_else)]
                 match check_profile_name(config, &name) {
                     Ok(_) => break name,
                     Err(_) => {

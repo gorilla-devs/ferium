@@ -1,4 +1,4 @@
-use crate::{THEME, TICK};
+use crate::{CROSS, THEME, TICK};
 use anyhow::{bail, Result};
 use colored::Colorize;
 use dialoguer::Confirm;
@@ -153,6 +153,15 @@ pub async fn modrinth(
                     Err(err) => {
                         if matches!(err, add::Error::AlreadyAdded) {
                             println!("{} Already added", *TICK);
+                        } else if matches!(err, add::Error::Incompatible) {
+                            println!(
+                                "{}",
+                                format!(
+                                    "{} Not compatible, try running `ferium add {}`",
+                                    CROSS, id
+                                )
+                                .yellow()
+                            );
                         } else {
                             bail!(err);
                         }
@@ -278,6 +287,15 @@ pub async fn curseforge(
                     Err(err) => {
                         if matches!(err, add::Error::AlreadyAdded) {
                             println!("{} Already added", *TICK);
+                        } else if matches!(err, add::Error::Incompatible) {
+                            println!(
+                                "{}",
+                                format!(
+                                    "{} Not compatible, try running `ferium add {}`",
+                                    CROSS, id
+                                )
+                                .yellow()
+                            );
                         } else {
                             bail!(err);
                         }

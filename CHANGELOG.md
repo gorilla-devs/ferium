@@ -6,6 +6,7 @@
 - Fix [#113](https://github.com/gorilla-devs/ferium/issues/113), dependencies will no longer be auto updated to minor versions
 - Fix [#118](https://github.com/gorilla-devs/ferium/issues/118), the `--output-dir` flag is now optional
 - Fix [#111](https://github.com/gorilla-devs/ferium/issues/111)
+- Fix [#121](https://github.com/gorilla-devs/ferium/issues/121), the add command just shows a warning for optional mods that are incompatible
 
 ## `v4.1.1`
 ### 31.05.2022
