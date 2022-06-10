@@ -1,6 +1,6 @@
 [package]
 name = "ferium"
-version = "4.1.2"
+version = "4.1.3"
 edition = "2021"
 authors = [
     "Ilesh Thiada (theRookieCoder) <ileshkt@gmail.com>",

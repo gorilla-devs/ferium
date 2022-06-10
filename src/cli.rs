@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand, ValueHint};
 use clap_complete::Shell;
+use libium::config::structs::ModLoader;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -93,7 +94,7 @@ Optionally, provide setting(s) to change as option(s)"
         #[clap(long)]
         #[clap(arg_enum)]
         #[clap(help("The mod loader to check compatibility for"))]
-        mod_loader: Option<libium::config::structs::ModLoader>,
+        mod_loader: Option<ModLoader>,
         #[clap(long)]
         #[clap(help("The name of the profile"))]
         name: Option<String>,
@@ -121,7 +122,7 @@ Optionally, provide the name of the profile to import mods from"
         #[clap(long)]
         #[clap(arg_enum)]
         #[clap(help("The mod loader to check compatibility for"))]
-        mod_loader: Option<libium::config::structs::ModLoader>,
+        mod_loader: Option<ModLoader>,
         #[clap(long)]
         #[clap(help("The name of the profile"))]
         name: Option<String>,

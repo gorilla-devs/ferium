@@ -1,7 +1,7 @@
 use colored::Colorize;
-use libium::config;
+use libium::config::structs::Config;
 
-pub fn list(config: &config::structs::Config) {
+pub fn list(config: &Config) {
     for (i, profile) in config.profiles.iter().enumerate() {
         println!(
             "{}{}

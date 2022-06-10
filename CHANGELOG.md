@@ -1,5 +1,11 @@
 # Changelog for Ferium
 
+## `v4.1.3`
+### 11.06.2022
+
+- Clean up imports
+- Fix [#131](https://github.com/gorilla-devs/ferium/issues/131), clean up `main.rs`'s fetching of the current profile and modpack
+
 ## `v4.1.2`
 ### 08.06.2022
 

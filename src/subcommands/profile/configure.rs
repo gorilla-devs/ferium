@@ -1,13 +1,17 @@
 use super::{check_output_directory, pick_minecraft_version, pick_mod_loader};
+use crate::THEME;
 use anyhow::Result;
 use dialoguer::{Input, Select};
-use libium::{config, file_picker};
+use libium::{
+    config::structs::{ModLoader, Profile},
+    file_picker::pick_folder,
+};
 use std::path::PathBuf;
 
 pub async fn configure(
-    profile: &mut config::structs::Profile,
+    profile: &mut Profile,
     game_version: Option<String>,
-    mod_loader: Option<config::structs::ModLoader>,
+    mod_loader: Option<ModLoader>,
     name: Option<String>,
     output_dir: Option<PathBuf>,
 ) -> Result<()> {
@@ -45,7 +49,7 @@ pub async fn configure(
         ];
 
         loop {
-            let selection = Select::with_theme(&*crate::THEME)
+            let selection = Select::with_theme(&*THEME)
                 .with_prompt("Which setting would you like to change")
                 .items(&items)
                 .interact_opt()?;
@@ -53,11 +57,8 @@ pub async fn configure(
             if let Some(index) = selection {
                 match index {
                     0 => {
-                        if let Some(dir) = file_picker::pick_folder(
-                            &profile.output_dir,
-                            "Pick an output directory",
-                        )
-                        .await
+                        if let Some(dir) =
+                            pick_folder(&profile.output_dir, "Pick an output directory").await
                         {
                             check_output_directory(&dir).await?;
                             profile.output_dir = dir;
@@ -66,7 +67,7 @@ pub async fn configure(
                     1 => profile.game_version = pick_minecraft_version().await?,
                     2 => profile.mod_loader = pick_mod_loader(Some(&profile.mod_loader))?,
                     3 => {
-                        let name = Input::with_theme(&*crate::THEME)
+                        let name = Input::with_theme(&*THEME)
                             .with_prompt("Change the profile's name")
                             .default(profile.name.clone())
                             .interact_text()?;

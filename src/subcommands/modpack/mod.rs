@@ -14,8 +14,8 @@ use crate::THEME;
 use anyhow::{anyhow, bail, Result};
 use dialoguer::Confirm;
 use fs_extra::dir::{copy, CopyOptions};
-use libium::{file_picker, HOME};
-use std::path::Path;
+use libium::{file_picker::pick_folder, HOME};
+use std::{fs::read_dir, path::Path};
 
 pub async fn check_output_directory(output_dir: &Path) -> Result<()> {
     if output_dir.is_relative() {
@@ -24,7 +24,7 @@ pub async fn check_output_directory(output_dir: &Path) -> Result<()> {
     for check_dir in [output_dir.join("mods"), output_dir.join("resourcepacks")] {
         let mut backup = false;
         if check_dir.exists() {
-            for file in std::fs::read_dir(&check_dir)? {
+            for file in read_dir(&check_dir)? {
                 let file = file?;
                 if file.path().is_file() && file.file_name() != ".DS_Store" {
                     backup = true;
@@ -41,10 +41,9 @@ pub async fn check_output_directory(output_dir: &Path) -> Result<()> {
                 .with_prompt("Would like to create a backup?")
                 .interact()?
             {
-                let backup_dir =
-                    file_picker::pick_folder(&*HOME, "Where should the backup be made?")
-                        .await
-                        .ok_or_else(|| anyhow!("Please pick an output directory"))?;
+                let backup_dir = pick_folder(&*HOME, "Where should the backup be made?")
+                    .await
+                    .ok_or_else(|| anyhow!("Please pick an output directory"))?;
                 copy(check_dir, backup_dir, &CopyOptions::new())?;
             }
         }

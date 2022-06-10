@@ -1,16 +1,17 @@
+use crate::THEME;
 use anyhow::{bail, Result};
 use dialoguer::MultiSelect;
-use libium::config;
+use libium::config::structs::Profile;
 
 /// Display a list of mods and repos in the profile to select from and remove selected ones
-pub fn remove(profile: &mut config::structs::Profile, mod_names: Vec<String>) -> Result<()> {
+pub fn remove(profile: &mut Profile, mod_names: Vec<String>) -> Result<()> {
     let names = profile
         .mods
         .iter()
         .map(|mod_| &mod_.name)
         .collect::<Vec<_>>();
     let mut items_to_remove = if mod_names.is_empty() {
-        match MultiSelect::with_theme(&*crate::THEME)
+        match MultiSelect::with_theme(&*THEME)
             .with_prompt("Select mods to remove")
             .items(&names)
             .interact_opt()?
