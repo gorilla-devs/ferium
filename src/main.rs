@@ -293,7 +293,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
     config.profiles.iter_mut().for_each(|profile| {
         profile
             .mods
-            .sort_by_cached_key(|mod_| mod_.name.to_lowercase())
+            .sort_by_cached_key(|mod_| mod_.name.to_lowercase());
     });
     // Update config file with possibly edited config
     config::write_file(&mut config_file, &config).await?;
