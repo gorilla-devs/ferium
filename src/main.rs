@@ -73,7 +73,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
     let mut config_file =
         config::get_file(cli_app.config_file
             .or_else(|| std::env::var_os("FERIUM_CONFIG_LOCATION")
-                .map(|str| str.into()))
+                .map(Into::into))
             .unwrap_or_else(config::file_path)).await?;
     let mut config = config::deserialise(&config::read_file(&mut config_file).await?)?;
 
