@@ -176,7 +176,7 @@ where
     slice.sort_unstable_by_key(&key);
     for i in 0..(slice.len() - 1) {
         if key(&slice[i]) == key(&slice[i + 1]) {
-            indices.push(i)
+            indices.push(i);
         }
     }
     indices.reverse();
