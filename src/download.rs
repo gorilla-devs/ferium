@@ -6,6 +6,7 @@ use fs_extra::{
     file::{move_file, CopyOptions as FileCopyOptions},
 };
 use indicatif::ProgressBar;
+use itertools::Itertools;
 use libium::{mutex_ext::MutexExt, upgrade::Downloadable};
 use size::{Base, Style};
 use std::{
@@ -30,15 +31,17 @@ pub async fn clean(
     to_download: &mut Vec<Downloadable>,
     to_install: &mut Vec<(OsString, PathBuf)>,
 ) -> Result<()> {
-    let len = to_download.len();
-    to_download.sort_unstable_by_key(|downloadable| downloadable.output.clone());
-    to_download.dedup_by_key(|downloadable| downloadable.output.clone());
-    if to_download.len() < len {
+    let dupes = find_dupes_by_key(to_download, Downloadable::filename);
+    if !dupes.is_empty() {
         println!(
             "{}",
             format!(
-                "Warning: {} duplicate files were found, please check your mods for duplicates!",
-                len - to_download.len()
+                "Warning: {} duplicate files were found {}. Remove the mod it belongs to",
+                dupes.len(),
+                dupes
+                    .into_iter()
+                    .map(|i| to_download.swap_remove(i).filename())
+                    .format(", ")
             )
             .yellow()
             .bold()
@@ -159,4 +162,23 @@ pub async fn download(
     }
 
     Ok(())
+}
+
+/// Find duplicates of the items in `slice` using a value obtained by the `key` closure
+///
+/// Returns the indices of duplicate items in reverse order for easy removal
+fn find_dupes_by_key<T, V, F>(slice: &mut [T], key: F) -> Vec<usize>
+where
+    V: Eq + Ord,
+    F: Fn(&T) -> V,
+{
+    let mut indices = Vec::new();
+    slice.sort_unstable_by_key(&key);
+    for i in 0..(slice.len() - 1) {
+        if key(&slice[i]) == key(&slice[i + 1]) {
+            indices.push(i)
+        }
+    }
+    indices.reverse();
+    indices
 }

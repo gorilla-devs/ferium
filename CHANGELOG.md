@@ -5,6 +5,7 @@
 
 - Clean up imports
 - Fix [#131](https://github.com/gorilla-devs/ferium/issues/131), clean up `main.rs`'s fetching of the current profile and modpack
+- Fix [#130](https://github.com/gorilla-devs/ferium/issues/130)
 
 ## `v4.1.2`
 ### 08.06.2022
