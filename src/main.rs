@@ -282,9 +282,6 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             check_empty_profile(profile)?;
             subcommands::remove(profile, mod_names)?;
         },
-        SubCommands::Sort => get_active_profile(&mut config)?
-            .mods
-            .sort_by_cached_key(|mod_| mod_.name.to_lowercase()),
         SubCommands::Upgrade => {
             check_internet().await?;
             let profile = get_active_profile(&mut config)?;
@@ -293,6 +290,11 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         },
     };
 
+    config.profiles.iter_mut().for_each(|profile| {
+        profile
+            .mods
+            .sort_by_cached_key(|mod_| mod_.name.to_lowercase())
+    });
     // Update config file with possibly edited config
     config::write_file(&mut config_file, &config).await?;
 

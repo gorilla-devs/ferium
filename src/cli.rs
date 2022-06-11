@@ -75,8 +75,6 @@ Optionally, provide a list of names of the mods to remove"
         #[clap(help("A case-insensitive list of names of a mods to remove"))]
         mod_names: Vec<String>,
     },
-    #[clap(about("Sort all your mods in alphabetical order"))]
-    Sort,
     #[clap(about("Download and install the latest version of the mods specified"))]
     Upgrade,
 }
