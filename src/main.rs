@@ -63,18 +63,20 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             })
             .build()?,
     );
-    let modrinth = Arc::new(Ferinth::new());
+    let modrinth = Arc::new(Ferinth::default());
     // Yes this is a personal API key, but I am allowed to write it in source.
     // The reason is the API key is used for tracking usage, it's not for authentication.
     // So please don't use this outside of Ferium, although telling you not to is all I can do...
     let curseforge = Arc::new(Furse::new(
         "$2a$10$QbCxI6f4KxEs50QKwE2piu1t6oOA8ayOw27H9N/eaH3Sdp5NTWwvO",
     ));
-    let mut config_file =
-        config::get_file(cli_app.config_file
-            .or_else(|| std::env::var_os("FERIUM_CONFIG_LOCATION")
-                .map(Into::into))
-            .unwrap_or_else(config::file_path)).await?;
+    let mut config_file = config::get_file(
+        cli_app
+            .config_file
+            .or_else(|| std::env::var_os("FERIUM_CONFIG_FILE").map(Into::into))
+            .unwrap_or_else(config::file_path),
+    )
+    .await?;
     let mut config = config::deserialise(&config::read_file(&mut config_file).await?)?;
 
     // Run function(s) based on the sub(sub)command to be executed

@@ -68,7 +68,7 @@ Remember to use an add-on like [cargo-update](https://crates.io/crates/cargo-upd
 > Note! A lot of Ferium's backend is in a seperate project [Libium](https://github.com/theRookieCoder/libium).
 > It deals with things such as the config, adding mod(pack)s, upgrading, file pickers, etc
 
-> The config file is located at `~/.config/ferium/config.json` if you're interested in manually editing it
+Ferium stores profile and modpack information in it's config file. By default it is located at `~/.config/ferium/config.json`, but you can change this in 2 ways. You can set the `FERIUM_CONFIG_FILE` environment variable or set the `--config-file` global command flag, the flag always takes precedence.
 
 ### First Startup
 

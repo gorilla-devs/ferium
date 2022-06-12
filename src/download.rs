@@ -173,6 +173,9 @@ where
     F: Fn(&T) -> V,
 {
     let mut indices = Vec::new();
+    if slice.len() < 2 {
+        return indices;
+    }
     slice.sort_unstable_by_key(&key);
     for i in 0..(slice.len() - 1) {
         if key(&slice[i]) == key(&slice[i + 1]) {
