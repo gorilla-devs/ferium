@@ -2,6 +2,7 @@
 name = "ferium"
 version = "4.1.4"
 edition = "2021"
+rust-version = "1.61"
 authors = [
     "Ilesh Thiada (theRookieCoder) <ileshkt@gmail.com>",
     "薛詠謙 (KyleUltimate)",
