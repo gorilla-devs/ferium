@@ -1,5 +1,29 @@
 # Changelog for Ferium
 
+## `v4.1.4`
+### 12.06.2022
+
+- Fixed bug where if the slice is shorter than 2, the find dupe functions will panic
+- Added an env var to set the config file
+- Updated ferinth to `2.3.0`
+
+## `v4.1.3`
+### 11.06.2022
+
+- Clean up imports
+- Fix [#131](https://github.com/gorilla-devs/ferium/issues/131), clean up `main.rs`'s fetching of the current profile and modpack
+- Fix [#130](https://github.com/gorilla-devs/ferium/issues/130)
+- Fix [#126](https://github.com/gorilla-devs/ferium/issues/126). Removed `sort` subcommand, all profiles' mods are sorted when writing to config
+
+## `v4.1.2`
+### 08.06.2022
+
+- Fix [#113](https://github.com/gorilla-devs/ferium/issues/113), dependencies will no longer be auto updated to minor versions
+- Fix [#118](https://github.com/gorilla-devs/ferium/issues/118), the `--output-dir` flag is now optional
+- Fix [#111](https://github.com/gorilla-devs/ferium/issues/111)
+- Fix [#121](https://github.com/gorilla-devs/ferium/issues/121), the add command just shows a warning for optional mods that are incompatible
+- Fix [#120](https://github.com/gorilla-devs/ferium/issues/120), duplicate files are no longer downloaded. Also, a warning so that you remove the duplicate mod
+
 ## `v4.1.1`
 ### 31.05.2022
 

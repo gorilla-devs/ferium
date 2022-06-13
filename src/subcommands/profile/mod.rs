@@ -15,10 +15,12 @@ use colored::Colorize;
 use dialoguer::{Confirm, Select};
 use fs_extra::dir::{copy, CopyOptions};
 use libium::{
-    config::{self, structs::ModLoader},
-    file_picker, misc, HOME,
+    config::structs::{Config, ModLoader},
+    file_picker::pick_folder,
+    misc::get_major_mc_versions,
+    HOME,
 };
-use std::path::PathBuf;
+use std::{fs::read_dir, path::PathBuf};
 
 pub fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
     let mut picker = Select::with_theme(&*THEME);
@@ -41,7 +43,7 @@ pub fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
 }
 
 pub async fn pick_minecraft_version() -> Result<String> {
-    let mut latest_versions: Vec<String> = misc::get_major_mc_versions(10).await?;
+    let mut latest_versions: Vec<String> = get_major_mc_versions(10).await?;
     let selected_version = Select::with_theme(&*THEME)
         .with_prompt("Which version of Minecraft do you play?")
         .items(&latest_versions)
@@ -51,7 +53,7 @@ pub async fn pick_minecraft_version() -> Result<String> {
 }
 
 /// Check that there isn't already a profile with the same name
-pub fn check_profile_name(config: &mut config::structs::Config, name: &str) -> Result<()> {
+pub fn check_profile_name(config: &Config, name: &str) -> Result<()> {
     for profile in &config.profiles {
         if profile.name == name {
             bail!("A profile with name {} already exists", name);
@@ -69,7 +71,7 @@ pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
     }
     let mut backup = false;
     if output_dir.exists() {
-        for file in std::fs::read_dir(output_dir)? {
+        for file in read_dir(output_dir)? {
             let file = file?;
             if file.path().is_file() && file.file_name() != ".DS_Store" {
                 backup = true;
@@ -85,7 +87,7 @@ pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
             .with_prompt("Would like to create a backup?")
             .interact()?
         {
-            let backup_dir = file_picker::pick_folder(&*HOME, "Where should the backup be made?")
+            let backup_dir = pick_folder(&*HOME, "Where should the backup be made?")
                 .await
                 .unwrap();
             copy(output_dir, backup_dir, &CopyOptions::new())?;

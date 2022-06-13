@@ -1,16 +1,17 @@
 use super::switch;
+use crate::THEME;
 use anyhow::{bail, Result};
 use dialoguer::Select;
-use libium::config;
+use libium::config::structs::Config;
 
-pub fn delete(config: &mut config::structs::Config, modpack_name: &Option<String>) -> Result<()> {
+pub fn delete(config: &mut Config, modpack_name: Option<String>) -> Result<()> {
     let selection = match modpack_name {
         // If the modpack name has been provided as an option
         Some(modpack_name) => {
             match config
                 .modpacks
                 .iter()
-                .position(|modpack| &modpack.name == modpack_name)
+                .position(|modpack| modpack.name == modpack_name)
             {
                 Some(selection) => selection,
                 None => bail!("The modpack name provided does not exist"),
@@ -23,7 +24,7 @@ pub fn delete(config: &mut config::structs::Config, modpack_name: &Option<String
                 .map(|modpack| &modpack.name)
                 .collect::<Vec<_>>();
 
-            let selection = Select::with_theme(&*crate::THEME)
+            let selection = Select::with_theme(&*THEME)
                 .with_prompt("Select which modpack to delete")
                 .items(&modpack_names)
                 .default(config.active_modpack)
@@ -42,7 +43,7 @@ pub fn delete(config: &mut config::structs::Config, modpack_name: &Option<String
         // And there is more than one modpack
         if config.modpacks.len() > 1 {
             // Let the user pick which modpack to switch to
-            switch(config, &None)?;
+            switch(config, None)?;
         } else {
             config.active_modpack = 0;
         }

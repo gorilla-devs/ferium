@@ -6,7 +6,9 @@ use fs_extra::{
     file::{move_file, CopyOptions as FileCopyOptions},
 };
 use indicatif::ProgressBar;
+use itertools::Itertools;
 use libium::{mutex_ext::MutexExt, upgrade::Downloadable};
+use size::{Base, Style};
 use std::{
     ffi::OsString,
     fs::read_dir,
@@ -29,6 +31,22 @@ pub async fn clean(
     to_download: &mut Vec<Downloadable>,
     to_install: &mut Vec<(OsString, PathBuf)>,
 ) -> Result<()> {
+    let dupes = find_dupes_by_key(to_download, Downloadable::filename);
+    if !dupes.is_empty() {
+        println!(
+            "{}",
+            format!(
+                "Warning: {} duplicate files were found {}. Remove the mod it belongs to",
+                dupes.len(),
+                dupes
+                    .into_iter()
+                    .map(|i| to_download.swap_remove(i).filename())
+                    .format(", ")
+            )
+            .yellow()
+            .bold()
+        );
+    }
     create_dir_all(directory.join(".old")).await?;
     for file in read_dir(&directory)? {
         let file = file?;
@@ -111,7 +129,7 @@ pub async fn download(
                 "{} Downloaded {:7} {}",
                 &*TICK,
                 match size {
-                    Some(size) => size.to_string(size::Base::Base10, size::Style::Smart),
+                    Some(size) => size.to_string(Base::Base10, Style::Smart),
                     None => String::new(),
                 },
                 filename.dimmed(),
@@ -144,4 +162,26 @@ pub async fn download(
     }
 
     Ok(())
+}
+
+/// Find duplicates of the items in `slice` using a value obtained by the `key` closure
+///
+/// Returns the indices of duplicate items in reverse order for easy removal
+fn find_dupes_by_key<T, V, F>(slice: &mut [T], key: F) -> Vec<usize>
+where
+    V: Eq + Ord,
+    F: Fn(&T) -> V,
+{
+    let mut indices = Vec::new();
+    if slice.len() < 2 {
+        return indices;
+    }
+    slice.sort_unstable_by_key(&key);
+    for i in 0..(slice.len() - 1) {
+        if key(&slice[i]) == key(&slice[i + 1]) {
+            indices.push(i);
+        }
+    }
+    indices.reverse();
+    indices
 }

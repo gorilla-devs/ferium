@@ -1,9 +1,10 @@
 use super::switch;
+use crate::THEME;
 use anyhow::{bail, Result};
 use dialoguer::Select;
-use libium::config;
+use libium::config::structs::Config;
 
-pub fn delete(config: &mut config::structs::Config, profile_name: Option<String>) -> Result<()> {
+pub fn delete(config: &mut Config, profile_name: Option<String>) -> Result<()> {
     let selection = match profile_name {
         // If the profile name has been provided as an option
         Some(profile_name) => {
@@ -23,7 +24,7 @@ pub fn delete(config: &mut config::structs::Config, profile_name: Option<String>
                 .map(|profile| &profile.name)
                 .collect::<Vec<_>>();
 
-            let selection = Select::with_theme(&*crate::THEME)
+            let selection = Select::with_theme(&*THEME)
                 .with_prompt("Select which profile to delete")
                 .items(&profile_names)
                 .default(config.active_profile)

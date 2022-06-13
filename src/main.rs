@@ -6,12 +6,17 @@ use anyhow::{anyhow, bail, Result};
 use clap::{IntoApp, StructOpt};
 use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
+use dialoguer::theme::ColorfulTheme;
 use ferinth::Ferinth;
 use furse::Furse;
 use indicatif::ProgressStyle;
 use lazy_static::lazy_static;
-use libium::config::{self, structs::ModIdentifier};
+use libium::config::{
+    self,
+    structs::{Config, ModIdentifier, Modpack, Profile},
+};
 use octocrab::OctocrabBuilder;
+use online::check;
 use std::{process::ExitCode, sync::Arc};
 use subcommands::{add, scan, upgrade};
 use tokio::{runtime, spawn};
@@ -20,8 +25,7 @@ const CROSS: &str = "×";
 lazy_static! {
     pub static ref TICK: ColoredString = "✓".green();
     pub static ref YELLOW_TICK: ColoredString = "✓".yellow();
-    pub static ref THEME: dialoguer::theme::ColorfulTheme =
-        dialoguer::theme::ColorfulTheme::default();
+    pub static ref THEME: ColorfulTheme = ColorfulTheme::default();
     pub static ref STYLE_NO: ProgressStyle = ProgressStyle::default_bar()
         .template("{spinner} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
         .progress_chars("#>-");
@@ -60,141 +64,21 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             })
             .build()?,
     );
-    let modrinth = Arc::new(Ferinth::new());
+    let modrinth = Arc::new(Ferinth::default());
     // Yes this is a personal API key, but I am allowed to write it in source.
     // The reason is the API key is used for tracking usage, it's not for authentication.
     // So please don't use this outside of Ferium, although telling you not to is all I can do...
     let curseforge = Arc::new(Furse::new(
         "$2a$10$QbCxI6f4KxEs50QKwE2piu1t6oOA8ayOw27H9N/eaH3Sdp5NTWwvO",
     ));
-    let mut config_file =
-        config::get_file(cli_app.config_file.unwrap_or_else(config::file_path)).await?;
+    let mut config_file = config::get_file(
+        cli_app
+            .config_file
+            .or_else(|| std::env::var_os("FERIUM_CONFIG_FILE").map(Into::into))
+            .unwrap_or_else(config::file_path),
+    )
+    .await?;
     let mut config = config::deserialise(&config::read_file(&mut config_file).await?)?;
-
-    // The create command must run before getting the profile so that configs without profiles can have profiles added
-    if let SubCommands::Profile {
-        subcommand:
-            ProfileSubCommands::Create {
-                import,
-                game_version,
-                mod_loader,
-                name,
-                output_dir,
-            },
-    } = cli_app.subcommand
-    {
-        check_internet().await?;
-        subcommands::profile::create(
-            &mut config,
-            import,
-            game_version,
-            mod_loader,
-            name,
-            output_dir,
-        )
-        .await?;
-
-        // Update config file and quit
-        config::write_file(&mut config_file, &config).await?;
-        return Ok(());
-    }
-
-    if let SubCommands::Modpack { subcommand } = &cli_app.subcommand {
-        // Similarly, the add commands must run before getting the modpack so that configs without modpacks can have modpacks added
-        if let ModpackSubCommands::Add {
-            identifier,
-            output_dir,
-            install_overrides,
-        } = subcommand
-        {
-            check_internet().await?;
-
-            if let Ok(project_id) = identifier.parse::<i32>() {
-                subcommands::modpack::add::curseforge(
-                    curseforge.clone(),
-                    &mut config,
-                    project_id,
-                    output_dir,
-                    *install_overrides,
-                )
-                .await?;
-            } else if let Err(err) = subcommands::modpack::add::modrinth(
-                modrinth.clone(),
-                &mut config,
-                identifier,
-                output_dir,
-                *install_overrides,
-            )
-            .await
-            {
-                return Err(
-                    if err.to_string() == ferinth::Error::NotBase62.to_string() {
-                        anyhow!("Invalid indentifier")
-                    } else {
-                        err
-                    },
-                );
-            }
-
-            // Update config file and quit
-            config::write_file(&mut config_file, &config).await?;
-            return Ok(());
-        }
-
-        // Get a mutable reference to the active modpack
-        let modpack = if let Some(modpack) = config.modpacks.get_mut(config.active_modpack) {
-            modpack
-        } else {
-            if config.modpacks.is_empty() {
-                bail!("There are no modpacks configured! Run `ferium modpack help` to see how to add modpacks")
-            }
-            // Default to first modpack if index is set incorrectly
-            config.active_modpack = 0;
-            config::write_file(&mut config_file, &config).await?;
-            bail!("Active modpack specified incorrectly. Switched to first modpack")
-        };
-
-        match subcommand {
-            ModpackSubCommands::Add { .. } => {
-                unreachable!()
-            },
-            ModpackSubCommands::Configure {
-                output_dir,
-                install_overrides,
-            } => {
-                subcommands::modpack::configure(modpack, output_dir, *install_overrides).await?;
-            },
-            ModpackSubCommands::Delete { modpack_name } => {
-                subcommands::modpack::delete(&mut config, modpack_name)?;
-            },
-            ModpackSubCommands::List => subcommands::modpack::list(&config),
-            ModpackSubCommands::Switch { modpack_name } => {
-                subcommands::modpack::switch(&mut config, modpack_name)?;
-            },
-            ModpackSubCommands::Upgrade => {
-                check_internet().await?;
-                subcommands::modpack::upgrade(modrinth.clone(), curseforge.clone(), modpack)
-                    .await?;
-            },
-        }
-
-        // Update config file and quit
-        config::write_file(&mut config_file, &config).await?;
-        return Ok(());
-    }
-
-    // Get a mutable reference to the active profile
-    let profile = if let Some(profile) = config.profiles.get_mut(config.active_profile) {
-        profile
-    } else {
-        if config.profiles.is_empty() {
-            bail!("There are no profiles configured. Add a profile to your config using `ferium profile create`")
-        }
-        // Default to first profile if index is set incorrectly
-        config.active_profile = 0;
-        config::write_file(&mut config_file, &config).await?;
-        bail!("Active profile specified incorrectly. Switched to first profile")
-    };
 
     // Run function(s) based on the sub(sub)command to be executed
     match cli_app.subcommand {
@@ -204,9 +88,10 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             dont_check_mod_loader,
             dont_add_dependencies,
         } => {
+            let profile = get_active_profile(&mut config)?;
             check_internet().await?;
             if let Ok(project_id) = identifier.parse::<i32>() {
-                add::curseforge(
+                subcommands::add::curseforge(
                     curseforge,
                     project_id,
                     profile,
@@ -217,14 +102,14 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 .await?;
             } else if identifier.split('/').count() == 2 {
                 let split = identifier.split('/').collect::<Vec<_>>();
-                add::github(
+                subcommands::add::github(
                     github.repos(split[0], split[1]),
                     profile,
                     Some(!dont_check_game_version),
                     Some(!dont_check_mod_loader),
                 )
                 .await?;
-            } else if let Err(err) = add::modrinth(
+            } else if let Err(err) = subcommands::add::modrinth(
                 modrinth,
                 &identifier,
                 profile,
@@ -250,6 +135,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             &mut std::io::stdout(),
         ),
         SubCommands::List { verbose } => {
+            let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
             if verbose {
                 check_internet().await?;
@@ -290,7 +176,68 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 }
             }
         },
-        SubCommands::Modpack { .. } => unreachable!(),
+        SubCommands::Modpack { subcommand } => match subcommand {
+            ModpackSubCommands::Add {
+                identifier,
+                output_dir,
+                install_overrides,
+            } => {
+                check_internet().await?;
+                if let Ok(project_id) = identifier.parse::<i32>() {
+                    subcommands::modpack::add::curseforge(
+                        curseforge.clone(),
+                        &mut config,
+                        project_id,
+                        output_dir,
+                        install_overrides,
+                    )
+                    .await?;
+                } else if let Err(err) = subcommands::modpack::add::modrinth(
+                    modrinth.clone(),
+                    &mut config,
+                    &identifier,
+                    output_dir,
+                    install_overrides,
+                )
+                .await
+                {
+                    return Err(
+                        if err.to_string() == ferinth::Error::NotBase62.to_string() {
+                            anyhow!("Invalid indentifier")
+                        } else {
+                            err
+                        },
+                    );
+                }
+            },
+            ModpackSubCommands::Configure {
+                output_dir,
+                install_overrides,
+            } => {
+                subcommands::modpack::configure(
+                    get_active_modpack(&mut config)?,
+                    output_dir,
+                    install_overrides,
+                )
+                .await?;
+            },
+            ModpackSubCommands::Delete { modpack_name } => {
+                subcommands::modpack::delete(&mut config, modpack_name)?;
+            },
+            ModpackSubCommands::List => subcommands::modpack::list(&config),
+            ModpackSubCommands::Switch { modpack_name } => {
+                subcommands::modpack::switch(&mut config, modpack_name)?;
+            },
+            ModpackSubCommands::Upgrade => {
+                check_internet().await?;
+                subcommands::modpack::upgrade(
+                    modrinth.clone(),
+                    curseforge.clone(),
+                    get_active_modpack(&mut config)?,
+                )
+                .await?;
+            },
+        },
         SubCommands::Profile { subcommand } => match subcommand {
             ProfileSubCommands::Configure {
                 game_version,
@@ -300,7 +247,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             } => {
                 check_internet().await?;
                 subcommands::profile::configure(
-                    profile,
+                    get_active_profile(&mut config)?,
                     game_version,
                     mod_loader,
                     name,
@@ -308,8 +255,26 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 )
                 .await?;
             },
-            // This must have ran earlier before getting the profile
-            ProfileSubCommands::Create { .. } => unreachable!(),
+            ProfileSubCommands::Create {
+                import,
+                game_version,
+                mod_loader,
+                name,
+                output_dir,
+            } => {
+                if game_version.is_none() {
+                    check_internet().await?;
+                }
+                subcommands::profile::create(
+                    &mut config,
+                    import,
+                    game_version,
+                    mod_loader,
+                    name,
+                    output_dir,
+                )
+                .await?;
+            },
             ProfileSubCommands::Delete { profile_name } => {
                 subcommands::profile::delete(&mut config, profile_name)?;
             },
@@ -319,16 +284,25 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             },
         },
         SubCommands::Remove { mod_names } => {
+            let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
             subcommands::remove(profile, mod_names)?;
         },
-        SubCommands::Sort => profile
-            .mods
-            .sort_by_cached_key(|mod_| mod_.name.to_lowercase()),
         SubCommands::Upgrade => {
             check_internet().await?;
+            let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
-            upgrade(modrinth, curseforge, github, profile).await?;
+            subcommands::upgrade(modrinth, curseforge, github, profile).await?;
+        },
+        SubCommands::Scan { preferred_platform } => {
+            check_internet().await?;
+            scan(
+                modrinth,
+                curseforge,
+                profile,
+                preferred_platform.unwrap_or(libium::config::structs::ModPlatform::Modrinth),
+            )
+            .await?;
         },
         SubCommands::Scan { preferred_platform } => {
             check_internet().await?;
@@ -342,14 +316,55 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         },
     };
 
+    config.profiles.iter_mut().for_each(|profile| {
+        profile
+            .mods
+            .sort_by_cached_key(|mod_| mod_.name.to_lowercase());
+    });
     // Update config file with possibly edited config
     config::write_file(&mut config_file, &config).await?;
 
     Ok(())
 }
 
+/// Get the active profile with error handling
+fn get_active_profile(config: &mut Config) -> Result<&mut Profile> {
+    if config.profiles.is_empty() {
+        bail!("There are no profiles configured, create a profile using `ferium profile create`")
+    } else if config.profiles.len() < config.active_profile {
+        println!(
+            "{}",
+            "Active profile specified incorrectly, please pick a profile to use"
+                .red()
+                .bold()
+        );
+        subcommands::profile::switch(config, None)?;
+        Ok(&mut config.profiles[config.active_profile])
+    } else {
+        Ok(&mut config.profiles[config.active_profile])
+    }
+}
+
+/// Get the active modpack with error handling
+fn get_active_modpack(config: &mut Config) -> Result<&mut Modpack> {
+    if config.modpacks.is_empty() {
+        bail!("There are no modpacks configured, add a modpack using `ferium modpack add`")
+    } else if config.modpacks.len() < config.active_modpack {
+        println!(
+            "{}",
+            "Active modpack specified incorrectly, please pick a modpack to use"
+                .red()
+                .bold()
+        );
+        subcommands::modpack::switch(config, None)?;
+        Ok(&mut config.modpacks[config.active_modpack])
+    } else {
+        Ok(&mut config.modpacks[config.active_modpack])
+    }
+}
+
 /// Check if `profile` is empty, and if so return an error
-fn check_empty_profile(profile: &config::structs::Profile) -> Result<()> {
+fn check_empty_profile(profile: &Profile) -> Result<()> {
     if profile.mods.is_empty() {
         bail!("Your currently selected profile is empty! Run `ferium help` to see how to add mods");
     }
@@ -358,12 +373,12 @@ fn check_empty_profile(profile: &config::structs::Profile) -> Result<()> {
 
 /// Check for an internet connection
 async fn check_internet() -> Result<()> {
-    if online::check(Some(1)).await.is_err() {
+    if check(Some(1)).await.is_err() {
         // If it takes more than 1 second
         // show that we're checking the internet connection
         // and check for 4 more seconds
         eprint!("Checking internet connection... ");
-        match online::check(Some(4)).await {
+        match check(Some(4)).await {
             Ok(_) => {
                 println!("{}", *TICK);
                 Ok(())

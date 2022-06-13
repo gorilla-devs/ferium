@@ -1,4 +1,5 @@
-use crate::{subcommands::modpack::check_output_directory, THEME, TICK};
+use super::check_output_directory;
+use crate::{THEME, TICK};
 use anyhow::{anyhow, Result};
 use colored::Colorize;
 use dialoguer::Confirm;
@@ -7,7 +8,7 @@ use furse::Furse;
 use itertools::Itertools;
 use libium::{
     config::structs::{Config, Modpack, ModpackIdentifier},
-    file_picker,
+    file_picker::pick_folder,
     misc::get_minecraft_dir,
     modpack::add,
 };
@@ -17,7 +18,7 @@ pub async fn curseforge(
     curseforge: Arc<Furse>,
     config: &mut Config,
     project_id: i32,
-    output_dir: &Option<PathBuf>,
+    output_dir: Option<PathBuf>,
     install_overrides: Option<bool>,
 ) -> Result<()> {
     eprint!("Checking modpack... ");
@@ -26,7 +27,7 @@ pub async fn curseforge(
     println!("Where should the modpack be installed to?");
     let output_dir = match output_dir {
         Some(some) => some.clone(),
-        None => file_picker::pick_folder(&get_minecraft_dir(), "Pick an output directory")
+        None => pick_folder(&get_minecraft_dir(), "Pick an output directory")
             .await
             .ok_or_else(|| anyhow!("Please pick an output directory"))?,
     };
@@ -61,7 +62,7 @@ pub async fn modrinth(
     modrinth: Arc<Ferinth>,
     config: &mut Config,
     project_id: &str,
-    output_dir: &Option<PathBuf>,
+    output_dir: Option<PathBuf>,
     install_overrides: Option<bool>,
 ) -> Result<()> {
     eprint!("Checking modpack... ");
@@ -70,7 +71,7 @@ pub async fn modrinth(
     println!("Where should the modpack be installed to?");
     let output_dir = match output_dir {
         Some(some) => some.clone(),
-        None => file_picker::pick_folder(&get_minecraft_dir(), "Pick an output directory")
+        None => pick_folder(&get_minecraft_dir(), "Pick an output directory")
             .await
             .ok_or_else(|| anyhow!("Please pick an output directory"))?,
     };

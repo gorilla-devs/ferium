@@ -1,4 +1,4 @@
-use crate::{THEME, TICK};
+use crate::{CROSS, THEME, TICK};
 use anyhow::{bail, Result};
 use colored::Colorize;
 use dialoguer::Confirm;
@@ -8,22 +8,19 @@ use furse::{structures::file_structs::FileRelationType, Furse};
 use itertools::Itertools;
 use libium::{
     add,
-    config::{
-        self,
-        structs::{Mod, ModIdentifier},
-    },
+    config::structs::{Mod, ModIdentifier, Profile},
 };
 use octocrab::repos::RepoHandler;
 use std::sync::Arc;
 
 pub async fn github(
     repo_handler: RepoHandler<'_>,
-    profile: &mut config::structs::Profile,
+    profile: &mut Profile,
     should_check_game_version: Option<bool>,
     should_check_mod_loader: Option<bool>,
 ) -> Result<()> {
     eprint!("Adding mod... ");
-    let (repo, _) = libium::add::github(
+    let (repo, _) = add::github(
         &repo_handler,
         profile,
         should_check_game_version,
@@ -51,7 +48,7 @@ pub async fn github(
 pub async fn modrinth(
     modrinth: Arc<Ferinth>,
     project_id: &str,
-    profile: &mut config::structs::Profile,
+    profile: &mut Profile,
     should_check_game_version: Option<bool>,
     should_check_mod_loader: Option<bool>,
     add_dependencies: bool,
@@ -153,6 +150,15 @@ pub async fn modrinth(
                     Err(err) => {
                         if matches!(err, add::Error::AlreadyAdded) {
                             println!("{} Already added", *TICK);
+                        } else if matches!(err, add::Error::Incompatible) {
+                            println!(
+                                "{}",
+                                format!(
+                                    "{} Not compatible, try running `ferium add {}`",
+                                    CROSS, id
+                                )
+                                .yellow()
+                            );
                         } else {
                             bail!(err);
                         }
@@ -184,7 +190,7 @@ pub async fn modrinth(
 pub async fn curseforge(
     curseforge: Arc<Furse>,
     project_id: i32,
-    profile: &mut config::structs::Profile,
+    profile: &mut Profile,
     should_check_game_version: Option<bool>,
     should_check_mod_loader: Option<bool>,
     add_dependencies: bool,
@@ -278,6 +284,15 @@ pub async fn curseforge(
                     Err(err) => {
                         if matches!(err, add::Error::AlreadyAdded) {
                             println!("{} Already added", *TICK);
+                        } else if matches!(err, add::Error::Incompatible) {
+                            println!(
+                                "{}",
+                                format!(
+                                    "{} Not compatible, try running `ferium add {}`",
+                                    CROSS, id
+                                )
+                                .yellow()
+                            );
                         } else {
                             bail!(err);
                         }

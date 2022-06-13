@@ -1,25 +1,33 @@
+use crate::THEME;
+
 use super::{check_output_directory, check_profile_name, pick_minecraft_version};
 use anyhow::{bail, Result};
+use colored::Colorize;
 use dialoguer::{Confirm, Input, Select};
-use libium::{config, file_picker, misc};
+use libium::{
+    config::structs::{Config, ModLoader, Profile},
+    file_picker::pick_folder,
+    misc::get_minecraft_dir,
+};
 use std::path::PathBuf;
 
 #[allow(clippy::option_option)]
 pub async fn create(
-    config: &mut config::structs::Config,
+    config: &mut Config,
     import: Option<Option<String>>,
     game_version: Option<String>,
-    mod_loader: Option<config::structs::ModLoader>,
+    mod_loader: Option<ModLoader>,
     name: Option<String>,
     output_dir: Option<PathBuf>,
 ) -> Result<()> {
     let mut profile = match (game_version, mod_loader, name, output_dir) {
-        (Some(game_version), Some(mod_loader), Some(name), Some(output_dir)) => {
+        (Some(game_version), Some(mod_loader), Some(name), output_dir) => {
             check_profile_name(config, &name)?;
+            let output_dir = output_dir.unwrap_or_else(|| get_minecraft_dir().join("mods"));
             if !output_dir.is_absolute() {
                 bail!("The provided output directory is not absolute, i.e. it is a relative path")
             }
-            config::structs::Profile {
+            Profile {
                 name,
                 output_dir,
                 game_version,
@@ -28,18 +36,16 @@ pub async fn create(
             }
         },
         (None, None, None, None) => {
-            // Create profile using a UI
-            println!("Please enter the details for the new profile");
-
-            // Let user pick mods directory
-            let mut selected_mods_dir = misc::get_minecraft_dir().join("mods");
-            println!("The default mods directory is {:?}", selected_mods_dir);
-            if Confirm::with_theme(&*crate::THEME)
+            let mut selected_mods_dir = get_minecraft_dir().join("mods");
+            println!(
+                "The default mods directory is {}",
+                selected_mods_dir.display()
+            );
+            if Confirm::with_theme(&*THEME)
                 .with_prompt("Would you like to specify a custom mods directory?")
                 .interact()?
             {
-                if let Some(dir) =
-                    file_picker::pick_folder(&selected_mods_dir, "Pick an output directory").await
+                if let Some(dir) = pick_folder(&selected_mods_dir, "Pick an output directory").await
                 {
                     check_output_directory(&dir).await?;
                     selected_mods_dir = dir;
@@ -47,19 +53,28 @@ pub async fn create(
             }
 
             let name = loop {
-                let name: String = Input::with_theme(&*crate::THEME)
+                let name: String = Input::with_theme(&*THEME)
                     .with_prompt("What should this profile be called?")
                     .interact_text()?;
 
+                #[allow(clippy::single_match_else)]
                 match check_profile_name(config, &name) {
                     Ok(_) => break name,
-                    Err(_) => continue,
+                    Err(_) => {
+                        println!(
+                            "{}",
+                            "Please provide a name that is not already being used"
+                                .red()
+                                .bold()
+                        );
+                        continue;
+                    },
                 }
             };
 
             let selected_version = pick_minecraft_version().await?;
 
-            config::structs::Profile {
+            Profile {
                 name,
                 output_dir: selected_mods_dir,
                 mods: Vec::new(),
@@ -68,7 +83,7 @@ pub async fn create(
             }
         },
         _ => {
-            bail!("Provide all four arguments to create a profile using options")
+            bail!("Provide at least the name, game version, and mod loader options to create a profile")
         },
     };
 
@@ -94,7 +109,7 @@ pub async fn create(
                     .iter()
                     .map(|profile| &profile.name)
                     .collect::<Vec<_>>();
-                Select::with_theme(&*crate::THEME)
+                Select::with_theme(&*THEME)
                     .with_prompt("Select which profile to import mods from")
                     .items(&profile_names)
                     .default(config.active_profile)
@@ -103,6 +118,11 @@ pub async fn create(
         };
         profile.mods = config.profiles[selection].mods.clone();
     }
+
+    println!(
+        "{}",
+        "After adding your mods, remember to run `ferium upgrade` to download them!".yellow()
+    );
 
     config.profiles.push(profile);
     config.active_profile = config.profiles.len() - 1; // Make created profile active

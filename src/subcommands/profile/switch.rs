@@ -1,8 +1,9 @@
+use crate::THEME;
 use anyhow::{anyhow, Result};
 use dialoguer::Select;
-use libium::config;
+use libium::config::structs::Config;
 
-pub fn switch(config: &mut config::structs::Config, profile_name: Option<String>) -> Result<()> {
+pub fn switch(config: &mut Config, profile_name: Option<String>) -> Result<()> {
     if config.profiles.len() < 2 {
         Err(anyhow!("There is only 1 profile in your config"))
     } else if let Some(profile_name) = profile_name {
@@ -24,7 +25,7 @@ pub fn switch(config: &mut config::structs::Config, profile_name: Option<String>
             .map(|profile| &profile.name)
             .collect::<Vec<_>>();
 
-        let selection = Select::with_theme(&*crate::THEME)
+        let selection = Select::with_theme(&*THEME)
             .with_prompt("Select which profile to switch to")
             .items(&profile_names)
             .default(config.active_profile)
