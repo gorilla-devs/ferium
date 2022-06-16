@@ -4,7 +4,6 @@ use anyhow::{bail, Result};
 use colored::Colorize;
 use ferinth::Ferinth;
 use furse::Furse;
-use itertools::Itertools;
 use libium::{
     add,
     config::structs::{Mod, ModIdentifier, ModPlatform, Profile},
@@ -18,99 +17,131 @@ pub async fn scan(
     profile: &mut Profile,
     preferred_platform: libium::config::structs::ModPlatform,
 ) -> Result<()> {
-    for mod_file in fs::read_dir(&profile.output_dir)? {
-        let mod_path = mod_file?.path();
-        if matches!(mod_path.extension().and_then(OsStr::to_str), Some("jar")) {
-            match libium::scan::scan(modrinth.clone(), curseforge.clone(), &mod_path).await {
-                Ok(mods) => {
-                    let mod_to_add =
-                        mods.iter()
-                            .find_or_first(|mod_| match (&preferred_platform, mod_) {
-                                (ModPlatform::Curseforge, ModIdentifier::CurseForgeProject(_))
-                                | (ModPlatform::Modrinth, ModIdentifier::ModrinthProject(_)) => {
-                                    true
-                                },
-                                _ => false,
-                            });
-                    let mod_ = {
-                        match mod_to_add {
-                            Some(ModIdentifier::ModrinthProject(id)) => {
-                                match add::modrinth(modrinth.clone(), &id, profile, None, None)
-                                    .await
-                                {
-                                    Ok((project, _version)) => {
-                                        println!(
-                                            "{} found {} on Modrinth",
-                                            TICK.clone(),
-                                            project.title
-                                        );
-                                        Ok(Mod {
-                                            check_game_version: None,
-                                            check_mod_loader: None,
-                                            identifier: ModIdentifier::ModrinthProject(project.id),
-                                            name: project.title,
-                                        })
-                                    },
-                                    Err(err) => Err(err)
-                                }
-                            },
-                            Some(ModIdentifier::CurseForgeProject(id)) => {
-                                match add::curseforge(curseforge.clone(), *id, profile, None, None)
-                                    .await
-                                {
-                                    Ok((project, _file)) => {
-                                        println!(
-                                            "{} found mod {} on CurseForge",
-                                            TICK.clone(),
-                                            project.name
-                                        );
-                                        Ok(Mod {
-                                            check_game_version: None,
-                                            check_mod_loader: None,
-                                            identifier: ModIdentifier::CurseForgeProject(
-                                                project.id,
-                                            ),
-                                            name: project.name,
-                                        })
-                                    },
-                                    Err(err) => Err(err),
-                                }
-                            },
+    let mods = scan::scan(
+        modrinth.clone(),
+        curseforge.clone(),
+        fs::read_dir(&profile.output_dir)?
+            .filter_map(|path| {
+                if let Ok(entry) = path {
+                    let file_path = entry.path();
+                    if matches!(file_path.extension().and_then(OsStr::to_str), Some("jar")) {
+                        Some(file_path)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
+            .collect(),
+    )
+    .await?;
+    for (path, mod_) in mods {
+        if !matches!(mod_, (None, None)) {
+            let mod_to_add = match (&mod_, &preferred_platform) {
+                ((Some(modrinth_mod), _), ModPlatform::Modrinth) => {
+                    add_mod(
+                        modrinth.clone(),
+                        curseforge.clone(),
+                        ModIdentifier::ModrinthProject(modrinth_mod.project_id.clone()),
+                        &profile,
+                    )
+                    .await
+                },
+                ((_, Some(curseforge_mod)), ModPlatform::Curseforge) => {
+                    add_mod(
+                        modrinth.clone(),
+                        curseforge.clone(),
+                        ModIdentifier::CurseForgeProject(curseforge_mod.mod_id),
+                        &profile,
+                    )
+                    .await
+                },
+                _ => match &mod_ {
+                    (Some(modrinth_mod), _) => {
+                        add_mod(
+                            modrinth.clone(),
+                            curseforge.clone(),
+                            ModIdentifier::ModrinthProject(modrinth_mod.project_id.clone()),
+                            &profile,
+                        )
+                        .await
+                    },
+                    (_, Some(curseforge_mod)) => {
+                        add_mod(
+                            modrinth.clone(),
+                            curseforge.clone(),
+                            ModIdentifier::CurseForgeProject(curseforge_mod.mod_id),
+                            &profile,
+                        )
+                        .await
+                    },
+                    _ => unreachable!(),
+                },
+            };
+            match mod_to_add {
+                Ok(mod_) => {
+                    println!(
+                        "{} found {} on {}",
+                        TICK.clone(),
+                        &mod_.name,
+                        match &mod_.identifier {
+                            ModIdentifier::CurseForgeProject(_) => "CurseForge",
+                            ModIdentifier::ModrinthProject(_) => "Modrinth",
                             _ => unreachable!(),
                         }
-                    };
-                    match mod_ {
-                        Ok(mod_) => {
-                            profile.mods.push(mod_);
-                        },
-                        Err(add::Error::AlreadyAdded) => {
-                            println!(
-                                "{} {} is already added",
-                                YELLOW_TICK.clone(),
-                                mod_path.display()
-                            )
-                        },
-                        Err(err) => {
-                            bail!(err);
-                        },
-                    }
-                },
-                Err(scan::Error::DoesNotExist) => {
-                    eprintln!(
-                        "{}",
-                        format!(
-                            "{} Could not find {} on any platform",
-                            CROSS,
-                            mod_path.display()
-                        )
-                        .red()
                     );
+                    profile.mods.push(mod_);
                 },
-                Err(err) => {
-                    return Err(err.into());
+                Err(add::Error::AlreadyAdded) => {
+                    println!(
+                        "{} {} is already added",
+                        YELLOW_TICK.clone(),
+                        path.display()
+                    )
                 },
+                Err(err) => bail!(err),
             }
+        } else {
+            eprintln!(
+                "{}",
+                format!(
+                    "{} Could not find {} on any platform",
+                    CROSS,
+                    path.display()
+                )
+                .red()
+            );
         }
     }
     Ok(())
+}
+
+async fn add_mod(
+    modrinth: Arc<Ferinth>,
+    curseforge: Arc<Furse>,
+    mod_: ModIdentifier,
+    profile: &Profile,
+) -> Result<Mod, add::Error> {
+    match &mod_ {
+        ModIdentifier::ModrinthProject(id) => {
+            let (project, _version) = add::modrinth(modrinth, id, profile, None, None).await?;
+            Ok(Mod {
+                check_game_version: None,
+                check_mod_loader: None,
+                identifier: mod_,
+                name: project.title,
+            })
+        },
+        ModIdentifier::CurseForgeProject(id) => {
+            let (project, _file) = add::curseforge(curseforge, *id, profile, None, None).await?;
+            Ok(Mod {
+                check_game_version: None,
+                check_mod_loader: None,
+                identifier: mod_,
+                name: project.name,
+            })
+        },
+        _ => unreachable!(),
+    }
 }

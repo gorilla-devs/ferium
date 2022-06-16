@@ -18,7 +18,6 @@ use libium::config::{
 use octocrab::OctocrabBuilder;
 use online::check;
 use std::{process::ExitCode, sync::Arc};
-use subcommands::{add, scan, upgrade};
 use tokio::{runtime, spawn};
 
 const CROSS: &str = "×";
@@ -296,17 +295,8 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         },
         SubCommands::Scan { preferred_platform } => {
             check_internet().await?;
-            scan(
-                modrinth,
-                curseforge,
-                profile,
-                preferred_platform.unwrap_or(libium::config::structs::ModPlatform::Modrinth),
-            )
-            .await?;
-        },
-        SubCommands::Scan { preferred_platform } => {
-            check_internet().await?;
-            scan(
+            let profile = get_active_profile(&mut config)?;
+            subcommands::scan(
                 modrinth,
                 curseforge,
                 profile,
