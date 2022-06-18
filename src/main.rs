@@ -133,24 +133,44 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             "ferium",
             &mut std::io::stdout(),
         ),
-        SubCommands::List { verbose } => {
+        SubCommands::List { verbose, markdown } => {
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
             if verbose {
                 check_internet().await?;
                 let mut tasks = Vec::new();
                 for mod_ in &profile.mods {
-                    match &mod_.identifier {
-                        ModIdentifier::CurseForgeProject(project_id) => tasks.push(spawn(
-                            subcommands::list::curseforge(curseforge.clone(), *project_id),
-                        )),
-                        ModIdentifier::ModrinthProject(project_id) => tasks.push(spawn(
-                            subcommands::list::modrinth(modrinth.clone(), project_id.clone()),
-                        )),
-                        ModIdentifier::GitHubRepository(full_name) => tasks.push(spawn(
-                            subcommands::list::github(github.clone(), full_name.clone()),
-                        )),
-                    };
+                    if markdown {
+                        match &mod_.identifier {
+                            ModIdentifier::CurseForgeProject(project_id) => {
+                                subcommands::list::curseforge_md(curseforge.clone(), *project_id)
+                                    .await?;
+                            },
+                            ModIdentifier::ModrinthProject(project_id) => {
+                                subcommands::list::modrinth_md(
+                                    modrinth.clone(),
+                                    project_id.clone(),
+                                )
+                                .await?;
+                            },
+                            ModIdentifier::GitHubRepository(full_name) => {
+                                subcommands::list::github_md(github.clone(), full_name.clone())
+                                    .await?;
+                            },
+                        };
+                    } else {
+                        match &mod_.identifier {
+                            ModIdentifier::CurseForgeProject(project_id) => tasks.push(spawn(
+                                subcommands::list::curseforge(curseforge.clone(), *project_id),
+                            )),
+                            ModIdentifier::ModrinthProject(project_id) => tasks.push(spawn(
+                                subcommands::list::modrinth(modrinth.clone(), project_id.clone()),
+                            )),
+                            ModIdentifier::GitHubRepository(full_name) => tasks.push(spawn(
+                                subcommands::list::github(github.clone(), full_name.clone()),
+                            )),
+                        };
+                    }
                 }
                 for handle in tasks {
                     handle.await??;

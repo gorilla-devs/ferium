@@ -191,8 +191,20 @@ fn already_added() {
 
 #[test]
 fn list() -> Result {
-    run_command(vec!["list"], Some("one_profile_full"))?;
+    run_command(vec!["list"], Some("one_profile_full"))
+}
+
+#[test]
+fn list_verbose() -> Result {
     run_command(vec!["list", "--verbose"], Some("one_profile_full"))
+}
+
+#[test]
+fn list_markdown() -> Result {
+    run_command(
+        vec!["list", "--verbose", "--markdown"],
+        Some("one_profile_full"),
+    )
 }
 
 #[test]

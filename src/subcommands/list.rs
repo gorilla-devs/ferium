@@ -9,16 +9,16 @@ use std::sync::Arc;
 pub async fn curseforge(curseforge: Arc<Furse>, project_id: i32) -> Result<()> {
     let project = curseforge.get_mod(project_id).await?;
     println!(
-        "{}
-       \r  {}\n
-       \r  Link:         {}
-       \r  Source:       {}
-       \r  Project ID:   {}
-       \r  Open Source:  {}
-       \r  Downloads:    {}
-       \r  Authors:      {}
-       \r  Categories:   {}
-       ",
+        "
+{}
+  {}\n
+  Link:         {}
+  Source:       {}
+  Project ID:   {}
+  Open Source:  {}
+  Downloads:    {}
+  Authors:      {}
+  Categories:   {}",
         project.name.bold(),
         project.summary.trim().italic(),
         project.links.website_url.blue().underline(),
@@ -54,17 +54,17 @@ pub async fn modrinth(modrinth: Arc<Ferinth>, project_id: String) -> Result<()> 
     let team_members = modrinth.list_team_members(&project.team).await?;
 
     println!(
-        "{}
-       \r  {}\n
-       \r  Link:         {}
-       \r  Source:       {}
-       \r  Project ID:   {}
-       \r  Open Source:  {}
-       \r  Downloads:    {}
-       \r  Authors:      {}
-       \r  Categories:   {}
-       \r  License:      {}{}
-       ",
+        "
+{}
+  {}\n
+  Link:         {}
+  Source:       {}
+  Project ID:   {}
+  Open Source:  {}
+  Downloads:    {}
+  Authors:      {}
+  Categories:   {}
+  License:      {}{}",
         project.title.bold(),
         project.description.italic(),
         format!("https://modrinth.com/mod/{}", project.slug)
@@ -92,7 +92,6 @@ pub async fn modrinth(modrinth: Arc<Ferinth>, project_id: String) -> Result<()> 
     Ok(())
 }
 
-/// List all the mods in `profile` with some of their metadata
 pub async fn github(github: Arc<Octocrab>, full_name: (String, String)) -> Result<()> {
     let repo_handler = github.repos(&full_name.0, &full_name.1);
     let repo = repo_handler.get().await?;
@@ -106,18 +105,17 @@ pub async fn github(github: Arc<Octocrab>, full_name: (String, String)) -> Resul
         }
     }
 
-    // Print repository data formatted
     println!(
-        "{}{}\n
-       \r  Link:         {}
-       \r  Source:       {}
-       \r  Identifier:   {}
-       \r  Open Source:  {}
-       \r  Downloads:    {}
-       \r  Authors:      {}
-       \r  Topics:       {}
-       \r  License:      {}
-       ",
+        "
+{}{}\n
+  Link:         {}
+  Source:       {}
+  Identifier:   {}
+  Open Source:  {}
+  Downloads:    {}
+  Authors:      {}
+  Topics:       {}
+  License:      {}",
         repo.name.bold(),
         repo.description
             .map_or("".into(), |description| { format!("\n  {}", description) })
@@ -139,6 +137,107 @@ pub async fn github(github: Arc<Octocrab>, full_name: (String, String)) -> Resul
             license.html_url.map_or("".into(), |url| {
                 format!(" ({})", url.to_string().blue().underline())
             })
+        )),
+    );
+
+    Ok(())
+}
+
+pub async fn curseforge_md(curseforge: Arc<Furse>, project_id: i32) -> Result<()> {
+    let project = curseforge.get_mod(project_id).await?;
+    println!(
+        "
+**[{}]({})**  
+_{}_
+
+|             |                 |
+|-------------|-----------------|
+| Source      | CurseForge `{}` |
+| Open Source | {}              |
+| Authors     | {}              |
+| Categories  | {}              |",
+        project.name.trim(),
+        project.links.website_url,
+        project.summary.trim(),
+        project.id,
+        project
+            .links
+            .source_url
+            .map_or("No".into(), |url| format!("[Yes]({})", url)),
+        project
+            .authors
+            .iter()
+            .map(|author| format!("[{}]({})", author.name, author.url))
+            .format(", "),
+        project
+            .categories
+            .iter()
+            .map(|category| &category.name)
+            .format(", "),
+    );
+
+    Ok(())
+}
+
+pub async fn modrinth_md(modrinth: Arc<Ferinth>, project_id: String) -> Result<()> {
+    let project = modrinth.get_project(&project_id).await?;
+    let team_members = modrinth.list_team_members(&project.team).await?;
+
+    println!(
+        "
+**[{}](https://modrinth.com/mod/{})**  
+_{}_
+
+|             |               |
+|-------------|---------------|
+| Source      | Modrinth `{}` |
+| Open Source | {}            |
+| Author      | {}            |
+| Categories  | {}            |",
+        project.title.trim(),
+        project.id,
+        project.description.trim(),
+        project.id,
+        project
+            .source_url
+            .map_or("No".into(), |url| { format!("[Yes]({})", url) }),
+        team_members
+            .iter()
+            .map(|member| format!(
+                "[{}](https://modrinth.com/user/{})",
+                member.user.username, member.user.id
+            ))
+            .format(", "),
+        project.categories.iter().format(", "),
+    );
+
+    Ok(())
+}
+
+pub async fn github_md(github: Arc<Octocrab>, full_name: (String, String)) -> Result<()> {
+    let repo_handler = github.repos(&full_name.0, &full_name.1);
+    let repo = repo_handler.get().await?;
+
+    println!(
+        "
+**[{}]({})**{}
+
+|             |             |
+|-------------|-------------|
+| Source      | GitHub `{}` |
+| Open Source | Yes         |
+| Owner       | [{}]({})    |{}",
+        repo.name,
+        repo.html_url.unwrap(),
+        repo.description.map_or("".into(), |description| {
+            format!("  \n_{}_", description.trim())
+        }),
+        repo.full_name.unwrap(),
+        repo.owner.clone().unwrap().login,
+        repo.owner.unwrap().html_url,
+        repo.topics.map_or("".into(), |topics| format!(
+            "\n| Topics | {} |",
+            topics.iter().format(", ")
         )),
     );
 
