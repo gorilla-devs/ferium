@@ -731,7 +731,7 @@ dependencies = [
  "reqwest",
  "semver",
  "serde_json",
- "size",
+ "size 0.4.0",
  "tokio",
  "url",
 ]
@@ -1324,7 +1324,7 @@ dependencies = [
  "rfd",
  "serde",
  "serde_json",
- "size",
+ "size 0.2.0",
  "thiserror",
  "tokio",
  "url",
@@ -2117,6 +2117,12 @@ checksum = "4fb3f61ca4410df5894add0b47d4d2c882c837dfa660d579c9b3fd29b1ce3a0e"
 dependencies = [
  "num-traits",
 ]
+
+[[package]]
+name = "size"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "63c9c8350184b6b037d09dc77df55f1324df076a706d0191b79ec270cc4d756b"
 
 [[package]]
 name = "slab"

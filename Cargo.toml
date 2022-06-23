@@ -48,7 +48,7 @@ semver = "~1.0.10"
 online = "~3.0.1"
 bytes = "~1.1.0"
 furse = "~1.4.0"
-size = "~0.2.0"
+size = "~0.4.0"
 url = "~2.2.2"
 
 [dev-dependencies]
