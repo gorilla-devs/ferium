@@ -36,72 +36,27 @@ pub async fn scan(
             .collect(),
     )
     .await?;
+    let mut mods_to_add: Vec<(std::path::PathBuf, ModIdentifier)> = vec![];
     for (path, mod_) in mods {
         if !matches!(mod_, (None, None)) {
             let mod_to_add = match (&mod_, &preferred_platform) {
                 ((Some(modrinth_mod), _), ModPlatform::Modrinth) => {
-                    add_mod(
-                        modrinth.clone(),
-                        curseforge.clone(),
-                        ModIdentifier::ModrinthProject(modrinth_mod.project_id.clone()),
-                        &profile,
-                    )
-                    .await
+                    ModIdentifier::ModrinthProject(modrinth_mod.project_id.clone())
                 },
                 ((_, Some(curseforge_mod)), ModPlatform::Curseforge) => {
-                    add_mod(
-                        modrinth.clone(),
-                        curseforge.clone(),
-                        ModIdentifier::CurseForgeProject(curseforge_mod.mod_id),
-                        &profile,
-                    )
-                    .await
+                    ModIdentifier::CurseForgeProject(curseforge_mod.mod_id)
                 },
                 _ => match &mod_ {
                     (Some(modrinth_mod), _) => {
-                        add_mod(
-                            modrinth.clone(),
-                            curseforge.clone(),
-                            ModIdentifier::ModrinthProject(modrinth_mod.project_id.clone()),
-                            &profile,
-                        )
-                        .await
+                        ModIdentifier::ModrinthProject(modrinth_mod.project_id.clone())
                     },
                     (_, Some(curseforge_mod)) => {
-                        add_mod(
-                            modrinth.clone(),
-                            curseforge.clone(),
-                            ModIdentifier::CurseForgeProject(curseforge_mod.mod_id),
-                            &profile,
-                        )
-                        .await
+                        ModIdentifier::CurseForgeProject(curseforge_mod.mod_id)
                     },
                     _ => unreachable!(),
                 },
             };
-            match mod_to_add {
-                Ok(mod_) => {
-                    println!(
-                        "{} found {} on {}",
-                        TICK.clone(),
-                        &mod_.name,
-                        match &mod_.identifier {
-                            ModIdentifier::CurseForgeProject(_) => "CurseForge",
-                            ModIdentifier::ModrinthProject(_) => "Modrinth",
-                            _ => unreachable!(),
-                        }
-                    );
-                    profile.mods.push(mod_);
-                },
-                Err(add::Error::AlreadyAdded) => {
-                    println!(
-                        "{} {} is already added",
-                        YELLOW_TICK.clone(),
-                        path.display()
-                    )
-                },
-                Err(err) => bail!(err),
-            }
+            mods_to_add.push((path, mod_to_add));
         } else {
             eprintln!(
                 "{}",
@@ -112,6 +67,31 @@ pub async fn scan(
                 )
                 .red()
             );
+        }
+    }
+    for (path, mod_) in mods_to_add {
+        match add_mod(modrinth.clone(), curseforge.clone(), mod_, profile).await {
+            Ok(mod_) => {
+                println!(
+                    "{} found {} on {}",
+                    TICK.clone(),
+                    &mod_.name,
+                    match &mod_.identifier {
+                        ModIdentifier::CurseForgeProject(_) => "CurseForge",
+                        ModIdentifier::ModrinthProject(_) => "Modrinth",
+                        _ => unreachable!(),
+                    }
+                );
+                profile.mods.push(mod_);
+            },
+            Err(add::Error::AlreadyAdded) => {
+                println!(
+                    "{} {} is already added",
+                    YELLOW_TICK.clone(),
+                    path.display()
+                )
+            },
+            Err(err) => bail!(err),
         }
     }
     Ok(())
@@ -128,18 +108,18 @@ async fn add_mod(
             let (project, _version) = add::modrinth(modrinth, id, profile, None, None).await?;
             Ok(Mod {
                 check_game_version: None,
-                check_mod_loader: None,
-                identifier: mod_,
-                name: project.title,
+                check_mod_loader:   None,
+                identifier:         mod_,
+                name:               project.title,
             })
         },
         ModIdentifier::CurseForgeProject(id) => {
             let (project, _file) = add::curseforge(curseforge, *id, profile, None, None).await?;
             Ok(Mod {
                 check_game_version: None,
-                check_mod_loader: None,
-                identifier: mod_,
-                name: project.name,
+                check_mod_loader:   None,
+                identifier:         mod_,
+                name:               project.name,
             })
         },
         _ => unreachable!(),
