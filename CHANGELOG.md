@@ -1,5 +1,12 @@
 # Changelog for Ferium
 
+## `v4.1.5`
+### 18.06.2022
+
+- Added a `--markdown` flag to the list verbose command to output in markdown format
+  - This is useful for modpack mod lists for example
+- Updated dependencies
+
 ## `v4.1.4`
 ### 12.06.2022
 

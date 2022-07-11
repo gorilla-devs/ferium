@@ -53,6 +53,12 @@ The GitHub identifier is the repository's full name, e.g. `gorilla-devs/ferium`"
         #[clap(long, short)]
         #[clap(help("Show information about the mod"))]
         verbose: bool,
+        #[clap(long)]
+        #[clap(help(
+            "Output information in markdown format and alphabetical order, e.g. for modpack mod lists
+Complements the verbose flag"
+        ))]
+        markdown: bool,
     },
     #[clap(arg_required_else_help = true)]
     #[clap(about("Add, configure, delete, switch, list, or upgrade modpacks"))]
