@@ -12,11 +12,11 @@
             }
         },
         {
-            "name": "Better Minecraft",
+            "name": "Fabulously Optimised",
             "output_dir": "./tests/md_modpack",
             "install_overrides": true,
             "identifier": {
-                "ModrinthModpack": "shFhR8Vx"
+                "ModrinthModpack": "1KVo5zza"
             }
         }
     ]

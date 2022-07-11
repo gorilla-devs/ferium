@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand, ValueHint};
 use clap_complete::Shell;
+use libium::config::structs::ModLoader;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -52,6 +53,12 @@ The GitHub identifier is the repository's full name, e.g. `gorilla-devs/ferium`"
         #[clap(long, short)]
         #[clap(help("Show information about the mod"))]
         verbose: bool,
+        #[clap(long)]
+        #[clap(help(
+            "Output information in markdown format and alphabetical order, e.g. for modpack mod lists
+Complements the verbose flag"
+        ))]
+        markdown: bool,
     },
     #[clap(arg_required_else_help = true)]
     #[clap(about("Add, configure, delete, switch, list, or upgrade modpacks"))]
@@ -74,8 +81,6 @@ Optionally, provide a list of names of the mods to remove"
         #[clap(help("A case-insensitive list of names of a mods to remove"))]
         mod_names: Vec<String>,
     },
-    #[clap(about("Sort all your mods in alphabetical order"))]
-    Sort,
     #[clap(about("Download and install the latest version of the mods specified"))]
     Upgrade,
     #[clap(about("Scan profile for mods"))]
@@ -100,7 +105,7 @@ Optionally, provide setting(s) to change as option(s)"
         #[clap(long)]
         #[clap(arg_enum)]
         #[clap(help("The mod loader to check compatibility for"))]
-        mod_loader: Option<libium::config::structs::ModLoader>,
+        mod_loader: Option<ModLoader>,
         #[clap(long)]
         #[clap(help("The name of the profile"))]
         name: Option<String>,
@@ -128,7 +133,7 @@ Optionally, provide the name of the profile to import mods from"
         #[clap(long)]
         #[clap(arg_enum)]
         #[clap(help("The mod loader to check compatibility for"))]
-        mod_loader: Option<libium::config::structs::ModLoader>,
+        mod_loader: Option<ModLoader>,
         #[clap(long)]
         #[clap(help("The name of the profile"))]
         name: Option<String>,

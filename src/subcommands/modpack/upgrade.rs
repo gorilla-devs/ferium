@@ -12,7 +12,7 @@ use libium::{
     config::structs::{Modpack, ModpackIdentifier},
     modpack::{
         curseforge::{deser_manifest, read_manifest_file},
-        extract_modpack,
+        extract_zip,
         modrinth::{deser_metadata, read_metadata_file},
     },
     upgrade::{
@@ -108,7 +108,7 @@ pub async fn upgrade(
                     .join("ferium")
                     .join(".tmp")
                     .join(manifest.name);
-                extract_modpack(modpack_file, &tmp_dir).await?;
+                extract_zip(modpack_file, &tmp_dir).await?;
                 to_install = read_overrides(&tmp_dir.join(manifest.overrides))?;
             }
         },
@@ -149,7 +149,7 @@ pub async fn upgrade(
                     .join("ferium")
                     .join(".tmp")
                     .join(metadata.name);
-                extract_modpack(modpack_file, &tmp_dir).await?;
+                extract_zip(modpack_file, &tmp_dir).await?;
                 to_install = read_overrides(&tmp_dir.join("overrides"))?;
             }
         },

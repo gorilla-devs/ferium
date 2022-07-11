@@ -1,4 +1,5 @@
 /target
+/.idea
 /out
 /tests/configs/.json
 /tests/configs/running
