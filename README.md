@@ -70,6 +70,8 @@ Remember to use an add-on like [cargo-update](https://crates.io/crates/cargo-upd
 
 Ferium stores profile and modpack information in it's config file. By default it is located at `~/.config/ferium/config.json`, but you can change this in 2 ways. You can set the `FERIUM_CONFIG_FILE` environment variable or set the `--config-file` global command flag, the flag always takes precedence.
 
+You can also set a custom CurseForge API Key using the `CURSEFORGE_API_KEY` environment variable.
+
 ### First Startup
 
 You can either have your own set of mods in what is called a 'profile', or install a modpack.
