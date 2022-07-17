@@ -59,6 +59,18 @@ fn main() -> ExitCode {
 
 #[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
 async fn actual_main(cli_app: Ferium) -> Result<()> {
+    // The complete command should not require a config.
+    // See [#139](https://github.com/gorilla-devs/ferium/issues/139) for why this might be a problem.
+    if let SubCommands::Complete { shell } = cli_app.subcommand {
+        clap_complete::generate(
+            shell,
+            &mut Ferium::command(),
+            "ferium",
+            &mut std::io::stdout(),
+        );
+        return Ok(());
+    }
+
     let github = Arc::new(
         cli_app
             .github_token
@@ -78,6 +90,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
     let curseforge = Arc::new(Furse::new(&var("CURSEFORGE_API_KEY").unwrap_or_else(
         |_| "$2a$10$QbCxI6f4KxEs50QKwE2piu1t6oOA8ayOw27H9N/eaH3Sdp5NTWwvO".into(),
     )));
+
     let mut config_file = config::get_file(
         cli_app
             .config_file
@@ -85,19 +98,6 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             .unwrap_or_else(config::file_path),
     )
     .await?;
-
-    // The complete command should not require a config.
-    // See [#139](https://github.com/gorilla-devs/ferium/issues/139) for why this might be a problem.
-    if let SubCommands::Complete { shell } = cli_app.subcommand {
-        clap_complete::generate(
-            shell,
-            &mut Ferium::command(),
-            "ferium",
-            &mut std::io::stdout(),
-        );
-        return Ok(());
-    }
-
     let mut config = config::deserialise(&config::read_file(&mut config_file).await?)?;
 
     // Run function(s) based on the sub(sub)command to be executed
