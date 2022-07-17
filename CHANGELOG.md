@@ -1,5 +1,14 @@
 # Changelog for Ferium
 
+## `v4.1.6`
+### 17.07.2022
+
+- Update dependencies and their respective breaking code
+- Fix [#139](https://github.com/gorilla-devs/ferium/issues/139), complete subcommand now runs without reading the config
+- Fix [#169](https://github.com/gorilla-devs/ferium/issues/169) by updating to ferinth `2.5.0`
+- Fix [#152](https://github.com/gorilla-devs/ferium/issues/152) by catching all errors in optional dependencies and turning them into warnings
+- Added proper ueer agent information from the new ferinth update
+
 ## `v4.1.5`
 ### 18.06.2022
 

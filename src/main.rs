@@ -63,7 +63,11 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             })
             .build()?,
     );
-    let modrinth = Arc::new(Ferinth::default());
+    let modrinth = Arc::new(Ferinth::new(
+        "ferium",
+        option_env!("CARGO_PKG_VERSION"),
+        Some("theRookieCoder#1287"),
+    ));
     // Yes this is a personal API key, but I am allowed to write it in source.
     // The reason is the API key is used for tracking usage, it's not for authentication.
     // So please don't use this outside of Ferium, although telling you not to is all I can do...
@@ -77,10 +81,23 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             .unwrap_or_else(config::file_path),
     )
     .await?;
+
+    // The complete command should not require a config.
+    // See [#139](https://github.com/gorilla-devs/ferium/issues/139) for why this might be a problem.
+    if let SubCommands::Complete { shell } = cli_app.subcommand {
+        clap_complete::generate(
+            shell,
+            &mut Ferium::command(),
+            "ferium",
+            &mut std::io::stdout(),
+        );
+    }
+
     let mut config = config::deserialise(&config::read_file(&mut config_file).await?)?;
 
     // Run function(s) based on the sub(sub)command to be executed
     match cli_app.subcommand {
+        SubCommands::Complete { .. } => unreachable!(),
         SubCommands::Add {
             identifier,
             dont_check_game_version,
@@ -127,12 +144,6 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 );
             }
         },
-        SubCommands::Complete { shell } => clap_complete::generate(
-            shell,
-            &mut Ferium::command(),
-            "ferium",
-            &mut std::io::stdout(),
-        ),
         SubCommands::List { verbose, markdown } => {
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;

@@ -7,7 +7,7 @@
 > Check out Ferium's sister projects [Ferinth](https://github.com/theRookieCoder/ferinth) and [Furse](https://github.com/theRookieCoder/furse).
 > They are Rust wrappers for the Modrinth and CurseForge APIs respectively
 
-Ferium is a fast and feature rich CLI program for downloading and updating Minecraft mods from [Modrinth](https://modrinth.com/mods), [CurseForge](https://curseforge.com/minecraft/mc-mods), and [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) and modpacks from [Modrinth](https://modrinth.com/modpacks), [CurseForge](https://curseforge.com/minecraft/modpacks).
+Ferium is a fast and feature rich CLI program for downloading and updating Minecraft mods from [Modrinth](https://modrinth.com/mods), [CurseForge](https://curseforge.com/minecraft/mc-mods), and [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases), and modpacks from [Modrinth](https://modrinth.com/modpacks) and [CurseForge](https://curseforge.com/minecraft/modpacks).
 Simply specify the mods or modpacks you use through the CLI, and in just one command you can the download all the mods or the modpack you configured.
 
 ## Features

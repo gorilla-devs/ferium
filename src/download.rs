@@ -8,7 +8,6 @@ use fs_extra::{
 use indicatif::ProgressBar;
 use itertools::Itertools;
 use libium::{mutex_ext::MutexExt, upgrade::Downloadable};
-use size::{Base, Style};
 use std::{
     ffi::OsString,
     fs::read_dir,
@@ -128,10 +127,10 @@ pub async fn download(
             progress_bar.println(format!(
                 "{} Downloaded {:7} {}",
                 &*TICK,
-                match size {
-                    Some(size) => size.to_string(Base::Base10, Style::Smart),
-                    None => String::new(),
-                },
+                size.map_or_else(Default::default, |size| size
+                    .format()
+                    .with_base(size::Base::Base10)
+                    .to_string()),
                 filename.dimmed(),
             ));
             Ok::<(), Error>(())
