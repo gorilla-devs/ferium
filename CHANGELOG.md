@@ -8,6 +8,7 @@
 - Fix [#169](https://github.com/gorilla-devs/ferium/issues/169) by updating to ferinth `2.5.0`
 - Fix [#152](https://github.com/gorilla-devs/ferium/issues/152) by catching all errors in optional dependencies and turning them into warnings
 - Added proper ueer agent information from the new ferinth update
+- Fix [#157](https://github.com/gorilla-devs/ferium/issues/157) added custom CF API key env var
 
 ## `v4.1.5`
 ### 18.06.2022
