@@ -1,5 +1,10 @@
 # Changelog for Ferium
 
+## `v4.1.7`
+### 17.07.2022
+
+Fix [#172](https://github.com/gorilla-devs/ferium/issues/172)
+
 ## `v4.1.6`
 ### 17.07.2022
 

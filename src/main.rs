@@ -95,6 +95,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             "ferium",
             &mut std::io::stdout(),
         );
+        return Ok(());
     }
 
     let mut config = config::deserialise(&config::read_file(&mut config_file).await?)?;

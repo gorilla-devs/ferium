@@ -470,9 +470,9 @@ dependencies = [
 
 [[package]]
 name = "concurrent-queue"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30ed07550be01594c6026cff2a1d7fe9c8f683caa798e12b68694ac9e88286a3"
+checksum = "83827793632c72fa4f73c2edb31e7a997527dd8ffe7077344621fc62c5478157"
 dependencies = [
  "cache-padded",
 ]
@@ -711,7 +711,7 @@ dependencies = [
 
 [[package]]
 name = "ferium"
-version = "4.1.6"
+version = "4.1.7"
 dependencies = [
  "anyhow",
  "bytes",
