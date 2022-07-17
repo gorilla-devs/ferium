@@ -3,7 +3,8 @@
 ## `v4.1.7`
 ### 17.07.2022
 
-Fix [#172](https://github.com/gorilla-devs/ferium/issues/172)
+- Fix [#172](https://github.com/gorilla-devs/ferium/issues/172)
+- Actually fix [#139](https://github.com/gorilla-devs/ferium/issues/139) by moving the subcommand's code to the very top
 
 ## `v4.1.6`
 ### 17.07.2022
