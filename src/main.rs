@@ -313,7 +313,12 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             ProfileSubCommands::Delete { profile_name } => {
                 subcommands::profile::delete(&mut config, profile_name)?;
             },
-            ProfileSubCommands::List => subcommands::profile::list(&config),
+            ProfileSubCommands::List => {
+                if config.profiles.is_empty() {
+                    bail!("There are no profiles configured, create a profile using `ferium profile create`")
+                }
+                subcommands::profile::list(&config);
+            },
             ProfileSubCommands::Switch { profile_name } => {
                 subcommands::profile::switch(&mut config, profile_name)?;
             },
