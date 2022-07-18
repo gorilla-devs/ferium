@@ -711,7 +711,7 @@ dependencies = [
 
 [[package]]
 name = "ferium"
-version = "4.1.7"
+version = "4.1.8"
 dependencies = [
  "anyhow",
  "bytes",
@@ -1309,9 +1309,9 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 
 [[package]]
 name = "libium"
-version = "1.19.1"
+version = "1.19.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a0bac86bc3f5909d663e9fade31a86dc9ee02b88adc33af155ebd9d9a0b2268"
+checksum = "06afc57021b6b42a7c9ecd7a1b2eae0f445abf2159708d5966bf774c198b9241"
 dependencies = [
  "bytes",
  "clap",

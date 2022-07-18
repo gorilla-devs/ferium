@@ -1,5 +1,10 @@
 # Changelog for Ferium
 
+## `v4.1.8`
+### 18.07.2022
+
+Fix [#87](https://github.com/gorilla-devs/ferium/issues/87) by updating to libium `1.19.2`
+
 ## `v4.1.7`
 ### 17.07.2022
 
