@@ -51,6 +51,12 @@ Available [here](https://scoop.sh/#/apps?q=ferium) in Scoop's official games buc
 
 Run `scoop bucket add games` then `scoop install ferium` to install.
 
+### Pacstall (Ubuntu Linux)
+
+Available [here](https://pacstall.dev/packages/ferium-bin)
+
+Run `pacstall -I ferium-bin` to install.
+
 ### Cargo Install (Cross Platform)
 
 If you have the Rust toolchain installed, you can compile and install Ferium from source by running `cargo install ferium`.
