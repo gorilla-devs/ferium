@@ -1,6 +1,6 @@
 [package]
 name = "ferium"
-version = "4.1.8"
+version = "4.1.9"
 edition = "2021"
 # Because of `std::process::ExitCode`
 rust-version = "1.61"
@@ -23,7 +23,7 @@ gtk = ["libium/gtk"]
 xdg = ["libium/xdg"]
 
 [dependencies]
-tokio = { version = "~1.20.0", default-features = false, features = [
+tokio = { version = "~1.20.1", default-features = false, features = [
     "rt-multi-thread",
     "macros",
 ] }
@@ -33,7 +33,7 @@ reqwest = { version = "~0.11.11", default-features = false, features = [
 octocrab = { version = "~0.16.0", default-features = false, features = [
     "rustls",
 ] }
-clap = { version = "~3.2.12", features = ["derive"] }
+clap = { version = "~3.2.14", features = ["derive"] }
 clap_complete = "~3.2.3"
 lazy_static = "~1.4.0"
 serde_json = "~1.0.82"
