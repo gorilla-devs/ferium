@@ -1,11 +1,11 @@
 # Changelog for Ferium
 
-## `4.1.10`
+## `v4.1.10`
 ### 25.07.2022
 
 Properly enable file dialogue
 
-## `4.1.9`
+## `v4.1.9`
 ### 25.07.2022
 
 - Fix [#181](https://github.com/gorilla-devs/ferium/issues/181), create the backup directory before copying files over
