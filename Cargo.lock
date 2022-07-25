@@ -704,7 +704,7 @@ dependencies = [
 
 [[package]]
 name = "ferium"
-version = "4.1.9"
+version = "4.1.10"
 dependencies = [
  "anyhow",
  "bytes",

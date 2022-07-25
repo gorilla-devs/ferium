@@ -1,5 +1,10 @@
 # Changelog for Ferium
 
+## `4.1.10`
+### 25.07.2022
+
+Properly enable file dialogue
+
 ## `4.1.9`
 ### 25.07.2022
 

@@ -1,6 +1,6 @@
 [package]
 name = "ferium"
-version = "4.1.9"
+version = "4.1.10"
 edition = "2021"
 # Because of `std::process::ExitCode`
 rust-version = "1.61"
@@ -18,7 +18,7 @@ license = "MPL-2.0"
 keywords = ["minecraft", "mod-manager", "modrinth", "curseforge", "github"]
 
 [features]
-# default = ["gtk"]
+default = ["gtk"]
 gtk = ["libium/gtk"]
 xdg = ["libium/xdg"]
 
