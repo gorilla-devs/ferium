@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)] // GitHub API wrapper `Option`s every damn thing for some reason
+
 use anyhow::Result;
 use colored::Colorize;
 use ferinth::Ferinth;

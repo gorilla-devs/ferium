@@ -29,14 +29,22 @@ lazy_static! {
     pub static ref TICK: ColoredString = "✓".green();
     pub static ref YELLOW_TICK: ColoredString = "✓".yellow();
     pub static ref THEME: ColorfulTheme = ColorfulTheme::default();
-    pub static ref STYLE_NO: ProgressStyle = ProgressStyle::default_bar()
+}
+
+pub fn style_no() -> ProgressStyle {
+    ProgressStyle::default_bar()
         .template("{spinner} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
-        .progress_chars("#>-");
-    pub static ref STYLE_BYTE: ProgressStyle = ProgressStyle::default_bar()
+        .expect("Progess bar template parse failure")
+        .progress_chars("#>-")
+}
+
+pub fn style_byte() -> ProgressStyle {
+    ProgressStyle::default_bar()
         .template(
             "{spinner} [{bytes_per_sec}] [{wide_bar:.cyan/blue}] {bytes:.cyan}/{total_bytes:.blue}",
         )
-        .progress_chars("#>-");
+        .expect("Progess bar template parse failure")
+        .progress_chars("#>-")
 }
 
 fn main() -> ExitCode {

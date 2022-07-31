@@ -1,5 +1,12 @@
 # Changelog for Ferium
 
+## `v4.1.11`
+### 31.07.2022
+
+- Upgrade dependencies and corresponding code
+- Replaced unwraps with expect
+- Replaced CLI attribute helps/abouts with doc comments
+
 ## `v4.1.10`
 ### 25.07.2022
 

@@ -30,7 +30,7 @@ pub async fn github(
     println!("{} {}", *TICK, repo.name.bold());
     profile.mods.push(Mod {
         name: repo.name.trim().into(),
-        identifier: ModIdentifier::GitHubRepository((repo.owner.unwrap().login, repo.name)),
+        identifier: ModIdentifier::GitHubRepository((repo.owner.expect("Could not get repository owner").login, repo.name)),
         check_game_version: if should_check_game_version == Some(true) {
             None
         } else {

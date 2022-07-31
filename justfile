@@ -62,11 +62,13 @@ lint:
         -D clippy::pedantic  \
         -D clippy::dbg_macro  \
         -D clippy::suspicious  \
-        -D clippy::complexity   \
-        -D clippy::create_dir    \
-        -D clippy::correctness    \
-        -D clippy::expect_used     \
-        -A clippy::too-many-lines   \
+        -D clippy::unwrap_used  \
+        -D clippy::complexity    \
+        -D clippy::create_dir     \
+        -D clippy::correctness     \
+        -W clippy::expect_used      \
+        -A clippy::too-many-lines    \
+        -A clippy::must-use-candidate \
         -A clippy::multiple-crate-versions \
 
 # Install Ferium to cargo's binary folder
