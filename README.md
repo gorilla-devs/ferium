@@ -7,7 +7,7 @@
 > Check out Ferium's sister projects [Ferinth](https://github.com/theRookieCoder/ferinth) and [Furse](https://github.com/theRookieCoder/furse).
 > They are Rust wrappers for the Modrinth and CurseForge APIs respectively
 
-Ferium is a fast and feature rich CLI program for downloading and updating Minecraft mods from [Modrinth](https://modrinth.com/mods), [CurseForge](https://curseforge.com/minecraft/mc-mods), and [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) and modpacks from [Modrinth](https://modrinth.com/modpacks), [CurseForge](https://curseforge.com/minecraft/modpacks).
+Ferium is a fast and feature rich CLI program for downloading and updating Minecraft mods from [Modrinth](https://modrinth.com/mods), [CurseForge](https://curseforge.com/minecraft/mc-mods), and [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases), and modpacks from [Modrinth](https://modrinth.com/modpacks) and [CurseForge](https://curseforge.com/minecraft/modpacks).
 Simply specify the mods or modpacks you use through the CLI, and in just one command you can the download all the mods or the modpack you configured.
 
 ## Features
@@ -51,6 +51,12 @@ Available [here](https://scoop.sh/#/apps?q=ferium) in Scoop's official games buc
 
 Run `scoop bucket add games` then `scoop install ferium` to install.
 
+### Pacstall (Ubuntu Linux)
+
+Available [here](https://pacstall.dev/packages/ferium-bin)
+
+Run `pacstall -I ferium-bin` to install.
+
 ### Cargo Install (Cross Platform)
 
 If you have the Rust toolchain installed, you can compile and install Ferium from source by running `cargo install ferium`.
@@ -69,6 +75,8 @@ Remember to use an add-on like [cargo-update](https://crates.io/crates/cargo-upd
 > It deals with things such as the config, adding mod(pack)s, upgrading, file pickers, etc
 
 Ferium stores profile and modpack information in it's config file. By default it is located at `~/.config/ferium/config.json`, but you can change this in 2 ways. You can set the `FERIUM_CONFIG_FILE` environment variable or set the `--config-file` global command flag, the flag always takes precedence.
+
+You can also set a custom CurseForge API Key using the `CURSEFORGE_API_KEY` environment variable.
 
 ### First Startup
 

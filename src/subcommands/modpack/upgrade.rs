@@ -1,6 +1,6 @@
 use crate::{
     download::{clean, download, read_overrides},
-    STYLE_BYTE, TICK,
+    style_byte, TICK,
 };
 use anyhow::Result;
 use colored::Colorize;
@@ -21,7 +21,7 @@ use libium::{
     },
     HOME,
 };
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 use tokio::spawn;
 
 #[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
@@ -36,12 +36,12 @@ pub async fn upgrade(
     match &modpack.identifier {
         ModpackIdentifier::CurseForgeModpack(project_id) => {
             println!("{}", "Downloading Modpack".bold());
-            let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
+            let progress_bar = ProgressBar::new(0).with_style(style_byte());
             let modpack_file = download_curseforge_modpack(
                 curseforge.clone(),
                 *project_id,
                 |total| {
-                    progress_bar.enable_steady_tick(100);
+                    progress_bar.enable_steady_tick(Duration::from_millis(100));
                     progress_bar.set_length(total);
                 },
                 |additional| {
@@ -114,12 +114,12 @@ pub async fn upgrade(
         },
         ModpackIdentifier::ModrinthModpack(project_id) => {
             println!("{}", "Downloading Modpack".bold());
-            let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
+            let progress_bar = ProgressBar::new(0).with_style(style_byte());
             let modpack_file = download_modrinth_modpack(
                 modrinth.clone(),
                 project_id,
                 |total| {
-                    progress_bar.enable_steady_tick(100);
+                    progress_bar.enable_steady_tick(Duration::from_millis(100));
                     progress_bar.set_length(total);
                 },
                 |additional| {

@@ -1,6 +1,6 @@
 use crate::{
     download::{clean, download},
-    CROSS, STYLE_NO, TICK, YELLOW_TICK,
+    style_no, CROSS, TICK, YELLOW_TICK,
 };
 use anyhow::{anyhow, bail, Result};
 use colored::Colorize;
@@ -15,6 +15,7 @@ use std::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
     },
+    time::Duration,
 };
 use tokio::{spawn, sync::Semaphore};
 
@@ -27,7 +28,7 @@ pub async fn upgrade(
     let profile = Arc::new(profile.clone());
     let to_download = Arc::new(Mutex::new(Vec::new()));
     let progress_bar = Arc::new(Mutex::new(
-        ProgressBar::new(profile.mods.len() as u64).with_style(STYLE_NO.clone()),
+        ProgressBar::new(profile.mods.len() as u64).with_style(style_no()),
     ));
     let backwards_compat_msg = Arc::new(AtomicBool::new(false));
     let error = Arc::new(AtomicBool::new(false));
@@ -35,7 +36,9 @@ pub async fn upgrade(
 
     println!("{}\n", "Determining the Latest Compatible Versions".bold());
     let semaphore = Arc::new(Semaphore::new(75));
-    progress_bar.force_lock().enable_steady_tick(100);
+    progress_bar
+        .force_lock()
+        .enable_steady_tick(Duration::from_millis(100));
     for mod_ in &profile.mods {
         let permit = semaphore.clone().acquire_owned().await?;
         let backwards_compat_msg = backwards_compat_msg.clone();

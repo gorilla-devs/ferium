@@ -17,7 +17,11 @@ use libium::config::{
 };
 use octocrab::OctocrabBuilder;
 use online::check;
-use std::{process::ExitCode, sync::Arc};
+use std::{
+    env::{var, var_os},
+    process::ExitCode,
+    sync::Arc,
+};
 use tokio::{runtime, spawn};
 
 const CROSS: &str = "×";
@@ -25,14 +29,22 @@ lazy_static! {
     pub static ref TICK: ColoredString = "✓".green();
     pub static ref YELLOW_TICK: ColoredString = "✓".yellow();
     pub static ref THEME: ColorfulTheme = ColorfulTheme::default();
-    pub static ref STYLE_NO: ProgressStyle = ProgressStyle::default_bar()
+}
+
+pub fn style_no() -> ProgressStyle {
+    ProgressStyle::default_bar()
         .template("{spinner} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
-        .progress_chars("#>-");
-    pub static ref STYLE_BYTE: ProgressStyle = ProgressStyle::default_bar()
+        .expect("Progess bar template parse failure")
+        .progress_chars("#>-")
+}
+
+pub fn style_byte() -> ProgressStyle {
+    ProgressStyle::default_bar()
         .template(
             "{spinner} [{bytes_per_sec}] [{wide_bar:.cyan/blue}] {bytes:.cyan}/{total_bytes:.blue}",
         )
-        .progress_chars("#>-");
+        .expect("Progess bar template parse failure")
+        .progress_chars("#>-")
 }
 
 fn main() -> ExitCode {
@@ -55,6 +67,18 @@ fn main() -> ExitCode {
 
 #[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
 async fn actual_main(cli_app: Ferium) -> Result<()> {
+    // The complete command should not require a config.
+    // See [#139](https://github.com/gorilla-devs/ferium/issues/139) for why this might be a problem.
+    if let SubCommands::Complete { shell } = cli_app.subcommand {
+        clap_complete::generate(
+            shell,
+            &mut Ferium::command(),
+            "ferium",
+            &mut std::io::stdout(),
+        );
+        return Ok(());
+    }
+
     let github = Arc::new(
         cli_app
             .github_token
@@ -63,17 +87,22 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             })
             .build()?,
     );
-    let modrinth = Arc::new(Ferinth::default());
+    let modrinth = Arc::new(Ferinth::new(
+        "ferium",
+        option_env!("CARGO_PKG_VERSION"),
+        Some("theRookieCoder#1287"),
+    ));
     // Yes this is a personal API key, but I am allowed to write it in source.
     // The reason is the API key is used for tracking usage, it's not for authentication.
     // So please don't use this outside of Ferium, although telling you not to is all I can do...
-    let curseforge = Arc::new(Furse::new(
-        "$2a$10$QbCxI6f4KxEs50QKwE2piu1t6oOA8ayOw27H9N/eaH3Sdp5NTWwvO",
-    ));
+    let curseforge = Arc::new(Furse::new(&var("CURSEFORGE_API_KEY").unwrap_or_else(
+        |_| "$2a$10$QbCxI6f4KxEs50QKwE2piu1t6oOA8ayOw27H9N/eaH3Sdp5NTWwvO".into(),
+    )));
+
     let mut config_file = config::get_file(
         cli_app
             .config_file
-            .or_else(|| std::env::var_os("FERIUM_CONFIG_FILE").map(Into::into))
+            .or_else(|| var_os("FERIUM_CONFIG_FILE").map(Into::into))
             .unwrap_or_else(config::file_path),
     )
     .await?;
@@ -81,6 +110,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
 
     // Run function(s) based on the sub(sub)command to be executed
     match cli_app.subcommand {
+        SubCommands::Complete { .. } => unreachable!(),
         SubCommands::Add {
             identifier,
             dont_check_game_version,
@@ -127,12 +157,6 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 );
             }
         },
-        SubCommands::Complete { shell } => clap_complete::generate(
-            shell,
-            &mut Ferium::command(),
-            "ferium",
-            &mut std::io::stdout(),
-        ),
         SubCommands::List { verbose, markdown } => {
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
@@ -243,7 +267,12 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             ModpackSubCommands::Delete { modpack_name } => {
                 subcommands::modpack::delete(&mut config, modpack_name)?;
             },
-            ModpackSubCommands::List => subcommands::modpack::list(&config),
+            ModpackSubCommands::List => {
+                if config.modpacks.is_empty() {
+                    bail!("There are no modpacks configured, add a modpack using `ferium modpack add`")
+                }
+                subcommands::modpack::list(&config);
+            },
             ModpackSubCommands::Switch { modpack_name } => {
                 subcommands::modpack::switch(&mut config, modpack_name)?;
             },
@@ -297,7 +326,12 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             ProfileSubCommands::Delete { profile_name } => {
                 subcommands::profile::delete(&mut config, profile_name)?;
             },
-            ProfileSubCommands::List => subcommands::profile::list(&config),
+            ProfileSubCommands::List => {
+                if config.profiles.is_empty() {
+                    bail!("There are no profiles configured, create a profile using `ferium profile create`")
+                }
+                subcommands::profile::list(&config);
+            },
             ProfileSubCommands::Switch { profile_name } => {
                 subcommands::profile::switch(&mut config, profile_name)?;
             },

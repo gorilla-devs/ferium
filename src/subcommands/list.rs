@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)] // GitHub API wrapper `Option`s every damn thing for some reason
+
 use anyhow::Result;
 use colored::Colorize;
 use ferinth::Ferinth;
@@ -21,12 +23,12 @@ pub async fn curseforge(curseforge: Arc<Furse>, project_id: i32) -> Result<()> {
   Categories:   {}",
         project.name.bold(),
         project.summary.trim().italic(),
-        project.links.website_url.blue().underline(),
+        project.links.website_url.to_string().blue().underline(),
         "CurseForge Mod".dimmed(),
         project.id.to_string().dimmed(),
         project.links.source_url.map_or("No".red(), |url| format!(
             "Yes ({})",
-            url.blue().underline()
+            url.to_string().blue().underline()
         )
         .green()),
         project.download_count.to_string().yellow(),
@@ -73,7 +75,7 @@ pub async fn modrinth(modrinth: Arc<Ferinth>, project_id: String) -> Result<()> 
         "Modrinth Mod".dimmed(),
         project.id.dimmed(),
         project.source_url.map_or("No".red(), |url| {
-            format!("Yes ({})", url.blue().underline()).green()
+            format!("Yes ({})", url.to_string().blue().underline()).green()
         }),
         project.downloads.to_string().yellow(),
         team_members
@@ -85,7 +87,7 @@ pub async fn modrinth(modrinth: Arc<Ferinth>, project_id: String) -> Result<()> 
         project.categories.iter().format(", ").to_string().magenta(),
         project.license.name,
         project.license.url.map_or("".into(), |url| {
-            format!(" ({})", url.blue().underline())
+            format!(" ({})", url.to_string().blue().underline())
         }),
     );
 

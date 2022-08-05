@@ -91,20 +91,19 @@ pub async fn modrinth(
                 .bold()
         );
     }
-    if let Some(donation_urls) = project.donation_urls {
-        if !donation_urls.is_empty() {
-            println!(
-                "Consider supporting the mod creator on {}",
-                donation_urls
-                    .iter()
-                    .map(|this| format!(
-                        "{} ({})",
-                        this.platform.bold(),
-                        this.url.blue().underline()
-                    ))
-                    .format(", ")
-            );
-        }
+    if !project.donation_urls.is_empty() {
+        println!(
+            "Consider supporting the mod creator on {}",
+            project
+                .donation_urls
+                .iter()
+                .map(|this| format!(
+                    "{} ({})",
+                    this.platform.bold(),
+                    this.url.to_string().blue().underline()
+                ))
+                .format(", ")
+        );
     }
     config.modpacks.push(Modpack {
         name: project.title,

@@ -1,5 +1,44 @@
 # Changelog for Ferium
 
+## `v4.1.11`
+### 31.07.2022
+
+- Upgrade dependencies and corresponding code
+- Replaced unwraps with expect
+- Replaced CLI attribute helps/abouts with doc comments
+
+## `v4.1.10`
+### 25.07.2022
+
+Properly enable file dialogue
+
+## `v4.1.9`
+### 25.07.2022
+
+- Fix [#181](https://github.com/gorilla-devs/ferium/issues/181), create the backup directory before copying files over
+- Check that there are modpacks before listing them
+
+## `v4.1.8`
+### 18.07.2022
+
+Fix [#87](https://github.com/gorilla-devs/ferium/issues/87) by updating to libium `1.19.2`
+
+## `v4.1.7`
+### 17.07.2022
+
+- Fix [#172](https://github.com/gorilla-devs/ferium/issues/172)
+- Actually fix [#139](https://github.com/gorilla-devs/ferium/issues/139) by moving the subcommand's code to the very top
+
+## `v4.1.6`
+### 17.07.2022
+
+- Update dependencies and their respective breaking code
+- Fix [#139](https://github.com/gorilla-devs/ferium/issues/139), complete subcommand now runs without reading the config
+- Fix [#169](https://github.com/gorilla-devs/ferium/issues/169) by updating to ferinth `2.5.0`
+- Fix [#152](https://github.com/gorilla-devs/ferium/issues/152) by catching all errors in optional dependencies and turning them into warnings
+- Added proper ueer agent information from the new ferinth update
+- Fix [#157](https://github.com/gorilla-devs/ferium/issues/157) added custom CF API key env var
+
 ## `v4.1.5`
 ### 18.06.2022
 

@@ -30,7 +30,7 @@ pub async fn github(
     println!("{} {}", *TICK, repo.name.bold());
     profile.mods.push(Mod {
         name: repo.name.trim().into(),
-        identifier: ModIdentifier::GitHubRepository((repo.owner.unwrap().login, repo.name)),
+        identifier: ModIdentifier::GitHubRepository((repo.owner.expect("Could not get repository owner").login, repo.name)),
         check_game_version: if should_check_game_version == Some(true) {
             None
         } else {
@@ -150,17 +150,8 @@ pub async fn modrinth(
                     Err(err) => {
                         if matches!(err, add::Error::AlreadyAdded) {
                             println!("{} Already added", *TICK);
-                        } else if matches!(err, add::Error::Incompatible) {
-                            println!(
-                                "{}",
-                                format!(
-                                    "{} Not compatible, try running `ferium add {}`",
-                                    CROSS, id
-                                )
-                                .yellow()
-                            );
                         } else {
-                            bail!(err);
+                            println!("{}", format!("{} {}", CROSS, err).yellow());
                         }
                     },
                 };
@@ -168,20 +159,19 @@ pub async fn modrinth(
         }
     }
 
-    if let Some(donation_urls) = project.donation_urls {
-        if !donation_urls.is_empty() {
-            println!(
-                "Consider supporting the mod creator on {}",
-                donation_urls
-                    .iter()
-                    .map(|this| format!(
-                        "{} ({})",
-                        this.platform.bold(),
-                        this.url.blue().underline()
-                    ))
-                    .format(" or ")
-            );
-        }
+    if !project.donation_urls.is_empty() {
+        println!(
+            "Consider supporting the mod creator on {}",
+            project
+                .donation_urls
+                .iter()
+                .map(|this| format!(
+                    "{} ({})",
+                    this.platform.bold(),
+                    this.url.to_string().blue().underline()
+                ))
+                .format(" or ")
+        );
     }
 
     Ok(())
@@ -261,7 +251,7 @@ pub async fn curseforge(
                             .with_prompt(format!(
                                 "Add optional dependency {} ({})?",
                                 project.name.bold(),
-                                project.links.website_url.blue().underline()
+                                project.links.website_url.to_string().blue().underline()
                             ))
                             .interact()?
                         {
@@ -284,17 +274,8 @@ pub async fn curseforge(
                     Err(err) => {
                         if matches!(err, add::Error::AlreadyAdded) {
                             println!("{} Already added", *TICK);
-                        } else if matches!(err, add::Error::Incompatible) {
-                            println!(
-                                "{}",
-                                format!(
-                                    "{} Not compatible, try running `ferium add {}`",
-                                    CROSS, id
-                                )
-                                .yellow()
-                            );
                         } else {
-                            bail!(err);
+                            println!("{}", format!("{} {}", CROSS, err).yellow());
                         }
                     },
                 };

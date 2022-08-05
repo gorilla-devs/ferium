@@ -35,7 +35,7 @@ pub async fn check_output_directory(output_dir: &Path) -> Result<()> {
         if backup {
             println!(
                 "There are files in the {} folder in your output directory, these will be deleted when you upgrade.",
-                check_dir.file_name().unwrap().to_string_lossy()
+                check_dir.file_name().expect("Unable to get folder name").to_string_lossy()
             );
             if Confirm::with_theme(&*THEME)
                 .with_prompt("Would like to create a backup?")

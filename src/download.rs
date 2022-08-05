@@ -1,4 +1,4 @@
-use crate::{STYLE_BYTE, TICK};
+use crate::{style_byte, TICK};
 use anyhow::{anyhow, bail, Error, Result};
 use colored::Colorize;
 use fs_extra::{
@@ -8,12 +8,12 @@ use fs_extra::{
 use indicatif::ProgressBar;
 use itertools::Itertools;
 use libium::{mutex_ext::MutexExt, upgrade::Downloadable};
-use size::{Base, Style};
 use std::{
     ffi::OsString,
     fs::read_dir,
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
+    time::Duration,
 };
 use tokio::{
     fs::{copy, create_dir_all, remove_file},
@@ -53,7 +53,8 @@ pub async fn clean(
         // If it's a file
         if file.file_type()?.is_file() {
             let filename = file.file_name();
-            let filename = filename.to_str().unwrap();
+            let filename = filename.to_string_lossy();
+            let filename = filename.as_ref();
             // If it is already downloaded
             if let Some(index) = to_download
                 .iter()
@@ -100,9 +101,11 @@ pub async fn download(
 ) -> Result<()> {
     create_dir_all(&*output_dir).await?;
     let progress_bar = Arc::new(Mutex::new(
-        ProgressBar::new(to_download.len() as u64).with_style(STYLE_BYTE.clone()),
+        ProgressBar::new(to_download.len() as u64).with_style(style_byte()),
     ));
-    progress_bar.force_lock().enable_steady_tick(100);
+    progress_bar
+        .force_lock()
+        .enable_steady_tick(Duration::from_millis(100));
     let mut tasks = Vec::new();
     let semaphore = Arc::new(Semaphore::new(75));
     for downloadable in to_download {
@@ -116,7 +119,7 @@ pub async fn download(
                     &output_dir,
                     |total| {
                         let progress_bar = progress_bar.force_lock();
-                        progress_bar.set_length(progress_bar.length() + total);
+                        progress_bar.set_length(progress_bar.length().unwrap_or(0) + total);
                     },
                     |additional| {
                         let progress_bar = progress_bar.force_lock();
@@ -128,10 +131,10 @@ pub async fn download(
             progress_bar.println(format!(
                 "{} Downloaded {:7} {}",
                 &*TICK,
-                match size {
-                    Some(size) => size.to_string(Base::Base10, Style::Smart),
-                    None => String::new(),
-                },
+                size.map_or_else(Default::default, |size| size
+                    .format()
+                    .with_base(size::Base::Base10)
+                    .to_string()),
                 filename.dimmed(),
             ));
             Ok::<(), Error>(())
