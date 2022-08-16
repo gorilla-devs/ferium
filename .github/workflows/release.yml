@@ -55,6 +55,9 @@ jobs:
             - GNU Linux (x64 linux gnu) with GTK backend for GNOME
             - GNU Linux (x64 linux gnu) without a GUI file dialogue and libraries
             - GNU Linux (x64 linux gnu) with XDG backend for XDG Desktop Portal
+            - GNU Linux (aarch64 linux gnu) with GTK backend for GNOME
+            - GNU Linux (aarch64 linux gnu) without a GUI file dialogue and libraries
+            - GNU Linux (aarch64 linux gnu) with XDG backend for XDG Desktop Portal
             - macOS Apple Silicon (aarch64 darwin)
             - macOS Intel (x64 darwin)
             - GNU Windows, i.e. Cygwin/MinGW (x64 windows gnu)
