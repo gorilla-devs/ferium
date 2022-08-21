@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Download artefacts
+      - name: Download artifacts
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow_conclusion: success
@@ -51,13 +51,12 @@ jobs:
             Compiled binaries for Ferium version `${{ github.ref_name }}` ([changelog](https://github.com/gorilla-devs/ferium/blob/main/CHANGELOG.md#${{ env.MD_HEADER }}))
 
             The provided binaries are for:
-
-            - GNU Linux (x64 linux gnu) with GTK backend for GNOME
-            - GNU Linux (x64 linux gnu) without a GUI file dialogue and libraries
-            - GNU Linux (x64 linux gnu) with XDG backend for XDG Desktop Portal
-            - GNU Linux (aarch64 linux gnu) with GTK backend for GNOME
-            - GNU Linux (aarch64 linux gnu) without a GUI file dialogue and libraries
-            - GNU Linux (aarch64 linux gnu) with XDG backend for XDG Desktop Portal
+            - Linux (x64 linux) with GTK backend for GNOME
+            - Linux (x64 linux) without a GUI file dialogue and libraries
+            - Linux (x64 linux) with XDG Desktop Portal backend
+            - Linux (aarch64 linux) with GTK backend for GNOME
+            - Linux (aarch64 linux) without a GUI file dialogue and libraries
+            - Linux (aarch64 linux) with XDG backend for XDG Desktop Portal
             - macOS Apple Silicon (aarch64 darwin)
             - macOS Intel (x64 darwin)
             - GNU Windows, i.e. Cygwin/MinGW (x64 windows gnu)

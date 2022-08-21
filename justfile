@@ -70,7 +70,49 @@ build-linux-arm64-nogui:
     mkdir -p out
     CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc cargo build --target=aarch64-unknown-linux-gnu --release --no-default-features
     zip -r out/ferium-linux-gnu-arm64-nogui.zip -j target/aarch64-unknown-linux-gnu/release/ferium
+    
+# Build for Musl Linux with a GTK backend
+build-linux-gtk-musl:
+    rm -f out/ferium-linux-musl-gtk.zip
+    mkdir -p out
+    cargo build --target=x86_64-unknown-linux-musl --release
+    zip -r out/ferium-linux-musl-gtk.zip -j target/x86_64-unknown-linux-musl/release/ferium
+    
+# Build for Musl Linux with an XDG backend
+build-linux-xdg-musl:
+    rm -f out/ferium-linux-musl-xdg.zip
+    mkdir -p out
+    cargo build --target=x86_64-unknown-linux-musl --release --no-default-features --features xdg
+    zip -r out/ferium-linux-musl-xdg.zip -j target/x86_64-unknown-linux-musl/release/ferium
+    
+# Build for Musl Linux without a GUI backend
+build-linux-nogui-musl:
+    rm -f out/ferium-linux-musl-nogui.zip
+    mkdir -p out
+    cargo build --target=x86_64-unknown-linux-musl --release --no-default-features
+    zip -r out/ferium-linux-musl-nogui.zip -j target/x86_64-unknown-linux-musl/release/ferium
 
+# Build for Musl Linux ARM64 with a GTK backend
+build-linux-arm64-gtk-musl:
+    rm -f out/ferium-linux-musl-arm64-gtk.zip
+    mkdir -p out
+    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc cargo build --target=aarch64-unknown-linux-musl --release
+    zip -r out/ferium-linux-musl-arm64-gtk.zip -j target/aarch64-unknown-linux-gnu/release/ferium
+
+# Build for Musl Linux ARM64 with an XDG backend
+build-linux-arm64-xdg-musl:
+    rm -f out/ferium-linux-musl-arm64-xdg.zip
+    mkdir -p out
+    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc cargo build --target=aarch64-unknown-linux-musl --release --no-default-features --features xdg
+    zip -r out/ferium-linux-musl-arm64-xdg.zip -j target/aarch64-unknown-linux-gnu/release/ferium
+
+# Build for Musl Linux ARM64 without a GUI backend
+build-linux-arm64-nogui-musl:
+    rm -f out/ferium-linux-musl-arm64-nogui.zip
+    mkdir -p out
+    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-gnu-gcc cargo build --target=aarch64-unknown-linux-musl --release --no-default-features
+    zip -r out/ferium-linux-musl-arm64-nogui.zip -j target/aarch64-unknown-linux-gnu/release/ferium
+    
 # Run clippy lints
 lint:
     cargo clippy --   \
