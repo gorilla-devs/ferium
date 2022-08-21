@@ -55,6 +55,13 @@ jobs:
         run: just lint
 
       - name: Run tests
+        if: matrix.os != 'ubuntu-latest'
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          
+      - name: Run Musl tests
+        if: matrix.os == 'ubuntu-latest'
         uses: actions-rs/cargo@v1
         with:
           command: test
