@@ -39,12 +39,17 @@ jobs:
         with:
           toolchain: stable
           target: x86_64-pc-windows-gnu
-
+      - name: Install Musl Rust target
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-unknown-linux-musl
       - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install librust-gdk-dev gcc-mingw-w64-x86-64
+          sudo apt-get install librust-gdk-dev gcc-mingw-w64-x86-64 musl musl-tools
 
       - name: Lint code
         run: just lint
@@ -65,9 +70,9 @@ jobs:
       - name: Build Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
-          just build-linux-nogui
-          just build-linux-gtk
-          just build-linux-xdg
+          just build-linux-gtk-musl
+          just build-linux-nogui-musl
+          just build-linux-xdg-musl
           just build-win-gnu
 
       - name: Upload build artefacts

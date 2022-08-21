@@ -49,7 +49,28 @@ build-linux-nogui:
     mkdir -p out
     cargo build --target=x86_64-unknown-linux-gnu --release --no-default-features
     zip -r out/ferium-linux-gnu-nogui.zip -j target/x86_64-unknown-linux-gnu/release/ferium
-
+    
+# Build for Musl Linux with a GTK backend
+build-linux-gtk-musl:
+    rm -f out/ferium-linux-musl-gtk.zip
+    mkdir -p out
+    cargo build --target=x86_64-unknown-linux-musl --release
+    zip -r out/ferium-linux-musl-gtk.zip -j target/x86_64-unknown-linux-musl/release/ferium
+    
+# Build for Musl Linux with an XDG backend
+build-linux-xdg-musl:
+    rm -f out/ferium-linux-musl-xdg.zip
+    mkdir -p out
+    cargo build --target=x86_64-unknown-linux-musl --release --no-default-features --features xdg
+    zip -r out/ferium-linux-musl-xdg.zip -j target/x86_64-unknown-linux-musl/release/ferium
+    
+# Build for Musl Linux without a GUI backend
+build-linux-nogui-musl:
+    rm -f out/ferium-linux-musl-nogui.zip
+    mkdir -p out
+    cargo build --target=x86_64-unknown-linux-musl --release --no-default-features
+    zip -r out/ferium-linux-musl-nogui.zip -j target/x86_64-unknown-linux-musl/release/ferium
+    
 # Run clippy lints
 lint:
     cargo clippy --   \
