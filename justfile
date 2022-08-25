@@ -50,6 +50,55 @@ build-linux-nogui:
     cargo build --target=x86_64-unknown-linux-gnu --release --no-default-features
     zip -r out/ferium-linux-gnu-nogui.zip -j target/x86_64-unknown-linux-gnu/release/ferium
 
+# Build for GNU Linux ARM64 with a GTK backend
+build-linux-arm64-gtk:
+    rm -f out/ferium-linux-gnu-arm64-gtk.zip
+    mkdir -p out
+    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc cargo build --target=aarch64-unknown-linux-gnu --release
+    zip -r out/ferium-linux-gnu-arm64-gtk.zip -j target/aarch64-unknown-linux-gnu/release/ferium
+
+# Build for GNU Linux ARM64 with an XDG backend
+build-linux-arm64-xdg:
+    rm -f out/ferium-linux-gnu-arm64-xdg.zip
+    mkdir -p out
+    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc cargo build --target=aarch64-unknown-linux-gnu --release --no-default-features --features xdg
+    zip -r out/ferium-linux-gnu-arm64-xdg.zip -j target/aarch64-unknown-linux-gnu/release/ferium
+
+# Build for GNU Linux ARM64 without a GUI backend
+build-linux-arm64-nogui:
+    rm -f out/ferium-linux-gnu-arm64-nogui.zip
+    mkdir -p out
+    CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc cargo build --target=aarch64-unknown-linux-gnu --release --no-default-features
+    zip -r out/ferium-linux-gnu-arm64-nogui.zip -j target/aarch64-unknown-linux-gnu/release/ferium
+
+# Build for Musl Linux with an XDG backend
+build-linux-xdg-musl:
+    rm -f out/ferium-linux-musl-xdg.zip
+    mkdir -p out
+    cargo build --target=x86_64-unknown-linux-musl --release --no-default-features --features xdg
+    zip -r out/ferium-linux-musl-xdg.zip -j target/x86_64-unknown-linux-musl/release/ferium
+
+# Build for Musl Linux without a GUI backend
+build-linux-nogui-musl:
+    rm -f out/ferium-linux-musl-nogui.zip
+    mkdir -p out
+    cargo build --target=x86_64-unknown-linux-musl --release --no-default-features
+    zip -r out/ferium-linux-musl-nogui.zip -j target/x86_64-unknown-linux-musl/release/ferium
+
+# Build for Musl Linux ARM64 with an XDG backend
+build-linux-arm64-xdg-musl:
+    rm -f out/ferium-linux-musl-arm64-xdg.zip
+    mkdir -p out
+    CC_aarch64_unknown_linux_musl=clang-14 AR_aarch64_unknown_linux_musl=llvm-ar-14 CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-Clink-self-contained=yes -Clinker=rust-lld" cargo build --target=aarch64-unknown-linux-musl --release --no-default-features --features xdg
+    zip -r out/ferium-linux-musl-arm64-xdg.zip -j target/aarch64-unknown-linux-musl/release/ferium
+
+# Build for Musl Linux ARM64 without a GUI backend
+build-linux-arm64-nogui-musl:
+    rm -f out/ferium-linux-musl-arm64-nogui.zip
+    mkdir -p out
+    CC_aarch64_unknown_linux_musl=clang-14 AR_aarch64_unknown_linux_musl=llvm-ar-14 CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-Clink-self-contained=yes -Clinker=rust-lld" cargo build --target=aarch64-unknown-linux-musl --release --no-default-features
+    zip -r out/ferium-linux-musl-arm64-nogui.zip -j target/aarch64-unknown-linux-musl/release/ferium
+
 # Run clippy lints
 lint:
     cargo clippy --   \

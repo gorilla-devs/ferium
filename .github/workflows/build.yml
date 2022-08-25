@@ -39,12 +39,27 @@ jobs:
         with:
           toolchain: stable
           target: x86_64-pc-windows-gnu
-
+      - name: Install Musl Rust target
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-unknown-linux-musl
+      - name: Install Musl Rust for Linux ARM64
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: aarch64-unknown-linux-musl
       - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install librust-gdk-dev gcc-mingw-w64-x86-64
+          # install clang-14 on focal
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 14
+          sudo apt-get install librust-gdk-dev gcc-mingw-w64-x86-64 musl musl-tools gcc-aarch64-linux-gnu
 
       - name: Lint code
         run: just lint
@@ -53,6 +68,13 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
+
+      - name: Run Musl tests
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --target=x86_64-unknown-linux-musl --no-default-features --features xdg
 
       - name: Build macOS
         if: matrix.os == 'macos-latest'
@@ -65,9 +87,11 @@ jobs:
       - name: Build Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
-          just build-linux-nogui
           just build-linux-gtk
-          just build-linux-xdg
+          just build-linux-nogui-musl
+          just build-linux-xdg-musl
+          just build-linux-arm64-nogui-musl
+          just build-linux-arm64-xdg-musl
           just build-win-gnu
 
       - name: Upload build artefacts
