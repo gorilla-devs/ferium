@@ -8,6 +8,7 @@ on:
       - "**.yml"
       - "Cargo.lock"
       - "Cargo.toml"
+      - "justfile"
   workflow_dispatch:
 
 jobs:
@@ -65,6 +66,7 @@ jobs:
         run: just lint
 
       - name: Run tests
+        if: matrix.os != 'ubuntu-latest'
         uses: actions-rs/cargo@v1
         with:
           command: test
@@ -87,7 +89,6 @@ jobs:
       - name: Build Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
-          just build-linux-gtk
           just build-linux-nogui-musl
           just build-linux-xdg-musl
           just build-linux-arm64-nogui-musl
