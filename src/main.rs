@@ -347,6 +347,17 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             check_empty_profile(profile)?;
             subcommands::upgrade(modrinth, curseforge, github, profile).await?;
         },
+        SubCommands::Scan { preferred_platform } => {
+            check_internet().await?;
+            let profile = get_active_profile(&mut config)?;
+            subcommands::scan(
+                modrinth,
+                curseforge,
+                profile,
+                preferred_platform.unwrap_or(libium::config::structs::ModPlatform::Modrinth),
+            )
+            .await?;
+        },
     };
 
     config.profiles.iter_mut().for_each(|profile| {
