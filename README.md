@@ -230,7 +230,7 @@ If you would like to make a feature request, check the [issues](https://github.c
 ## Building from Source or Working on Ferium
 
 Firstly, you need the Rust toolchain which includes `cargo`, `rustup`, etc. You can install these from [the Rust website](https://www.rust-lang.org/tools/install).
-You'll also need the [Just](https://github.com/casey/just#installation) command runner, it's basically a much better version of `make`.
+You'll also need the [`just`](https://github.com/casey/just#installation) command runner, which is basically a much better version of `make`.
 
 To build the project and install it to your Cargo binary directory, clone the project and run `just install`. If you want to install it for testing a developement version, run `just` (alias for `just install-dev`).
 
