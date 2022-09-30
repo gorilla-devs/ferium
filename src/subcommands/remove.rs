@@ -3,7 +3,8 @@ use anyhow::{bail, Result};
 use dialoguer::MultiSelect;
 use libium::config::structs::Profile;
 
-/// Display a list of mods and repos in the profile to select from and remove selected ones
+/// Display a list of mods and repos in the profile to select from and remove
+/// selected ones
 pub fn remove(profile: &mut Profile, mod_names: Vec<String>) -> Result<()> {
     let names = profile
         .mods

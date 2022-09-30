@@ -2,8 +2,7 @@ use crate::{CROSS, THEME, TICK};
 use anyhow::{bail, Result};
 use colored::Colorize;
 use dialoguer::Confirm;
-use ferinth::structures::version_structs::DependencyType;
-use ferinth::Ferinth;
+use ferinth::{structures::version_structs::DependencyType, Ferinth};
 use furse::{structures::file_structs::FileRelationType, Furse};
 use itertools::Itertools;
 use libium::{
@@ -29,14 +28,17 @@ pub async fn github(
     .await?;
     println!("{} {}", *TICK, repo.name.bold());
     profile.mods.push(Mod {
-        name: repo.name.trim().into(),
-        identifier: ModIdentifier::GitHubRepository((repo.owner.expect("Could not get repository owner").login, repo.name)),
+        name:               repo.name.trim().into(),
+        identifier:         ModIdentifier::GitHubRepository((
+            repo.owner.expect("Could not get repository owner").login,
+            repo.name,
+        )),
         check_game_version: if should_check_game_version == Some(true) {
             None
         } else {
             should_check_game_version
         },
-        check_mod_loader: if should_check_mod_loader == Some(true) {
+        check_mod_loader:   if should_check_mod_loader == Some(true) {
             None
         } else {
             should_check_mod_loader
@@ -46,7 +48,7 @@ pub async fn github(
 }
 
 pub async fn modrinth(
-    modrinth: Arc<Ferinth>,
+    modrinth: &Arc<Ferinth>,
     project_id: &str,
     profile: &mut Profile,
     should_check_game_version: Option<bool>,
@@ -64,14 +66,14 @@ pub async fn modrinth(
     .await?;
     println!("{} {}", *TICK, project.title.bold());
     profile.mods.push(Mod {
-        name: project.title.trim().into(),
-        identifier: ModIdentifier::ModrinthProject(project.id),
+        name:               project.title.trim().into(),
+        identifier:         ModIdentifier::ModrinthProject(project.id),
         check_game_version: if should_check_game_version == Some(true) {
             None
         } else {
             should_check_game_version
         },
-        check_mod_loader: if should_check_mod_loader == Some(true) {
+        check_mod_loader:   if should_check_mod_loader == Some(true) {
             None
         } else {
             should_check_mod_loader
@@ -93,14 +95,14 @@ pub async fn modrinth(
                         println!("{} {}", *TICK, project.title.bold());
                         // If it's required, add it without asking
                         profile.mods.push(Mod {
-                            name: project.title.trim().into(),
-                            identifier: ModIdentifier::ModrinthProject(project.id),
+                            name:               project.title.trim().into(),
+                            identifier:         ModIdentifier::ModrinthProject(project.id),
                             check_game_version: if should_check_game_version == Some(true) {
                                 None
                             } else {
                                 should_check_game_version
                             },
-                            check_mod_loader: if should_check_mod_loader == Some(true) {
+                            check_mod_loader:   if should_check_mod_loader == Some(true) {
                                 None
                             } else {
                                 should_check_mod_loader
@@ -132,14 +134,14 @@ pub async fn modrinth(
                             .interact()?
                         {
                             profile.mods.push(Mod {
-                                name: project.title.trim().into(),
-                                identifier: ModIdentifier::ModrinthProject(project.id),
+                                name:               project.title.trim().into(),
+                                identifier:         ModIdentifier::ModrinthProject(project.id),
                                 check_game_version: if should_check_game_version == Some(true) {
                                     None
                                 } else {
                                     should_check_game_version
                                 },
-                                check_mod_loader: if should_check_mod_loader == Some(true) {
+                                check_mod_loader:   if should_check_mod_loader == Some(true) {
                                     None
                                 } else {
                                     should_check_mod_loader
@@ -178,7 +180,7 @@ pub async fn modrinth(
 }
 
 pub async fn curseforge(
-    curseforge: Arc<Furse>,
+    curseforge: &Arc<Furse>,
     project_id: i32,
     profile: &mut Profile,
     should_check_game_version: Option<bool>,
@@ -196,14 +198,14 @@ pub async fn curseforge(
     .await?;
     println!("{} {}", *TICK, project.name.bold());
     profile.mods.push(Mod {
-        name: project.name.trim().into(),
-        identifier: ModIdentifier::CurseForgeProject(project.id),
+        name:               project.name.trim().into(),
+        identifier:         ModIdentifier::CurseForgeProject(project.id),
         check_game_version: if should_check_game_version == Some(true) {
             None
         } else {
             should_check_game_version
         },
-        check_mod_loader: if should_check_mod_loader == Some(true) {
+        check_mod_loader:   if should_check_mod_loader == Some(true) {
             None
         } else {
             should_check_mod_loader
@@ -219,14 +221,14 @@ pub async fn curseforge(
                         println!("{} {}", *TICK, project.name.bold());
                         // If it's required, add it without asking
                         profile.mods.push(Mod {
-                            name: project.name.trim().into(),
-                            identifier: ModIdentifier::CurseForgeProject(project.id),
+                            name:               project.name.trim().into(),
+                            identifier:         ModIdentifier::CurseForgeProject(project.id),
                             check_game_version: if should_check_game_version == Some(true) {
                                 None
                             } else {
                                 should_check_game_version
                             },
-                            check_mod_loader: if should_check_mod_loader == Some(true) {
+                            check_mod_loader:   if should_check_mod_loader == Some(true) {
                                 None
                             } else {
                                 should_check_mod_loader
@@ -256,14 +258,14 @@ pub async fn curseforge(
                             .interact()?
                         {
                             profile.mods.push(Mod {
-                                name: project.name.trim().into(),
-                                identifier: ModIdentifier::CurseForgeProject(project.id),
+                                name:               project.name.trim().into(),
+                                identifier:         ModIdentifier::CurseForgeProject(project.id),
                                 check_game_version: if should_check_game_version == Some(true) {
                                     None
                                 } else {
                                     should_check_game_version
                                 },
-                                check_mod_loader: if should_check_mod_loader == Some(true) {
+                                check_mod_loader:   if should_check_mod_loader == Some(true) {
                                     None
                                 } else {
                                     should_check_mod_loader

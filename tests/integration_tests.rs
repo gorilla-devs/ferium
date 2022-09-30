@@ -190,14 +190,10 @@ fn already_added() {
 }
 
 #[test]
-fn list() -> Result {
-    run_command(vec!["list"], Some("one_profile_full"))
-}
+fn list() -> Result { run_command(vec!["list"], Some("one_profile_full")) }
 
 #[test]
-fn list_verbose() -> Result {
-    run_command(vec!["list", "--verbose"], Some("one_profile_full"))
-}
+fn list_verbose() -> Result { run_command(vec!["list", "--verbose"], Some("one_profile_full")) }
 
 #[test]
 fn list_markdown() -> Result {
@@ -208,9 +204,7 @@ fn list_markdown() -> Result {
 }
 
 #[test]
-fn profile_list() -> Result {
-    run_command(vec!["profile", "list"], Some("one_profile_full"))
-}
+fn profile_list() -> Result { run_command(vec!["profile", "list"], Some("one_profile_full")) }
 
 #[test]
 fn upgrade() -> Result {

@@ -23,9 +23,12 @@ use tokio::{
 
 /// Check the given `directory`
 ///
-/// - If there are files there that are not in `to_download` or `to_install`, they will be moved to `directory`/.old
-/// - If a file in `to_download` or `to_install` is already there, it will be removed from the respective vector
-/// - If the file is a `.part` file or if the move failed, the file will be deleted
+/// - If there are files there that are not in `to_download` or `to_install`,
+///   they will be moved to `directory`/.old
+/// - If a file in `to_download` or `to_install` is already there, it will be
+///   removed from the respective vector
+/// - If the file is a `.part` file or if the move failed, the file will be
+///   deleted
 pub async fn clean(
     directory: &Path,
     to_download: &mut Vec<Downloadable>,
@@ -48,7 +51,7 @@ pub async fn clean(
         );
     }
     create_dir_all(directory.join(".old")).await?;
-    for file in read_dir(&directory)? {
+    for file in read_dir(directory)? {
         let file = file?;
         // If it's a file
         if file.file_type()?.is_file() {
@@ -67,7 +70,8 @@ pub async fn clean(
                 // Don't install it
                 to_install.swap_remove(index);
             // Or else, move the file to `directory`/.old
-            // If the file is a `.part` file or if the move failed, delete the file
+            // If the file is a `.part` file or if the move failed, delete the
+            // file
             } else if filename.ends_with("part")
                 || move_file(
                     file.path(),
@@ -93,7 +97,8 @@ pub fn read_overrides(directory: &Path) -> Result<Vec<(OsString, PathBuf)>> {
     Ok(to_install)
 }
 
-/// Download and install the files in `to_download` and `to_install` to `output_dir`
+/// Download and install the files in `to_download` and `to_install` to
+/// `output_dir`
 pub async fn download(
     output_dir: Arc<PathBuf>,
     to_download: Vec<Downloadable>,
@@ -167,7 +172,8 @@ pub async fn download(
     Ok(())
 }
 
-/// Find duplicates of the items in `slice` using a value obtained by the `key` closure
+/// Find duplicates of the items in `slice` using a value obtained by the `key`
+/// closure
 ///
 /// Returns the indices of duplicate items in reverse order for easy removal
 fn find_dupes_by_key<T, V, F>(slice: &mut [T], key: F) -> Vec<usize>
@@ -180,7 +186,7 @@ where
         return indices;
     }
     slice.sort_unstable_by_key(&key);
-    for i in 0..(slice.len() - 1) {
+    for i in 0 .. (slice.len() - 1) {
         if key(&slice[i]) == key(&slice[i + 1]) {
             indices.push(i);
         }

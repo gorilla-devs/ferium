@@ -1,7 +1,9 @@
 use std::process::Command;
 
-use std::fs::{copy, create_dir};
-use std::io::Result;
+use std::{
+    fs::{copy, create_dir},
+    io::Result,
+};
 
 pub fn run_command(args: Vec<&str>, config_file: Option<&str>) -> Result<()> {
     let mut args = args; // Borrow checker bug (I think)

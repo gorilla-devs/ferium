@@ -88,7 +88,7 @@ pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
             .with_prompt("Would like to create a backup?")
             .interact()?
         {
-            let backup_dir = pick_folder(&*HOME, "Where should the backup be made?")
+            let backup_dir = pick_folder(&HOME, "Where should the backup be made?")
                 .await
                 .expect("Please pick a backup directory");
             create_dir_all(&backup_dir).await?;
