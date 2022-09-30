@@ -190,6 +190,55 @@ fn already_added() {
 }
 
 #[test]
+fn add_multiple_modrinth() -> Result {
+    run_command(
+        vec!["add", "starlight", "sodium", "lithium"],
+        Some("empty_profile"),
+    )
+}
+
+#[test]
+fn add_multiple_curseforge() -> Result {
+    // Add Carpet Mod, Terralith, and Curseforge to the config
+    run_command(
+        vec!["add", "349239", "591388", "225608"],
+        Some("empty_profile"),
+    )
+}
+
+#[test]
+fn add_multiple_github() -> Result {
+    run_command(
+        vec!["add", "CaffeineMC/sodium-fabric", "gnembon/fabric-carpet"],
+        Some("empty_profile"),
+    )
+}
+
+#[test]
+fn add_mixed() -> Result { run_command(vec!["add", "starlight", "349239"], Some("empty_profile")) }
+
+#[test]
+fn already_added_multiple() {
+    assert!(run_command(
+        vec!["add", "StArLiGhT", "lithium"],
+        Some("one_profile_full")
+    )
+    .is_err());
+    assert!(run_command(vec!["add", "591388", "349239"], Some("one_profile_full")).is_err());
+    assert!(run_command(
+        vec![
+            "add",
+            "caffeinemc",
+            "Sodium-Fabric",
+            "gnembon",
+            "fabric-carpet"
+        ],
+        Some("one_profile_full")
+    )
+    .is_err());
+}
+
+#[test]
 fn list() -> Result { run_command(vec!["list"], Some("one_profile_full")) }
 
 #[test]
