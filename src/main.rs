@@ -186,17 +186,28 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                             },
                         };
                     } else {
+                        let mut mr_ids = Vec::<&str>::new();
                         match &mod_.identifier {
                             ModIdentifier::CurseForgeProject(project_id) => tasks.push(spawn(
                                 subcommands::list::curseforge(curseforge.clone(), *project_id),
                             )),
-                            ModIdentifier::ModrinthProject(project_id) => tasks.push(spawn(
-                                subcommands::list::modrinth(modrinth.clone(), project_id.clone()),
-                            )),
+                            ModIdentifier::ModrinthProject(project_id) => mr_ids.push(project_id),
                             ModIdentifier::GitHubRepository(full_name) => tasks.push(spawn(
                                 subcommands::list::github(github.clone(), full_name.clone()),
                             )),
                         };
+                        let mr_projects = modrinth.get_multiple_projects(&mr_ids).await?;
+                        let mr_teams_members = modrinth
+                            .list_multiple_teams_members(
+                                &mr_projects
+                                    .iter()
+                                    .map(|p| &p.team as &str)
+                                    .collect::<Vec<_>>(),
+                            )
+                            .await?;
+                        for (project, team_members) in mr_projects.into_iter().zip(mr_teams_members.into_iter()) {
+                            tasks.push(spawn(subcommands::list::modrinth(project, team_members)));
+                        }
                     }
                 }
                 for handle in tasks {

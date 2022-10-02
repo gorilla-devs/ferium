@@ -2,7 +2,10 @@
 
 use anyhow::Result;
 use colored::Colorize;
-use ferinth::Ferinth;
+use ferinth::{
+    structures::{project::Project, user::TeamMember},
+    Ferinth,
+};
 use furse::Furse;
 use itertools::Itertools;
 use octocrab::Octocrab;
@@ -51,10 +54,7 @@ pub async fn curseforge(curseforge: Arc<Furse>, project_id: i32) -> Result<()> {
     Ok(())
 }
 
-pub async fn modrinth(modrinth: Arc<Ferinth>, project_id: String) -> Result<()> {
-    let project = modrinth.get_project(&project_id).await?;
-    let team_members = modrinth.list_team_members(&project.team).await?;
-
+pub async fn modrinth(project: Project, team_members: Vec<TeamMember>) -> Result<()> {
     println!(
         "
 {}
@@ -90,7 +90,6 @@ pub async fn modrinth(modrinth: Arc<Ferinth>, project_id: String) -> Result<()> 
             format!(" ({})", url.to_string().blue().underline())
         }),
     );
-
     Ok(())
 }
 

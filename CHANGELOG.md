@@ -9,6 +9,7 @@
 - Remove `gtk` feature and rename `xdg` feature to `gui`
 - Fix [#173](https://github.com/gorilla-devs/ferium/issues/173) and [#158](https://github.com/gorilla-devs/ferium/issues/158)
 - Implement linter suggestions
+- Use batch requests for modrinth verbose listing
 
 ## `v4.1.10`
 ### 25.07.2022
