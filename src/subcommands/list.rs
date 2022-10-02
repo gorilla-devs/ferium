@@ -54,6 +54,7 @@ pub async fn curseforge(curseforge: Arc<Furse>, project_id: i32) -> Result<()> {
     Ok(())
 }
 
+#[allow(clippy::unused_async)]
 pub async fn modrinth(project: Project, team_members: Vec<TeamMember>) -> Result<()> {
     println!(
         "
