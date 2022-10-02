@@ -1,8 +1,8 @@
-use crate::{CROSS, THEME, TICK};
+use crate::{cli::DependencyLevel, CROSS, THEME, TICK};
 use anyhow::{bail, Result};
 use colored::Colorize;
 use dialoguer::Confirm;
-use ferinth::structures::version_structs::DependencyType;
+use ferinth::structures::version::DependencyType;
 use ferinth::Ferinth;
 use furse::{structures::file_structs::FileRelationType, Furse};
 use itertools::Itertools;
@@ -13,6 +13,7 @@ use libium::{
 use octocrab::repos::RepoHandler;
 use std::sync::Arc;
 
+#[allow(clippy::expect_used)]
 pub async fn github(
     repo_handler: RepoHandler<'_>,
     profile: &mut Profile,
@@ -30,7 +31,10 @@ pub async fn github(
     println!("{} {}", *TICK, repo.name.bold());
     profile.mods.push(Mod {
         name: repo.name.trim().into(),
-        identifier: ModIdentifier::GitHubRepository((repo.owner.expect("Could not get repository owner").login, repo.name)),
+        identifier: ModIdentifier::GitHubRepository((
+            repo.owner.expect("Could not get repository owner").login,
+            repo.name,
+        )),
         check_game_version: if should_check_game_version == Some(true) {
             None
         } else {
@@ -51,12 +55,13 @@ pub async fn modrinth(
     profile: &mut Profile,
     should_check_game_version: Option<bool>,
     should_check_mod_loader: Option<bool>,
-    add_dependencies: bool,
+    dependencies: Option<DependencyLevel>,
 ) -> Result<()> {
     eprint!("Adding mod... ");
-    let (project, latest_version) = add::modrinth(
+    let project = modrinth.get_project(project_id).await?;
+    let latest_version = add::modrinth(
         modrinth.clone(),
-        project_id,
+        &project,
         profile,
         should_check_game_version,
         should_check_mod_loader,
@@ -77,7 +82,7 @@ pub async fn modrinth(
             should_check_mod_loader
         },
     });
-    if add_dependencies {
+    if dependencies != Some(DependencyLevel::None) {
         for dependency in &latest_version.dependencies {
             let id = if let Some(project_id) = &dependency.project_id {
                 project_id.clone()
@@ -87,9 +92,10 @@ pub async fn modrinth(
                 break;
             };
             if dependency.dependency_type == DependencyType::Required {
-                eprint!("Adding required dependency... ");
-                match add::modrinth(modrinth.clone(), &id, profile, None, None).await {
-                    Ok((project, _)) => {
+                eprint!("Adding required dependency {}... ", id.dimmed());
+                let project = modrinth.get_project(&id).await?;
+                match add::modrinth(modrinth.clone(), &project, profile, None, None).await {
+                    Ok(_) => {
                         println!("{} {}", *TICK, project.title.bold());
                         // If it's required, add it without asking
                         profile.mods.push(Mod {
@@ -115,21 +121,31 @@ pub async fn modrinth(
                         }
                     },
                 };
-            } else if dependency.dependency_type == DependencyType::Optional {
-                eprint!("Checking optional dependency... ");
-                match add::modrinth(modrinth.clone(), &id, profile, None, None).await {
-                    Ok((project, _)) => {
-                        println!("{}", *TICK);
+            } else if dependency.dependency_type == DependencyType::Optional
+                && (dependencies == Some(DependencyLevel::All) || dependencies == None)
+            {
+                if dependencies == Some(DependencyLevel::All) {
+                    eprint!("Adding optional dependency {}... ", id.dimmed());
+                } else {
+                    eprint!("Checking optional dependency {}... ", id.dimmed());
+                }
+                let project = modrinth.get_project(&id).await?;
+                match add::modrinth(modrinth.clone(), &project, profile, None, None).await {
+                    Ok(_) => {
+                        if dependencies == None {
+                            println!("{}", *TICK);
+                        }
                         // If it's optional, confirm with the user if they want to add it
-                        if Confirm::with_theme(&*THEME)
-                            .with_prompt(format!(
-                                "Add optional dependency {} ({})?",
-                                project.title.bold(),
-                                format!("https://modrinth.com/mod/{}", project.slug)
-                                    .blue()
-                                    .underline()
-                            ))
-                            .interact()?
+                        if dependencies == Some(DependencyLevel::All)
+                            || Confirm::with_theme(&*THEME)
+                                .with_prompt(format!(
+                                    "Add optional dependency {} ({})?",
+                                    project.title.bold(),
+                                    format!("https://modrinth.com/mod/{}", project.slug)
+                                        .blue()
+                                        .underline()
+                                ))
+                                .interact()?
                         {
                             profile.mods.push(Mod {
                                 name: project.title.trim().into(),
@@ -145,6 +161,9 @@ pub async fn modrinth(
                                     should_check_mod_loader
                                 },
                             });
+                            if dependencies == Some(DependencyLevel::All) {
+                                println!("{} {}", *TICK, project.title.bold());
+                            }
                         }
                     },
                     Err(err) => {
@@ -183,12 +202,13 @@ pub async fn curseforge(
     profile: &mut Profile,
     should_check_game_version: Option<bool>,
     should_check_mod_loader: Option<bool>,
-    add_dependencies: bool,
+    dependencies: Option<DependencyLevel>,
 ) -> Result<()> {
     eprint!("Adding mod... ");
-    let (project, latest_file) = add::curseforge(
+    let project = curseforge.get_mod(project_id).await?;
+    let latest_file = add::curseforge(
         curseforge.clone(),
-        project_id,
+        &project,
         profile,
         should_check_game_version,
         should_check_mod_loader,
@@ -209,13 +229,14 @@ pub async fn curseforge(
             should_check_mod_loader
         },
     });
-    if add_dependencies {
+    if dependencies != Some(DependencyLevel::None) {
         for dependency in &latest_file.dependencies {
             let id = dependency.mod_id;
             if dependency.relation_type == FileRelationType::RequiredDependency {
-                eprint!("Adding required dependency... ");
-                match add::curseforge(curseforge.clone(), id, profile, None, None).await {
-                    Ok((project, _)) => {
+                eprint!("Adding required dependency {}... ", id.to_string().dimmed());
+                let project = curseforge.get_mod(id).await?;
+                match add::curseforge(curseforge.clone(), &project, profile, None, None).await {
+                    Ok(_) => {
                         println!("{} {}", *TICK, project.name.bold());
                         // If it's required, add it without asking
                         profile.mods.push(Mod {
@@ -241,19 +262,29 @@ pub async fn curseforge(
                         }
                     },
                 };
-            } else if dependency.relation_type == FileRelationType::OptionalDependency {
-                eprint!("Checking optional dependency... ");
-                match add::curseforge(curseforge.clone(), id, profile, None, None).await {
-                    Ok((project, _)) => {
-                        println!("{}", *TICK);
+            } else if dependency.relation_type == FileRelationType::OptionalDependency
+                && (dependencies == Some(DependencyLevel::All) || dependencies == None)
+            {
+                if dependencies == Some(DependencyLevel::All) {
+                    eprint!("Adding optional dependency {}... ", id.to_string().dimmed());
+                } else {
+                    eprint!("Checking optional dependency {}... ", id.to_string().dimmed());
+                }
+                let project = curseforge.get_mod(id).await?;
+                match add::curseforge(curseforge.clone(), &project, profile, None, None).await {
+                    Ok(_) => {
+                        if dependencies == None {
+                            println!("{}", *TICK);
+                        }
                         // If it's optional, confirm with the user if they want to add it
-                        if Confirm::with_theme(&*THEME)
-                            .with_prompt(format!(
-                                "Add optional dependency {} ({})?",
-                                project.name.bold(),
-                                project.links.website_url.to_string().blue().underline()
-                            ))
-                            .interact()?
+                        if dependencies == Some(DependencyLevel::All)
+                            || Confirm::with_theme(&*THEME)
+                                .with_prompt(format!(
+                                    "Add optional dependency {} ({})?",
+                                    project.name.bold(),
+                                    project.links.website_url.to_string().blue().underline()
+                                ))
+                                .interact()?
                         {
                             profile.mods.push(Mod {
                                 name: project.name.trim().into(),
@@ -269,6 +300,9 @@ pub async fn curseforge(
                                     should_check_mod_loader
                                 },
                             });
+                            if dependencies == Some(DependencyLevel::All) {
+                                println!("{} {}", *TICK, project.name.bold());
+                            }
                         }
                     },
                     Err(err) => {

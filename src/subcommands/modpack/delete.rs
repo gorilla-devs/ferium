@@ -5,36 +5,33 @@ use dialoguer::Select;
 use libium::config::structs::Config;
 
 pub fn delete(config: &mut Config, modpack_name: Option<String>) -> Result<()> {
-    let selection = match modpack_name {
-        // If the modpack name has been provided as an option
-        Some(modpack_name) => {
-            match config
-                .modpacks
-                .iter()
-                .position(|modpack| modpack.name == modpack_name)
-            {
-                Some(selection) => selection,
-                None => bail!("The modpack name provided does not exist"),
-            }
-        },
-        None => {
-            let modpack_names = config
-                .modpacks
-                .iter()
-                .map(|modpack| &modpack.name)
-                .collect::<Vec<_>>();
+    // If the modpack name has been provided as an option
+    let selection = if let Some(modpack_name) = modpack_name {
+        match config
+            .modpacks
+            .iter()
+            .position(|modpack| modpack.name == modpack_name)
+        {
+            Some(selection) => selection,
+            None => bail!("The modpack name provided does not exist"),
+        }
+    } else {
+        let modpack_names = config
+            .modpacks
+            .iter()
+            .map(|modpack| &modpack.name)
+            .collect::<Vec<_>>();
 
-            let selection = Select::with_theme(&*THEME)
-                .with_prompt("Select which modpack to delete")
-                .items(&modpack_names)
-                .default(config.active_modpack)
-                .interact_opt()?;
-            if let Some(selection) = selection {
-                selection
-            } else {
-                return Ok(());
-            }
-        },
+        let selection = Select::with_theme(&*THEME)
+            .with_prompt("Select which modpack to delete")
+            .items(&modpack_names)
+            .default(config.active_modpack)
+            .interact_opt()?;
+        if let Some(selection) = selection {
+            selection
+        } else {
+            return Ok(());
+        }
     };
     config.modpacks.swap_remove(selection);
 

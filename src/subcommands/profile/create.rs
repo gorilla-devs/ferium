@@ -91,30 +91,27 @@ pub async fn create(
         if config.profiles.is_empty() {
             bail!("There are no profiles configured to import mods from")
         }
-        let selection = match from {
-            // If the profile name has been provided as an option
-            Some(profile_name) => {
-                match config
-                    .profiles
-                    .iter()
-                    .position(|profile| profile.name == profile_name)
-                {
-                    Some(selection) => selection,
-                    None => bail!("The profile name provided does not exist"),
-                }
-            },
-            None => {
-                let profile_names = config
-                    .profiles
-                    .iter()
-                    .map(|profile| &profile.name)
-                    .collect::<Vec<_>>();
-                Select::with_theme(&*THEME)
-                    .with_prompt("Select which profile to import mods from")
-                    .items(&profile_names)
-                    .default(config.active_profile)
-                    .interact()?
-            },
+        // If the profile name has been provided as an option
+        let selection = if let Some(profile_name) = from {
+            match config
+                .profiles
+                .iter()
+                .position(|profile| profile.name == profile_name)
+            {
+                Some(selection) => selection,
+                None => bail!("The profile name provided does not exist"),
+            }
+        } else {
+            let profile_names = config
+                .profiles
+                .iter()
+                .map(|profile| &profile.name)
+                .collect::<Vec<_>>();
+            Select::with_theme(&*THEME)
+                .with_prompt("Select which profile to import mods from")
+                .items(&profile_names)
+                .default(config.active_profile)
+                .interact()?
         };
         profile.mods = config.profiles[selection].mods.clone();
     }

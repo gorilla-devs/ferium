@@ -3,7 +3,7 @@ mod download;
 mod subcommands;
 
 use anyhow::{anyhow, bail, Result};
-use clap::{IntoApp, StructOpt};
+use clap::{CommandFactory, Parser};
 use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
 use dialoguer::theme::ColorfulTheme;
@@ -16,7 +16,7 @@ use libium::config::{
     structs::{Config, ModIdentifier, Modpack, Profile},
 };
 use octocrab::OctocrabBuilder;
-use online::check;
+use online::tokio::check;
 use std::{
     env::{var, var_os},
     process::ExitCode,
@@ -31,6 +31,7 @@ lazy_static! {
     pub static ref THEME: ColorfulTheme = ColorfulTheme::default();
 }
 
+#[allow(clippy::expect_used)]
 pub fn style_no() -> ProgressStyle {
     ProgressStyle::default_bar()
         .template("{spinner} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
@@ -38,6 +39,7 @@ pub fn style_no() -> ProgressStyle {
         .progress_chars("#>-")
 }
 
+#[allow(clippy::expect_used)]
 pub fn style_byte() -> ProgressStyle {
     ProgressStyle::default_bar()
         .template(
@@ -91,7 +93,8 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         "ferium",
         option_env!("CARGO_PKG_VERSION"),
         Some("theRookieCoder#1287"),
-    ));
+        None,
+    )?);
     // Yes this is a personal API key, but I am allowed to write it in source.
     // The reason is the API key is used for tracking usage, it's not for authentication.
     // So please don't use this outside of Ferium, although telling you not to is all I can do...
@@ -115,7 +118,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             identifier,
             dont_check_game_version,
             dont_check_mod_loader,
-            dont_add_dependencies,
+            dependencies,
         } => {
             let profile = get_active_profile(&mut config)?;
             check_internet().await?;
@@ -126,7 +129,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     profile,
                     Some(!dont_check_game_version),
                     Some(!dont_check_mod_loader),
-                    !dont_add_dependencies,
+                    dependencies,
                 )
                 .await?;
             } else if identifier.split('/').count() == 2 {
@@ -144,7 +147,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 profile,
                 Some(!dont_check_game_version),
                 Some(!dont_check_mod_loader),
-                !dont_add_dependencies,
+                dependencies,
             )
             .await
             {
