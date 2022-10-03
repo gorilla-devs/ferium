@@ -86,17 +86,26 @@ jobs:
         run: |
           just build-mac-intel
           just build-mac-arm
+
       - name: Build Windows
         if: matrix.os == 'windows-latest'
         run: just build-win
+
       - name: Build Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
           just build-linux
           just build-linux-nogui
+
+      - name: Build ARM Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
           just build-linux-arm64
           just build-linux-arm64-nogui
-          just build-win-gnu
+
+      - name: Build Windows GNU
+        if: matrix.os == 'ubuntu-latest'
+        run: just build-win-gnu
 
       - name: Upload build artefacts
         uses: actions/upload-artifact@v3
