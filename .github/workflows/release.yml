@@ -51,7 +51,6 @@ jobs:
             Compiled binaries for Ferium version `${{ github.ref_name }}` ([changelog](https://github.com/gorilla-devs/ferium/blob/main/CHANGELOG.md#${{ env.MD_HEADER }}))
 
             The provided binaries are for:
-            - Linux (x64 linux) with GTK backend for GNOME (Deprecated Dynamic Binary)
             - Linux (x64 linux) without a GUI file dialogue and libraries
             - Linux (x64 linux) with XDG Desktop Portal backend
             - Linux (aarch64 linux) without a GUI file dialogue and libraries

@@ -89,14 +89,14 @@ build-linux-nogui-musl:
 build-linux-arm64-xdg-musl:
     rm -f out/ferium-linux-musl-arm64-xdg.zip
     mkdir -p out
-    CC_aarch64_unknown_linux_musl=clang-14 AR_aarch64_unknown_linux_musl=llvm-ar-14 CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-Clink-self-contained=yes -Clinker=rust-lld" cargo build --target=aarch64-unknown-linux-musl --release --no-default-features --features xdg
+    CC_aarch64_unknown_linux_musl=clang-14 CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld cargo rustc --target=aarch64-unknown-linux-musl --release --no-default-features --features xdg -- -Clink-self-contained=yes -Clinker=rust-lld
     zip -r out/ferium-linux-musl-arm64-xdg.zip -j target/aarch64-unknown-linux-musl/release/ferium
 
 # Build for Musl Linux ARM64 without a GUI backend
 build-linux-arm64-nogui-musl:
     rm -f out/ferium-linux-musl-arm64-nogui.zip
     mkdir -p out
-    CC_aarch64_unknown_linux_musl=clang-14 AR_aarch64_unknown_linux_musl=llvm-ar-14 CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS="-Clink-self-contained=yes -Clinker=rust-lld" cargo build --target=aarch64-unknown-linux-musl --release --no-default-features
+    CC_aarch64_unknown_linux_musl=clang-14 CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld cargo rustc --target=aarch64-unknown-linux-musl --release --no-default-features -- -Clink-self-contained=yes -Clinker=rust-lld 
     zip -r out/ferium-linux-musl-arm64-nogui.zip -j target/aarch64-unknown-linux-musl/release/ferium
 
 # Run clippy lints
