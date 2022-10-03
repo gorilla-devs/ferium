@@ -51,10 +51,10 @@ jobs:
             Compiled binaries for Ferium version `${{ github.ref_name }}` ([changelog](https://github.com/gorilla-devs/ferium/blob/main/CHANGELOG.md#${{ env.MD_HEADER }}))
 
             The provided binaries are for:
-            - Linux (x64 linux) without a GUI file dialogue and libraries
-            - Linux (x64 linux) with XDG Desktop Portal backend
-            - Linux (aarch64 linux) without a GUI file dialogue and libraries
-            - Linux (aarch64 linux) with XDG Desktop Portal backend
+            - Linux x64 without a GUI file dialogue and libraries
+            - Linux x64
+            - Linux aarch64 without a GUI file dialogue and libraries
+            - Linux aarch64
             - macOS Apple Silicon (aarch64 darwin)
             - macOS Intel (x64 darwin)
             - GNU Windows, i.e. Cygwin/MinGW (x64 windows gnu)

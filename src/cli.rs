@@ -1,6 +1,6 @@
 #![deny(missing_docs)]
 
-use clap::{Parser, Subcommand, ValueHint};
+use clap::{clap_derive::ValueEnum, Parser, Subcommand, ValueHint};
 use clap_complete::Shell;
 use libium::config::structs::ModLoader;
 use std::path::PathBuf;
@@ -26,7 +26,7 @@ pub struct Ferium {
 
 #[derive(Subcommand)]
 pub enum SubCommands {
-    #[clap(about("Add a mod to the profile"))]
+    /// Add a mod to the profile
     Add {
         /// The identifier of the mod/project/repository
         ///
@@ -41,8 +41,9 @@ pub enum SubCommands {
         /// The mod loader will not be checked for this mod
         dont_check_mod_loader: bool,
         #[clap(long)]
-        /// The mod's dependencies will not be added
-        dont_add_dependencies: bool,
+        #[clap(value_enum)]
+        /// Select which dependencies should be added
+        dependencies: Option<DependencyLevel>,
     },
     /// Generate shell auto completions to stdout for the specified shell
     Complete {
@@ -94,7 +95,7 @@ pub enum ProfileSubCommands {
         /// The Minecraft version to check compatibility for
         game_version: Option<String>,
         #[clap(long)]
-        #[clap(arg_enum)]
+        #[clap(value_enum)]
         /// The mod loader to check compatibility for
         mod_loader: Option<ModLoader>,
         #[clap(long)]
@@ -120,7 +121,7 @@ pub enum ProfileSubCommands {
         /// The Minecraft version to check compatibility for
         game_version: Option<String>,
         #[clap(long)]
-        #[clap(arg_enum)]
+        #[clap(value_enum)]
         /// The mod loader to check compatibility for
         mod_loader: Option<ModLoader>,
         #[clap(long)]
@@ -204,4 +205,14 @@ pub enum ModpackSubCommands {
     },
     /// Download and install the latest version of the modpack
     Upgrade,
+}
+
+#[derive(Clone, PartialEq, Eq, ValueEnum)]
+pub enum DependencyLevel {
+    /// Do not add any dependencies
+    None,
+    /// Add only required dependencies
+    Required,
+    /// Add all dependencies
+    All,
 }

@@ -29,19 +29,12 @@ build-win-gnu:
     cargo build --target=x86_64-pc-windows-gnu --release
     zip -r out/ferium-windows-gnu.zip -j target/x86_64-pc-windows-gnu/release/ferium.exe
 
-# Build for GNU Linux with a GTK backend
-build-linux-gtk:
-    rm -f out/ferium-linux-gnu-gtk.zip
-    mkdir -p out
-    cargo build --target=x86_64-unknown-linux-gnu --release
-    zip -r out/ferium-linux-gnu-gtk.zip -j target/x86_64-unknown-linux-gnu/release/ferium
-
 # Build for GNU Linux with an XDG backend
-build-linux-xdg:
-    rm -f out/ferium-linux-gnu-xdg.zip
+build-linux-gui:
+    rm -f out/ferium-linux-gnu.zip
     mkdir -p out
-    cargo build --target=x86_64-unknown-linux-gnu --release --no-default-features --features xdg
-    zip -r out/ferium-linux-gnu-xdg.zip -j target/x86_64-unknown-linux-gnu/release/ferium
+    cargo build --target=x86_64-unknown-linux-gnu --release --no-default-features --features gui
+    zip -r out/ferium-linux-gnu.zip -j target/x86_64-unknown-linux-gnu/release/ferium
 
 # Build for GNU Linux without a GUI backend
 build-linux-nogui:

@@ -23,23 +23,22 @@ pub async fn configure(
             }
         },
     }
-    match install_overrides {
-        Some(install_overrides) => modpack.install_overrides = install_overrides,
-        None => {
-            let install_overrides = Confirm::with_theme(&*THEME)
-                .default(modpack.install_overrides)
-                .with_prompt("Should overrides be installed?")
-                .interact()?;
-            if install_overrides {
-                println!(
-                    "{}",
-                    "WARNING: Configs in your output directory may be overwritten by modpack overrides"
-                        .yellow()
-                        .bold()
-                );
-            }
-            modpack.install_overrides = install_overrides;
-        },
-    }
+    modpack.install_overrides = if let Some(install_overrides) = install_overrides {
+        install_overrides
+    } else {
+        let install_overrides = Confirm::with_theme(&*THEME)
+            .default(modpack.install_overrides)
+            .with_prompt("Should overrides be installed?")
+            .interact()?;
+        if install_overrides {
+            println!(
+                "{}",
+                "WARNING: Configs in your output directory may be overwritten by modpack overrides"
+                    .yellow()
+                    .bold()
+            );
+        }
+        install_overrides
+    };
     Ok(())
 }
