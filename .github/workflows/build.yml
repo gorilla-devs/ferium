@@ -28,30 +28,33 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          target: aarch64-apple-darwin
+          target: aarch64-apple-darwin'
+
       - name: Install Rust for Windows
         if: matrix.os == 'windows-latest'
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - name: Install Rust for Linux
+
+      - name: Install Windows GNU toolchain for Linux
         if: matrix.os == 'ubuntu-latest'
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: x86_64-pc-windows-gnu
-      - name: Install Musl Rust target
+      - name: Install musl toolchain for linux
         if: matrix.os == 'ubuntu-latest'
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: x86_64-unknown-linux-musl
-      - name: Install Musl Rust for Linux ARM64
+      - name: Install musl toolchain for ARM64
         if: matrix.os == 'ubuntu-latest'
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: aarch64-unknown-linux-musl
+
       - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -70,13 +73,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-
-      - name: Run Musl tests
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --target=x86_64-unknown-linux-musl --no-default-features --features xdg
+          args: --target=x86_64-unknown-linux-musl --no-default-features
 
       - name: Build macOS
         if: matrix.os == 'macos-latest'
@@ -89,10 +86,10 @@ jobs:
       - name: Build Linux
         if: matrix.os == 'ubuntu-latest'
         run: |
-          just build-linux-nogui-musl
-          just build-linux-xdg-musl
-          just build-linux-arm64-nogui-musl
-          just build-linux-arm64-xdg-musl
+          just build-linux
+          just build-linux-nogui
+          just build-linux-arm64
+          just build-linux-arm64-nogui
           just build-win-gnu
 
       - name: Upload build artefacts

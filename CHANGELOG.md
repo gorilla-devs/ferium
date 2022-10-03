@@ -1,7 +1,12 @@
 # Changelog for Ferium
 
+## `v4.2.0`
+### 03.10.2022
+
+- 
+
 ## `v4.1.11`
-### 31.07.2022
+### 02.10.2022
 
 - Upgrade dependencies and corresponding code
 - Replaced unwraps with expects
