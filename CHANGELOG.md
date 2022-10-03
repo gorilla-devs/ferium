@@ -3,7 +3,8 @@
 ## `v4.2.0`
 ### 03.10.2022
 
-- 
+- Fix [#184](https://github.com/gorilla-devs/ferium/issues/184), switch all linux builds to use `musl`
+- Fix [#134](https://github.com/gorilla-devs/ferium/issues/134), add arm builds for linux
 
 ## `v4.1.11`
 ### 02.10.2022
