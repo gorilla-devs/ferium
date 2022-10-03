@@ -84,9 +84,15 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
     let github = Arc::new(
         cli_app
             .github_token
-            .map_or_else(OctocrabBuilder::new, |token| {
-                OctocrabBuilder::new().personal_token(token)
-            })
+            .map_or_else(
+                || {
+                    var("GITHUB_TOKEN").map_or_else(
+                        |_| OctocrabBuilder::new(),
+                        |token| OctocrabBuilder::new().personal_token(token),
+                    )
+                },
+                |token| OctocrabBuilder::new().personal_token(token),
+            )
             .build()?,
     );
     let modrinth = Arc::new(Ferinth::new(
@@ -95,11 +101,12 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         Some("theRookieCoder#1287"),
         None,
     )?);
-    // Yes this is a personal API key, but I am allowed to write it in source.
-    // The reason is the API key is used for tracking usage, it's not for authentication.
-    // So please don't use this outside of Ferium, although telling you not to is all I can do...
-    let curseforge = Arc::new(Furse::new(&var("CURSEFORGE_API_KEY").unwrap_or_else(
-        |_| "$2a$10$QbCxI6f4KxEs50QKwE2piu1t6oOA8ayOw27H9N/eaH3Sdp5NTWwvO".into(),
+    let curseforge = Arc::new(Furse::new(&cli_app.curseforge_api_key.unwrap_or_else(
+        || {
+            var("CURSEFORGE_API_KEY").unwrap_or_else(|_| {
+                "$2a$10$QbCxI6f4KxEs50QKwE2piu1t6oOA8ayOw27H9N/eaH3Sdp5NTWwvO".into()
+            })
+        },
     )));
 
     let mut config_file = config::get_file(
@@ -205,7 +212,9 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                                     .collect::<Vec<_>>(),
                             )
                             .await?;
-                        for (project, team_members) in mr_projects.into_iter().zip(mr_teams_members.into_iter()) {
+                        for (project, team_members) in
+                            mr_projects.into_iter().zip(mr_teams_members.into_iter())
+                        {
                             tasks.push(spawn(subcommands::list::modrinth(project, team_members)));
                         }
                     }

@@ -5,6 +5,7 @@
 
 - Fix [#184](https://github.com/gorilla-devs/ferium/issues/184), switch all linux builds to use `musl`
 - Fix [#134](https://github.com/gorilla-devs/ferium/issues/134), add arm builds for linux
+- Make both the GitHub PAT and custom CF API key have a global flag and environment variable
 
 ## `v4.1.11`
 ### 02.10.2022

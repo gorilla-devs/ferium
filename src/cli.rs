@@ -16,11 +16,16 @@ pub struct Ferium {
     /// The limit for additional threads spawned by the Tokio runtime
     pub threads: Option<usize>,
     #[clap(long)]
-    /// A GitHub personal access token for increasing the GitHub API rate limit
+    /// Set a GitHub personal access token for increasing the GitHub API rate limit.
+    /// You can also use the environment variable `GITHUB_TOKEN`
     pub github_token: Option<String>,
     #[clap(long)]
-    /// Set the file to read the config from. Does not change the cache and tmp directories
+    /// Set a custom CurseForge API key.
+    /// You can also use the environment variable `CURSEFORGE_API_KEY`
+    pub curseforge_api_key: Option<String>,
+    #[clap(long)]
     #[clap(value_hint(ValueHint::FilePath))]
+    /// Set the file to read the config from. Does not change the cache and tmp directories
     pub config_file: Option<PathBuf>,
 }
 

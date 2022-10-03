@@ -5,7 +5,7 @@ on:
     commits:
     paths:
       - "**.rs"
-      - "**.yml"
+      - ".github/workflows/build.yml"
       - "Cargo.lock"
       - "Cargo.toml"
       - "justfile"
