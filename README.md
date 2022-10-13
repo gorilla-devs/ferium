@@ -8,7 +8,7 @@
 > They are Rust wrappers for the official Modrinth and CurseForge APIs respectively
 
 Ferium is a fast and feature rich CLI program for downloading and updating Minecraft mods from [Modrinth](https://modrinth.com/mods), [CurseForge](https://curseforge.com/minecraft/mc-mods), and [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases), and modpacks from [Modrinth](https://modrinth.com/modpacks) and [CurseForge](https://curseforge.com/minecraft/modpacks).
-Simply specify the mods or modpacks you use through the CLI, and in just one command you can the download all the mods or the modpack you configured.
+Simply specify the mods or modpacks you use through the CLI, and in just one command you can download all the mods or the modpack you configured.
 
 ## Features
 
@@ -21,7 +21,7 @@ Simply specify the mods or modpacks you use through the CLI, and in just one com
     ![Listing Mods Verbosely](media/list%20verbose.png)
   - Upgrading mods/modpacks
     ![Upgrading Mods/Modpacks](media/upgrade.png)
-- [It's super fast](https://www.reddit.com/r/rust/comments/umcu1j/media_ferium_the_cli_minecraft_mod_manager) due to multi-threading for network intensive tasks
+- [It's super fast](https://www.reddit.com/r/rust/comments/umcu1j/media_ferium_the_cli_minecraft_mod_manager) due to multithreading for network intensive tasks
   - Of course, the real world speed still depends on your internet connection
 - Upgrade all your mods in one command, `ferium upgrade`
   - Ferium checks that the version being downloaded is the latest one compatible with the chosen mod loader and Minecraft version
@@ -77,10 +77,10 @@ Remember to use an add-on like [cargo-update](https://crates.io/crates/cargo-upd
 
 ## Overview / Help Page
 
-> Note! A lot of ferium's backend is in a seperate project [libium](https://github.com/theRookieCoder/libium).
+> Note! A lot of ferium's backend is in a separate project [libium](https://github.com/theRookieCoder/libium).
 > It deals with things such as the config, adding mod(pack)s, upgrading, file pickers, etc
 
-Ferium stores profile and modpack information in it's config file. By default it is located at `~/.config/ferium/config.json`, but you can change this in 2 ways. You can set the `FERIUM_CONFIG_FILE` environment variable or set the `--config-file` global command flag, the flag always takes precedence.
+Ferium stores profile and modpack information in its config file. By default it is located at `~/.config/ferium/config.json`, but you can change this in 2 ways. You can set the `FERIUM_CONFIG_FILE` environment variable or set the `--config-file` global command flag, the flag always takes precedence.
 
 You can also set a custom CurseForge API key or GitHub personal access token using the `CURSEFORGE_API_KEY` and `GITHUB_TOKEN` environment variables or the `--curseforge_api_key` and `--github-token` flags respectively. Again, the flags take precedence.
 
@@ -141,19 +141,19 @@ Now after adding all your mods, run `ferium upgrade` to download all of them to 
 This defaults to `.minecraft/mods`, where `.minecraft` is the default Minecraft resources directory. You don't need to worry about this if you play with Mojang's launcher (unless you changed the resources directory).
 You can choose to pick a custom output directory during profile creation or [change it later](#profiles).
 
-If ferium fails to download a mod, it will print it's name in red and give the reason. It will continue downloading the rest of the mods and will exit with an error.
+If ferium fails to download a mod, it will print its name in red and give the reason. It will continue downloading the rest of the mods and will exit with an error.
 
 **WARNING:** _When upgrading, any files not downloaded by ferium will be moved to the `.old` folder in the output directory_
 
 ### Upgrading Modpacks
 
-> If your output directory's `mods` and `resourcepacks` sre not empty when setting it, ferium will offer to create a backup. Please do so if it contains any files you would like to keep
+> If your output directory's `mods` and `resourcepacks` are not empty when setting it, ferium will offer to create a backup. Please do so if it contains any files you would like to keep
 
 Now after adding all your mods, run `ferium modpack upgrade` to download the modpack to your output directory.
 This defaults to `.minecraft`, which is the default Minecraft resources directory. You don't need to worry about this if you play with Mojang's launcher (unless you changed the resources directory).
 You can choose to pick a custom output directory when adding modpacks or [change it later](#managing-modpacks).
 
-If ferium fails to download a mod, it will print it's name in red and give the reason. It will continue downloading the rest of the mods and will exit with an error.
+If ferium fails to download a mod, it will print its name in red and give the reason. It will continue downloading the rest of the mods and will exit with an error.
 
 **WARNING:** _If you choose to install modpack overrides, your existing configs may be overwritten_
 
@@ -161,7 +161,7 @@ If ferium fails to download a mod, it will print it's name in red and give the r
 
 You can see all the mods in your current profile by running `ferium list`. If you want to see more information about them, you can run `ferium list -v` or `ferium list --verbose`.
 
-You can remove any of your mods by runnning `ferium remove`, selecting the ones you would like to remove by using the space key, and pressing enter once you're done.
+You can remove any of your mods by running `ferium remove`, selecting the ones you would like to remove by using the space key, and pressing enter once you're done.
 You can also provide the names of the mods to remove as arguments. Mod names with spaces have to be given in quotes (`ferium remove "ok zoomer"`) or the spaces should be escaped (`ferium remove ok\ zoomer`).
 
 #### Check Overrides
@@ -215,7 +215,7 @@ You can create a profile by running `ferium profile create` and configuring the 
 - Mod loader
 
 You can also provide these settings as flags.
-If you want to copy the mods from another profile, provide the `--import` flag. You can also directly provide a profile name to the flag if you don't want a profile picker will be shown.
+If you want to copy the mods from another profile, provide the `--import` flag. You can also directly provide a profile name to the flag if you don't want a profile picker to be shown.
 Ferium will automatically switch to the newly created profile.
 
 #### Configure
@@ -238,8 +238,8 @@ If you would like to make a feature request, check the [issues](https://github.c
 Firstly, you need the Rust toolchain which includes `cargo`, `rustup`, etc. You can install these from [the Rust website](https://www.rust-lang.org/tools/install).
 You'll also need the [`just`](https://github.com/casey/just#installation) command runner, which is basically a much better version of `make`.
 
-To build the project and install it to your Cargo binary directory, clone the project and run `just install`. If you want to install it for testing a developement version, run `just` (alias for `just install-dev`).
+To build the project and install it to your Cargo binary directory, clone the project and run `just install`. If you want to install it for testing a development version, run `just` (alias for `just install-dev`).
 
 If you want to obtain executables for specific targets, you can run `just build-<target>` and replace `<target>` with `mac-intel`, `mac-arm` `win`, `win-gnu`, `linux`, or `linux-nogui`. The produced binaries will be zipped and moved to `out/`. `just build-linux-nogui` is for building binaries that don't need GTK, but they will not have a GUI file dialogue.
 
-You can run clippy lints using `just lint`, integration tests using `cargo test`, and delete all the build and test artefacts using `just clean`.
+You can run clippy lints using `just lint`, integration tests using `cargo test`, and delete all the build and test artifacts using `just clean`.
