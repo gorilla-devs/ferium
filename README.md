@@ -47,6 +47,12 @@ Ferium is coming to more package managers soon!
 From source builds will install the Rust toolchain.
 GUI builds require any XDG compatible desktop environment to be available at runtime.
 
+### Homebrew (macOS and Linux)
+
+Available [here](https://formulae.brew.sh/formula/ferium) in the core formulae repository.
+
+Run `brew install ferium` to install.
+
 ### Scoop (Windows)
 
 Available [here](https://scoop.sh/#/apps?q=ferium) in Scoop's official games bucket.
