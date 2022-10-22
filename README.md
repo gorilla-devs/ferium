@@ -22,8 +22,10 @@ Simply specify the mods or modpacks you use through the CLI, and in just one com
   - Upgrading mods/modpacks
     ![Upgrading Mods/Modpacks](media/upgrade.png)
 - It's super fast due to multithreading for network intensive tasks
-  [![asciicast](https://asciinema.org/a/DkgxFE9TbKTklhNPAy3eGygrl.svg)](https://asciinema.org/a/DkgxFE9TbKTklhNPAy3eGygrl)
   - Of course, the real world speed still depends on your internet connection
+  
+https://user-images.githubusercontent.com/60034030/197343638-cef80649-132e-4039-9895-658cf3dd4e7a.mp4
+
 - Upgrade all your mods in one command, `ferium upgrade`
   - Ferium checks that the version being downloaded is the latest one compatible with the chosen mod loader and Minecraft version
   - You can configure overrides for mods that are not specified as compatible but still work
