@@ -35,22 +35,22 @@ reqwest = { version = "~0.11.12", default-features = false, features = [
 octocrab = { version = "~0.17.0", default-features = false, features = [
     "rustls",
 ] }
-clap = { version = "~4.0.8", features = ["derive"] }
+clap = { version = "~4.0.15", features = ["derive"] }
 clap_complete = "~4.0.2"
 lazy_static = "~1.4.0"
-serde_json = "~1.0.85"
+serde_json = "~1.0.87"
 dialoguer = "~0.10.2"
 indicatif = "~0.17.1"
 itertools = "~0.10.5"
 fs_extra = "~1.2.0"
 colored = "~2.0.0"
 ferinth = "~2.7.0"
-anyhow = "~1.0.65"
+anyhow = "~1.0.66"
 libium = "~1.20.0"
 semver = "~1.0.14"
 bytes = "~1.1.0"
 furse = "~1.5.5"
-size = "~0.4.0"
+size = "~0.4.1"
 url = "~2.2.2"
 
 [dev-dependencies]
