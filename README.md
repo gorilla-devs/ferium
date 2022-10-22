@@ -21,7 +21,8 @@ Simply specify the mods or modpacks you use through the CLI, and in just one com
     ![Listing Mods Verbosely](media/list%20verbose.png)
   - Upgrading mods/modpacks
     ![Upgrading Mods/Modpacks](media/upgrade.png)
-- [It's super fast](https://www.reddit.com/r/rust/comments/umcu1j/media_ferium_the_cli_minecraft_mod_manager) due to multithreading for network intensive tasks
+- It's super fast due to multithreading for network intensive tasks
+  [![asciicast](https://asciinema.org/a/DkgxFE9TbKTklhNPAy3eGygrl.svg)](https://asciinema.org/a/DkgxFE9TbKTklhNPAy3eGygrl)
   - Of course, the real world speed still depends on your internet connection
 - Upgrade all your mods in one command, `ferium upgrade`
   - Ferium checks that the version being downloaded is the latest one compatible with the chosen mod loader and Minecraft version
