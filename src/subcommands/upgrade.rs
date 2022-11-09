@@ -35,7 +35,7 @@ pub async fn upgrade(
     let mut tasks = Vec::new();
 
     println!("{}\n", "Determining the Latest Compatible Versions".bold());
-    let semaphore = Arc::new(Semaphore::new(75));
+    let semaphore = Arc::new(Semaphore::new(40));
     progress_bar
         .force_lock()
         .enable_steady_tick(Duration::from_millis(100));
