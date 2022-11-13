@@ -63,7 +63,7 @@ jobs:
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 14
-          sudo apt-get install librust-gdk-dev gcc-mingw-w64-x86-64 musl musl-tools gcc-aarch64-linux-gnu
+          sudo apt-get install gcc-mingw-w64-x86-64 musl musl-tools gcc-aarch64-linux-gnu
 
       - name: Lint code
         run: just lint
@@ -81,11 +81,13 @@ jobs:
           command: test
           args: --target=x86_64-unknown-linux-musl --no-default-features
 
-      - name: Build macOS
+      - name: Build macOS Intel
         if: matrix.os == 'macos-latest'
-        run: |
-          just build-mac-intel
-          just build-mac-arm
+        run: just build-mac-intel
+
+      - name: Build macOS ARM
+        if: matrix.os == 'macos-latest'
+        run: just build-mac-arm
 
       - name: Build Windows
         if: matrix.os == 'windows-latest'
@@ -93,15 +95,19 @@ jobs:
 
       - name: Build Linux
         if: matrix.os == 'ubuntu-latest'
-        run: |
-          just build-linux
-          just build-linux-nogui
+        run: just build-linux
+
+      - name: Build Linux nogui
+        if: matrix.os == 'ubuntu-latest'
+        run: just build-linux-nogui
 
       - name: Build ARM Linux
         if: matrix.os == 'ubuntu-latest'
-        run: |
-          just build-linux-arm64
-          just build-linux-arm64-nogui
+        run: just build-linux-arm64
+
+      - name: Build ARM Linux nogui
+        if: matrix.os == 'ubuntu-latest'
+        run: just build-linux-arm64-nogui
 
       - name: Build Windows GNU
         if: matrix.os == 'ubuntu-latest'
