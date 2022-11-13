@@ -1,5 +1,10 @@
 # Changelog for Ferium
 
+## `v4.2.2`
+### 14.11.2022
+
+Fixed a bug where `Bad file descriptor (os error 9)` is returned when the config file is created.
+
 ## `v4.2.1`
 ### 13.11.2022
 
