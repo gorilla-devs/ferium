@@ -1,6 +1,5 @@
-use crate::THEME;
-
 use super::{check_output_directory, check_profile_name, pick_minecraft_version};
+use crate::THEME;
 use anyhow::{bail, Result};
 use colored::Colorize;
 use dialoguer::{Confirm, Input, Select};
@@ -45,8 +44,7 @@ pub async fn create(
                 .with_prompt("Would you like to specify a custom mods directory?")
                 .interact()?
             {
-                if let Some(dir) = pick_folder(&selected_mods_dir, "Pick an output directory").await
-                {
+                if let Some(dir) = pick_folder(&selected_mods_dir, "Pick an output directory")? {
                     check_output_directory(&dir).await?;
                     selected_mods_dir = dir;
                 };

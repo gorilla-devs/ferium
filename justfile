@@ -33,7 +33,7 @@ build-win-gnu:
 build-linux:
     rm -f out/ferium-linux.zip
     mkdir -p out
-    cargo build --target=x86_64-unknown-linux-musl --release --no-default-features --features gui
+    cargo build --target=x86_64-unknown-linux-musl --release
     zip -r out/ferium-linux.zip -j target/x86_64-unknown-linux-musl/release/ferium
 
 # Build for Linux without a GUI
@@ -47,7 +47,7 @@ build-linux-nogui:
 build-linux-arm64:
     rm -f out/ferium-linux-arm64.zip
     mkdir -p out
-    CC_aarch64_unknown_linux_musl=clang-14 CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld cargo rustc --target=aarch64-unknown-linux-musl --release --no-default-features --features gui -- -Clink-self-contained=yes -Clinker=rust-lld
+    CC_aarch64_unknown_linux_musl=clang-14 CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=rust-lld cargo rustc --target=aarch64-unknown-linux-musl --release -- -Clink-self-contained=yes -Clinker=rust-lld
     zip -r out/ferium-linux-arm64.zip -j target/aarch64-unknown-linux-musl/release/ferium
 
 # Build for Linux ARM64 without a GUI

@@ -25,11 +25,7 @@ use std::{sync::Arc, time::Duration};
 use tokio::spawn;
 
 #[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
-pub async fn upgrade(
-    modrinth: Arc<Ferinth>,
-    curseforge: Arc<Furse>,
-    modpack: &'_ Modpack,
-) -> Result<()> {
+pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpack) -> Result<()> {
     let mut to_download: Vec<Downloadable> = Vec::new();
     let mut to_install = Vec::new();
     let install_msg;
@@ -38,14 +34,14 @@ pub async fn upgrade(
             println!("{}", "Downloading Modpack".bold());
             let progress_bar = ProgressBar::new(0).with_style(style_byte());
             let modpack_file = download_curseforge_modpack(
-                curseforge.clone(),
+                &curseforge.clone(),
                 *project_id,
                 |total| {
                     progress_bar.enable_steady_tick(Duration::from_millis(100));
                     progress_bar.set_length(total);
                 },
                 |additional| {
-                    progress_bar.set_position(progress_bar.position() + additional as u64);
+                    progress_bar.inc(additional as u64);
                 },
             )
             .await?;
@@ -116,14 +112,14 @@ pub async fn upgrade(
             println!("{}", "Downloading Modpack".bold());
             let progress_bar = ProgressBar::new(0).with_style(style_byte());
             let modpack_file = download_modrinth_modpack(
-                modrinth.clone(),
+                &modrinth.clone(),
                 project_id,
                 |total| {
                     progress_bar.enable_steady_tick(Duration::from_millis(100));
                     progress_bar.set_length(total);
                 },
                 |additional| {
-                    progress_bar.set_position(progress_bar.position() + additional as u64);
+                    progress_bar.inc(additional as u64);
                 },
             )
             .await?;

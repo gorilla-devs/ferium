@@ -87,7 +87,7 @@ pub async fn modrinth(project: Project, team_members: Vec<TeamMember>) -> Result
             .cyan(),
         project.categories.iter().format(", ").to_string().magenta(),
         project.license.name,
-        project.license.url.map_or("".into(), |url| {
+        project.license.url.map_or(String::new(), |url| {
             format!(" ({})", url.to_string().blue().underline())
         }),
     );
@@ -120,7 +120,9 @@ pub async fn github(github: Arc<Octocrab>, full_name: (String, String)) -> Resul
   License:      {}",
         repo.name.bold(),
         repo.description
-            .map_or("".into(), |description| { format!("\n  {}", description) })
+            .map_or(String::new(), |description| {
+                format!("\n  {}", description)
+            })
             .italic(),
         repo.html_url.unwrap().to_string().blue().underline(),
         "GitHub Repository".dimmed(),
@@ -136,7 +138,7 @@ pub async fn github(github: Arc<Octocrab>, full_name: (String, String)) -> Resul
         repo.license.map_or("None".into(), |license| format!(
             "{}{}",
             license.name,
-            license.html_url.map_or("".into(), |url| {
+            license.html_url.map_or(String::new(), |url| {
                 format!(" ({})", url.to_string().blue().underline())
             })
         )),
@@ -145,7 +147,7 @@ pub async fn github(github: Arc<Octocrab>, full_name: (String, String)) -> Resul
     Ok(())
 }
 
-pub async fn curseforge_md(curseforge: Arc<Furse>, project_id: i32) -> Result<()> {
+pub async fn curseforge_md(curseforge: &Furse, project_id: i32) -> Result<()> {
     let project = curseforge.get_mod(project_id).await?;
     println!(
         "
@@ -181,7 +183,7 @@ _{}_
     Ok(())
 }
 
-pub async fn modrinth_md(modrinth: Arc<Ferinth>, project_id: String) -> Result<()> {
+pub async fn modrinth_md(modrinth: &Ferinth, project_id: String) -> Result<()> {
     let project = modrinth.get_project(&project_id).await?;
     let team_members = modrinth.list_team_members(&project.team).await?;
 
@@ -216,7 +218,7 @@ _{}_
     Ok(())
 }
 
-pub async fn github_md(github: Arc<Octocrab>, full_name: (String, String)) -> Result<()> {
+pub async fn github_md(github: &Octocrab, full_name: (String, String)) -> Result<()> {
     let repo_handler = github.repos(&full_name.0, &full_name.1);
     let repo = repo_handler.get().await?;
 
@@ -231,13 +233,13 @@ pub async fn github_md(github: Arc<Octocrab>, full_name: (String, String)) -> Re
 | Owner       | [{}]({})    |{}",
         repo.name,
         repo.html_url.unwrap(),
-        repo.description.map_or("".into(), |description| {
+        repo.description.map_or(String::new(), |description| {
             format!("  \n_{}_", description.trim())
         }),
         repo.full_name.unwrap(),
         repo.owner.clone().unwrap().login,
         repo.owner.unwrap().html_url,
-        repo.topics.map_or("".into(), |topics| format!(
+        repo.topics.map_or(String::new(), |topics| format!(
             "\n| Topics | {} |",
             topics.iter().format(", ")
         )),

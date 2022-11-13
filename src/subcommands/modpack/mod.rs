@@ -18,7 +18,7 @@ use libium::{file_picker::pick_folder, HOME};
 use std::{fs::read_dir, path::Path};
 
 #[allow(clippy::expect_used)]
-pub async fn check_output_directory(output_dir: &Path) -> Result<()> {
+pub fn check_output_directory(output_dir: &Path) -> Result<()> {
     if output_dir.is_relative() {
         bail!("The provided output directory is not absolute, i.e. it is a relative path");
     }
@@ -42,8 +42,7 @@ pub async fn check_output_directory(output_dir: &Path) -> Result<()> {
                 .with_prompt("Would like to create a backup?")
                 .interact()?
             {
-                let backup_dir = pick_folder(&HOME, "Where should the backup be made?")
-                    .await
+                let backup_dir = pick_folder(&HOME, "Where should the backup be made?")?
                     .ok_or_else(|| anyhow!("Please pick an output directory"))?;
                 copy(check_dir, backup_dir, &CopyOptions::new())?;
             }

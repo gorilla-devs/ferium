@@ -58,7 +58,7 @@ pub async fn configure(
                 match index {
                     0 => {
                         if let Some(dir) =
-                            pick_folder(&profile.output_dir, "Pick an output directory").await
+                            pick_folder(&profile.output_dir, "Pick an output directory")?
                         {
                             check_output_directory(&dir).await?;
                             profile.output_dir = dir;

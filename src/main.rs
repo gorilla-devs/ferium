@@ -131,7 +131,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             check_internet().await?;
             if let Ok(project_id) = identifier.parse::<i32>() {
                 subcommands::add::curseforge(
-                    curseforge,
+                    &curseforge,
                     project_id,
                     profile,
                     Some(!dont_check_game_version),
@@ -149,7 +149,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 )
                 .await?;
             } else if let Err(err) = subcommands::add::modrinth(
-                modrinth,
+                &modrinth,
                 &identifier,
                 profile,
                 Some(!dont_check_game_version),
@@ -177,19 +177,14 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     if markdown {
                         match &mod_.identifier {
                             ModIdentifier::CurseForgeProject(project_id) => {
-                                subcommands::list::curseforge_md(curseforge.clone(), *project_id)
-                                    .await?;
+                                subcommands::list::curseforge_md(&curseforge, *project_id).await?;
                             },
                             ModIdentifier::ModrinthProject(project_id) => {
-                                subcommands::list::modrinth_md(
-                                    modrinth.clone(),
-                                    project_id.clone(),
-                                )
-                                .await?;
+                                subcommands::list::modrinth_md(&modrinth, project_id.clone())
+                                    .await?;
                             },
                             ModIdentifier::GitHubRepository(full_name) => {
-                                subcommands::list::github_md(github.clone(), full_name.clone())
-                                    .await?;
+                                subcommands::list::github_md(&github, full_name.clone()).await?;
                             },
                         };
                     } else {
@@ -251,7 +246,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 check_internet().await?;
                 if let Ok(project_id) = identifier.parse::<i32>() {
                     subcommands::modpack::add::curseforge(
-                        curseforge.clone(),
+                        &curseforge,
                         &mut config,
                         project_id,
                         output_dir,
@@ -259,7 +254,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     )
                     .await?;
                 } else if let Err(err) = subcommands::modpack::add::modrinth(
-                    modrinth.clone(),
+                    &modrinth,
                     &mut config,
                     &identifier,
                     output_dir,
@@ -284,8 +279,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     get_active_modpack(&mut config)?,
                     output_dir,
                     install_overrides,
-                )
-                .await?;
+                )?;
             },
             ModpackSubCommands::Delete { modpack_name } => {
                 subcommands::modpack::delete(&mut config, modpack_name)?;
@@ -302,8 +296,8 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             ModpackSubCommands::Upgrade => {
                 check_internet().await?;
                 subcommands::modpack::upgrade(
-                    modrinth.clone(),
-                    curseforge.clone(),
+                    &modrinth,
+                    &curseforge,
                     get_active_modpack(&mut config)?,
                 )
                 .await?;
@@ -385,38 +379,42 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
 
 /// Get the active profile with error handling
 fn get_active_profile(config: &mut Config) -> Result<&mut Profile> {
-    if config.profiles.is_empty() {
-        bail!("There are no profiles configured, create a profile using `ferium profile create`")
-    } else if config.profiles.len() < config.active_profile {
-        println!(
-            "{}",
-            "Active profile specified incorrectly, please pick a profile to use"
-                .red()
-                .bold()
-        );
-        subcommands::profile::switch(config, None)?;
-        Ok(&mut config.profiles[config.active_profile])
-    } else {
-        Ok(&mut config.profiles[config.active_profile])
+    match config.profiles.len() {
+        0 => {
+            bail!("There are no profiles configured, add a profiles using `ferium profile create`")
+        },
+        1 => config.active_profile = 0,
+        n if n <= config.active_profile => {
+            println!(
+                "{}",
+                "Active profile specified incorrectly, please pick a profile to use"
+                    .red()
+                    .bold()
+            );
+            subcommands::profile::switch(config, None)?;
+        },
+        _ => (),
     }
+    Ok(&mut config.profiles[config.active_profile])
 }
 
 /// Get the active modpack with error handling
 fn get_active_modpack(config: &mut Config) -> Result<&mut Modpack> {
-    if config.modpacks.is_empty() {
-        bail!("There are no modpacks configured, add a modpack using `ferium modpack add`")
-    } else if config.modpacks.len() < config.active_modpack {
-        println!(
-            "{}",
-            "Active modpack specified incorrectly, please pick a modpack to use"
-                .red()
-                .bold()
-        );
-        subcommands::modpack::switch(config, None)?;
-        Ok(&mut config.modpacks[config.active_modpack])
-    } else {
-        Ok(&mut config.modpacks[config.active_modpack])
+    match config.modpacks.len() {
+        0 => bail!("There are no modpacks configured, add a modpack using `ferium modpack add`"),
+        1 => config.active_modpack = 0,
+        n if n <= config.active_modpack => {
+            println!(
+                "{}",
+                "Active modpack specified incorrectly, please pick a modpack to use"
+                    .red()
+                    .bold()
+            );
+            subcommands::modpack::switch(config, None)?;
+        },
+        _ => (),
     }
+    Ok(&mut config.modpacks[config.active_modpack])
 }
 
 /// Check if `profile` is empty, and if so return an error

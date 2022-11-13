@@ -1,5 +1,16 @@
 # Changelog for Ferium
 
+## `v4.2.1`
+### 13.11.2022
+
+- Update dependencies
+- Removed unnecessary `Arc`s, `clone()`s, and `async`s
+- Set the `download.rs` progress bar length immediately
+- Use a common reqwest client for downloads
+- Fix [#229](https://github.com/gorilla-devs/ferium/issues/229)
+- Fix [#228](https://github.com/gorilla-devs/ferium/issues/228) by updating to libium `1.21.0`
+- Use the `inc()` method with progress bars when possible
+
 ## `v4.2.0`
 ### 03.10.2022
 

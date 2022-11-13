@@ -22,6 +22,7 @@ Simply specify the mods or modpacks you use through the CLI, and in just one com
   - Upgrading mods/modpacks
     ![Upgrading Mods/Modpacks](media/upgrade.png)
 - It's super fast due to multithreading for network intensive tasks
+  - It downloads the largest modpack, [MMTP](https://www.curseforge.com/minecraft/modpacks/mats-mega-tech-pack) with around 400 mods in just under a minute and a half
   - Of course, the real world speed still depends on your internet connection
   
 https://user-images.githubusercontent.com/60034030/197343638-cef80649-132e-4039-9895-658cf3dd4e7a.mp4

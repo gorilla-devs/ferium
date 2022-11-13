@@ -68,7 +68,7 @@ pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
         bail!("The provided output directory is not absolute, i.e. it is a relative path");
     }
     if output_dir.file_name() != Some(std::ffi::OsStr::new("mods")) {
-        println!("{}", "Warning! The output directory is not called `mods`. Most mod loaders will load a directory called `mods`.".bright_yellow());
+        println!("{}", "Warning! The output directory is not called `mods`. Most mod loaders will load from a directory called `mods`.".bright_yellow());
     }
     let mut backup = false;
     if output_dir.exists() {
@@ -88,8 +88,7 @@ pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
             .with_prompt("Would like to create a backup?")
             .interact()?
         {
-            let backup_dir = pick_folder(&HOME, "Where should the backup be made?")
-                .await
+            let backup_dir = pick_folder(&HOME, "Where should the backup be made?")?
                 .ok_or_else(|| anyhow!("Please pick a backup directory"))?;
             create_dir_all(&backup_dir).await?;
             copy(output_dir, backup_dir, &CopyOptions::new())?;

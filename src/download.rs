@@ -8,6 +8,8 @@ use fs_extra::{
 use indicatif::ProgressBar;
 use itertools::Itertools;
 use libium::{mutex_ext::MutexExt, upgrade::Downloadable};
+use reqwest::Client;
+use size::Size;
 use std::{
     ffi::OsString,
     fs::read_dir,
@@ -48,7 +50,7 @@ pub async fn clean(
         );
     }
     create_dir_all(directory.join(".old")).await?;
-    for file in read_dir(&directory)? {
+    for file in read_dir(directory)? {
         let file = file?;
         // If it's a file
         if file.file_type()?.is_file() {
@@ -101,40 +103,39 @@ pub async fn download(
 ) -> Result<()> {
     create_dir_all(&*output_dir).await?;
     let progress_bar = Arc::new(Mutex::new(
-        ProgressBar::new(to_download.len() as u64).with_style(style_byte()),
+        ProgressBar::new(
+            to_download
+                .iter()
+                .map(|downloadable| downloadable.length)
+                .sum(),
+        )
+        .with_style(style_byte()),
     ));
     progress_bar
         .force_lock()
         .enable_steady_tick(Duration::from_millis(100));
     let mut tasks = Vec::new();
     let semaphore = Arc::new(Semaphore::new(75));
+    let client = Arc::new(Client::new());
     for downloadable in to_download {
         let permit = semaphore.clone().acquire_owned().await?;
         let progress_bar = progress_bar.clone();
         let output_dir = output_dir.clone();
+        let client = client.clone();
         tasks.push(spawn(async move {
             let _permit = permit;
-            let (size, filename) = downloadable
-                .download(
-                    &output_dir,
-                    |total| {
-                        let progress_bar = progress_bar.force_lock();
-                        progress_bar.set_length(progress_bar.length().unwrap_or(0) + total);
-                    },
-                    |additional| {
-                        let progress_bar = progress_bar.force_lock();
-                        progress_bar.set_position(progress_bar.position() + additional as u64);
-                    },
-                )
+            let (length, filename) = downloadable
+                .download(&client, &output_dir, |additional| {
+                    progress_bar.force_lock().inc(additional as u64);
+                })
                 .await?;
-            let progress_bar = progress_bar.force_lock();
-            progress_bar.println(format!(
+            progress_bar.force_lock().println(format!(
                 "{} Downloaded {:7} {}",
                 &*TICK,
-                size.map_or_else(Default::default, |size| size
+                Size::from_bytes(length)
                     .format()
                     .with_base(size::Base::Base10)
-                    .to_string()),
+                    .to_string(),
                 filename.dimmed(),
             ));
             Ok::<(), Error>(())

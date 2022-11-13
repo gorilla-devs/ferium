@@ -11,7 +11,6 @@ use libium::{
     config::structs::{Mod, ModIdentifier, Profile},
 };
 use octocrab::repos::RepoHandler;
-use std::sync::Arc;
 
 #[allow(clippy::expect_used)]
 pub async fn github(
@@ -50,7 +49,7 @@ pub async fn github(
 }
 
 pub async fn modrinth(
-    modrinth: Arc<Ferinth>,
+    modrinth: &Ferinth,
     project_id: &str,
     profile: &mut Profile,
     should_check_game_version: Option<bool>,
@@ -60,7 +59,7 @@ pub async fn modrinth(
     eprint!("Adding mod... ");
     let project = modrinth.get_project(project_id).await?;
     let latest_version = add::modrinth(
-        modrinth.clone(),
+        modrinth,
         &project,
         profile,
         should_check_game_version,
@@ -94,7 +93,7 @@ pub async fn modrinth(
             if dependency.dependency_type == DependencyType::Required {
                 eprint!("Adding required dependency {}... ", id.dimmed());
                 let project = modrinth.get_project(&id).await?;
-                match add::modrinth(modrinth.clone(), &project, profile, None, None).await {
+                match add::modrinth(modrinth, &project, profile, None, None).await {
                     Ok(_) => {
                         println!("{} {}", *TICK, project.title.bold());
                         // If it's required, add it without asking
@@ -122,7 +121,7 @@ pub async fn modrinth(
                     },
                 };
             } else if dependency.dependency_type == DependencyType::Optional
-                && (dependencies == Some(DependencyLevel::All) || dependencies == None)
+                && (dependencies == Some(DependencyLevel::All) || dependencies.is_none())
             {
                 if dependencies == Some(DependencyLevel::All) {
                     eprint!("Adding optional dependency {}... ", id.dimmed());
@@ -130,9 +129,9 @@ pub async fn modrinth(
                     eprint!("Checking optional dependency {}... ", id.dimmed());
                 }
                 let project = modrinth.get_project(&id).await?;
-                match add::modrinth(modrinth.clone(), &project, profile, None, None).await {
+                match add::modrinth(modrinth, &project, profile, None, None).await {
                     Ok(_) => {
-                        if dependencies == None {
+                        if dependencies.is_none() {
                             println!("{}", *TICK);
                         }
                         // If it's optional, confirm with the user if they want to add it
@@ -197,7 +196,7 @@ pub async fn modrinth(
 }
 
 pub async fn curseforge(
-    curseforge: Arc<Furse>,
+    curseforge: &Furse,
     project_id: i32,
     profile: &mut Profile,
     should_check_game_version: Option<bool>,
@@ -207,7 +206,7 @@ pub async fn curseforge(
     eprint!("Adding mod... ");
     let project = curseforge.get_mod(project_id).await?;
     let latest_file = add::curseforge(
-        curseforge.clone(),
+        curseforge,
         &project,
         profile,
         should_check_game_version,
@@ -235,7 +234,7 @@ pub async fn curseforge(
             if dependency.relation_type == FileRelationType::RequiredDependency {
                 eprint!("Adding required dependency {}... ", id.to_string().dimmed());
                 let project = curseforge.get_mod(id).await?;
-                match add::curseforge(curseforge.clone(), &project, profile, None, None).await {
+                match add::curseforge(curseforge, &project, profile, None, None).await {
                     Ok(_) => {
                         println!("{} {}", *TICK, project.name.bold());
                         // If it's required, add it without asking
@@ -263,17 +262,20 @@ pub async fn curseforge(
                     },
                 };
             } else if dependency.relation_type == FileRelationType::OptionalDependency
-                && (dependencies == Some(DependencyLevel::All) || dependencies == None)
+                && (dependencies == Some(DependencyLevel::All) || dependencies.is_none())
             {
                 if dependencies == Some(DependencyLevel::All) {
                     eprint!("Adding optional dependency {}... ", id.to_string().dimmed());
                 } else {
-                    eprint!("Checking optional dependency {}... ", id.to_string().dimmed());
+                    eprint!(
+                        "Checking optional dependency {}... ",
+                        id.to_string().dimmed()
+                    );
                 }
                 let project = curseforge.get_mod(id).await?;
-                match add::curseforge(curseforge.clone(), &project, profile, None, None).await {
+                match add::curseforge(curseforge, &project, profile, None, None).await {
                     Ok(_) => {
-                        if dependencies == None {
+                        if dependencies.is_none() {
                             println!("{}", *TICK);
                         }
                         // If it's optional, confirm with the user if they want to add it

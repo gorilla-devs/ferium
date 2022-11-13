@@ -4,7 +4,7 @@ use dialoguer::Select;
 use libium::config::structs::Config;
 
 pub fn switch(config: &mut Config, profile_name: Option<String>) -> Result<()> {
-    if config.profiles.len() < 2 {
+    if config.profiles.len() <= 1 {
         Err(anyhow!("There is only 1 profile in your config"))
     } else if let Some(profile_name) = profile_name {
         match config

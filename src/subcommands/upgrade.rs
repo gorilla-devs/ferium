@@ -53,9 +53,9 @@ pub async fn upgrade(
         tasks.push(spawn(async move {
             let _permit = permit;
             let result = mod_downloadable::get_latest_compatible_downloadable(
-                modrinth.clone(),
-                curseforge.clone(),
-                github.clone(),
+                &modrinth.clone(),
+                &curseforge.clone(),
+                &github.clone(),
                 &mod_,
                 &profile.game_version,
                 &profile.mod_loader,
@@ -96,7 +96,7 @@ pub async fn upgrade(
                     error.store(true, Ordering::Relaxed);
                 },
             }
-            progress_bar.set_position(progress_bar.position() + 1);
+            progress_bar.inc(1);
             Ok(())
         }));
     }

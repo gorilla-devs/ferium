@@ -4,7 +4,8 @@ use dialoguer::Select;
 use libium::config::structs::Config;
 
 pub fn switch(config: &mut Config, modpack_name: Option<String>) -> Result<()> {
-    if config.modpacks.len() < 2 {
+    if config.modpacks.len() <= 1 {
+        config.active_modpack = 0;
         Err(anyhow!("There is only 1 modpack in your config"))
     } else if let Some(modpack_name) = modpack_name {
         match config
