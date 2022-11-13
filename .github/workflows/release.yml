@@ -73,7 +73,5 @@ jobs:
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
       - name: Update Homebrew formula
         uses: mislav/bump-homebrew-formula-action@v2
-        with:
-          formula_name: ferium
         env:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
