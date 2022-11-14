@@ -1,6 +1,6 @@
 [package]
 name = "ferium"
-version = "4.2.1"
+version = "4.2.2"
 edition = "2021"
 # Because of `std::process::ExitCode`
 rust-version = "1.61"
