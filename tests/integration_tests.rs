@@ -19,12 +19,6 @@ fn argparse() -> Result {
 }
 
 #[test]
-fn create_config_file_when_none() {
-    // This should create a config file and then fail because there are no profiles
-    assert!(run_command(vec!["profile", "list"], None).is_err());
-}
-
-#[test]
 fn create_profile() -> Result {
     run_command(
         vec![
@@ -39,7 +33,8 @@ fn create_profile() -> Result {
             "--output-dir",
             &output_dir(),
         ],
-        Some("empty"),
+        // This also tests that the config file is automatically created
+        None,
     )
 }
 
