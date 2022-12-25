@@ -8,7 +8,7 @@ use furse::{structures::file_structs::FileRelationType, Furse};
 use itertools::Itertools;
 use libium::{
     add,
-    config::structs::{Mod, ModIdentifier, Profile},
+    config::structs::{Mod, ModIdentifier, Profile, ModLoader},
 };
 use octocrab::repos::RepoHandler;
 
@@ -90,6 +90,10 @@ pub async fn modrinth(
             } else {
                 break;
             };
+            // If the mod loader is Quilt and the dependency is Fabric API, don't download it
+            if profile.mod_loader == ModLoader::Quilt && id == "P7dR8mSH" {
+                continue;
+            }
             if dependency.dependency_type == DependencyType::Required {
                 eprint!("Adding required dependency {}... ", id.dimmed());
                 let project = modrinth.get_project(&id).await?;
