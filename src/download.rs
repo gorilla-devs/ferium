@@ -19,8 +19,9 @@ use std::{
 };
 use tokio::{
     fs::{copy, create_dir_all, remove_file},
-    spawn,
+
     sync::Semaphore,
+    task::JoinSet,
 };
 
 /// Check the given `directory`
@@ -114,7 +115,7 @@ pub async fn download(
     progress_bar
         .force_lock()
         .enable_steady_tick(Duration::from_millis(100));
-    let mut tasks = Vec::new();
+    let mut tasks = JoinSet::new();
     let semaphore = Arc::new(Semaphore::new(75));
     let client = Arc::new(Client::new());
     for downloadable in to_download {
@@ -122,7 +123,7 @@ pub async fn download(
         let progress_bar = progress_bar.clone();
         let output_dir = output_dir.clone();
         let client = client.clone();
-        tasks.push(spawn(async move {
+        tasks.spawn(async move {
             let _permit = permit;
             let (length, filename) = downloadable
                 .download(&client, &output_dir, |additional| {
@@ -139,10 +140,10 @@ pub async fn download(
                 filename.dimmed(),
             ));
             Ok::<(), Error>(())
-        }));
+        });
     }
-    for handle in tasks {
-        handle.await??;
+    while let Some(res) = tasks.join_next().await {
+        res??;
     }
     Arc::try_unwrap(progress_bar)
         .map_err(|_| anyhow!("Failed to run threads to completion"))?

@@ -28,7 +28,7 @@ pub fn remove(profile: &mut Profile, mod_names: Vec<String>) -> Result<()> {
             {
                 items_to_remove.push(index);
             } else {
-                bail!("A mod called {} is not present in this profile", mod_name);
+                bail!("A mod called {mod_name} is not present in this profile");
             }
         }
         items_to_remove

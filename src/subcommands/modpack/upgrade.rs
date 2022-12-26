@@ -73,7 +73,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                                 "- {}
                            \r  {}",
                                 project.name.bold(),
-                                format!("{}/download/{}", project.links.website_url, file_id)
+                                format!("{}/download/{file_id}", project.links.website_url)
                                     .blue()
                                     .underline(),
                             );

@@ -121,7 +121,7 @@ pub async fn github(github: Arc<Octocrab>, full_name: (String, String)) -> Resul
         repo.name.bold(),
         repo.description
             .map_or(String::new(), |description| {
-                format!("\n  {}", description)
+                format!("\n  {description}")
             })
             .italic(),
         repo.html_url.unwrap().to_string().blue().underline(),
@@ -167,7 +167,7 @@ _{}_
         project
             .links
             .source_url
-            .map_or("No".into(), |url| format!("[Yes]({})", url)),
+            .map_or("No".into(), |url| format!("[Yes]({url})")),
         project
             .authors
             .iter()
@@ -204,7 +204,7 @@ _{}_
         project.id,
         project
             .source_url
-            .map_or("No".into(), |url| { format!("[Yes]({})", url) }),
+            .map_or("No".into(), |url| { format!("[Yes]({url})") }),
         team_members
             .iter()
             .map(|member| format!(

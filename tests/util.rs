@@ -9,7 +9,7 @@ pub fn run_command(args: Vec<&str>, config_file: Option<&str>) -> Result<()> {
     if let Some(config_file) = config_file {
         let _ = create_dir("./tests/configs/running");
         let template = format!("./tests/configs/{}.json", config_file);
-        copy(&template, &running)?;
+        copy(template, &running)?;
     }
 
     let mut command = Command::new(env!("CARGO_BIN_EXE_ferium"));

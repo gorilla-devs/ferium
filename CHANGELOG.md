@@ -1,5 +1,15 @@
 # Changelog for Ferium
 
+## `v4.3.0`
+### 26.12.2022
+
+- Use `JoinSet` instead of a hard-coded loop to slightly speed up parallel performance
+- Partially implement [#127](https://github.com/gorilla-devs/ferium/issues/127) by hard coding an override of Fabric API with QFAPI when Quilt is used
+- Loosen dependency specification to minor versions only
+- Use inline format variables
+- Fix [#234](https://github.com/gorilla-devs/ferium/issues/234) by not copying user mods when Quilt is used
+- Fix [#230](https://github.com/gorilla-devs/ferium/issues/230) by only copying jar files from the user folder
+
 ## `v4.2.2`
 ### 14.11.2022
 

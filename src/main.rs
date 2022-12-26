@@ -22,7 +22,7 @@ use std::{
     process::ExitCode,
     sync::Arc,
 };
-use tokio::{runtime, spawn};
+use tokio::{runtime, task::JoinSet};
 
 const CROSS: &str = "×";
 lazy_static! {
@@ -172,7 +172,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             check_empty_profile(profile)?;
             if verbose {
                 check_internet().await?;
-                let mut tasks = Vec::new();
+                let mut tasks = JoinSet::new();
                 for mod_ in &profile.mods {
                     if markdown {
                         match &mod_.identifier {
@@ -190,13 +190,19 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     } else {
                         let mut mr_ids = Vec::<&str>::new();
                         match &mod_.identifier {
-                            ModIdentifier::CurseForgeProject(project_id) => tasks.push(spawn(
-                                subcommands::list::curseforge(curseforge.clone(), *project_id),
-                            )),
+                            ModIdentifier::CurseForgeProject(project_id) => {
+                                tasks.spawn(subcommands::list::curseforge(
+                                    curseforge.clone(),
+                                    *project_id,
+                                ));
+                            },
                             ModIdentifier::ModrinthProject(project_id) => mr_ids.push(project_id),
-                            ModIdentifier::GitHubRepository(full_name) => tasks.push(spawn(
-                                subcommands::list::github(github.clone(), full_name.clone()),
-                            )),
+                            ModIdentifier::GitHubRepository(full_name) => {
+                                tasks.spawn(subcommands::list::github(
+                                    github.clone(),
+                                    full_name.clone(),
+                                ));
+                            },
                         };
                         let mr_projects = modrinth.get_multiple_projects(&mr_ids).await?;
                         let mr_teams_members = modrinth
@@ -210,12 +216,12 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                         for (project, team_members) in
                             mr_projects.into_iter().zip(mr_teams_members.into_iter())
                         {
-                            tasks.push(spawn(subcommands::list::modrinth(project, team_members)));
+                            tasks.spawn(subcommands::list::modrinth(project, team_members));
                         }
                     }
                 }
-                for handle in tasks {
-                    handle.await??;
+                while let Some(res) = tasks.join_next().await {
+                    res??;
                 }
             } else {
                 for mod_ in &profile.mods {
@@ -438,8 +444,7 @@ async fn check_internet() -> Result<()> {
                 Ok(())
             },
             Err(_) => Err(anyhow!(
-                "{} Ferium requires an internet connection to work",
-                CROSS
+                "{CROSS} Ferium requires an internet connection to work"
             )),
         }
     } else {

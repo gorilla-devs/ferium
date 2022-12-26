@@ -7,7 +7,11 @@ use colored::Colorize;
 use ferinth::Ferinth;
 use furse::Furse;
 use indicatif::ProgressBar;
-use libium::{config::structs::Profile, mutex_ext::MutexExt, upgrade::mod_downloadable};
+use libium::{
+    config::structs::{ModLoader, Profile},
+    mutex_ext::MutexExt,
+    upgrade::mod_downloadable,
+};
 use octocrab::Octocrab;
 use std::{
     fs::read_dir,
@@ -17,7 +21,7 @@ use std::{
     },
     time::Duration,
 };
-use tokio::{spawn, sync::Semaphore};
+use tokio::{sync::Semaphore, task::JoinSet};
 
 pub async fn upgrade(
     modrinth: Arc<Ferinth>,
@@ -32,7 +36,7 @@ pub async fn upgrade(
     ));
     let backwards_compat_msg = Arc::new(AtomicBool::new(false));
     let error = Arc::new(AtomicBool::new(false));
-    let mut tasks = Vec::new();
+    let mut tasks = JoinSet::new();
 
     println!("{}\n", "Determining the Latest Compatible Versions".bold());
     let semaphore = Arc::new(Semaphore::new(75));
@@ -50,7 +54,7 @@ pub async fn upgrade(
         let error = error.clone();
         let github = github.clone();
         let mod_ = mod_.clone();
-        tasks.push(spawn(async move {
+        tasks.spawn(async move {
             let _permit = permit;
             let result = mod_downloadable::get_latest_compatible_downloadable(
                 &modrinth.clone(),
@@ -91,17 +95,17 @@ pub async fn upgrade(
                     }
                     progress_bar.println(format!(
                         "{}",
-                        format!("{} {:43} {}", CROSS, mod_.name, err).red()
+                        format!("{CROSS} {:43} {err}", mod_.name).red()
                     ));
                     error.store(true, Ordering::Relaxed);
                 },
             }
             progress_bar.inc(1);
             Ok(())
-        }));
+        });
     }
-    for handle in tasks {
-        handle.await??;
+    while let Some(res) = tasks.join_next().await {
+        res??;
     }
     Arc::try_unwrap(progress_bar)
         .map_err(|_| anyhow!("Failed to run threads to completion"))?
@@ -118,12 +122,17 @@ pub async fn upgrade(
     }
 
     let mut to_install = Vec::new();
-    if profile.output_dir.join("user").exists() {
-        for file in read_dir(&profile.output_dir.join("user"))? {
+    if profile.output_dir.join("user").exists() && profile.mod_loader != ModLoader::Quilt {
+        for file in read_dir(profile.output_dir.join("user"))? {
             let file = file?;
             let path = file.path();
             if path.is_file() {
-                to_install.push((file.file_name(), path));
+                // TODO: Use `path.extension().is_some_and(|ext| ext == "jar")` instead, see [#93050](https://github.com/rust-lang/rust/issues/93050)
+                if let Some(ext) = path.extension() {
+                    if ext == "jar" {
+                        to_install.push((file.file_name(), path));
+                    }
+                }
             }
         }
     }

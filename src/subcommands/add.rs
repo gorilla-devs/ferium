@@ -8,7 +8,7 @@ use furse::{structures::file_structs::FileRelationType, Furse};
 use itertools::Itertools;
 use libium::{
     add,
-    config::structs::{Mod, ModIdentifier, Profile},
+    config::structs::{Mod, ModIdentifier, ModLoader, Profile},
 };
 use octocrab::repos::RepoHandler;
 
@@ -83,13 +83,19 @@ pub async fn modrinth(
     });
     if dependencies != Some(DependencyLevel::None) {
         for dependency in &latest_version.dependencies {
-            let id = if let Some(project_id) = &dependency.project_id {
+            let mut id = if let Some(project_id) = &dependency.project_id {
                 project_id.clone()
             } else if let Some(version_id) = &dependency.version_id {
                 modrinth.get_version(version_id).await?.project_id
             } else {
                 break;
             };
+
+            // Replace Fabric API with Quilted Fabric API on Quilt
+            if profile.mod_loader == ModLoader::Quilt && id == "P7dR8mSH" {
+                id = "qvIfYCYJ".into();
+            }
+
             if dependency.dependency_type == DependencyType::Required {
                 eprint!("Adding required dependency {}... ", id.dimmed());
                 let project = modrinth.get_project(&id).await?;
@@ -169,7 +175,7 @@ pub async fn modrinth(
                         if matches!(err, add::Error::AlreadyAdded) {
                             println!("{} Already added", *TICK);
                         } else {
-                            println!("{}", format!("{} {}", CROSS, err).yellow());
+                            println!("{}", format!("{CROSS} {err}").yellow());
                         }
                     },
                 };
@@ -311,7 +317,7 @@ pub async fn curseforge(
                         if matches!(err, add::Error::AlreadyAdded) {
                             println!("{} Already added", *TICK);
                         } else {
-                            println!("{}", format!("{} {}", CROSS, err).yellow());
+                            println!("{}", format!("{CROSS} {err}").yellow());
                         }
                     },
                 };

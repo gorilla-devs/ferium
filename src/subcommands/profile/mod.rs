@@ -57,7 +57,7 @@ pub async fn pick_minecraft_version() -> Result<String> {
 pub fn check_profile_name(config: &Config, name: &str) -> Result<()> {
     for profile in &config.profiles {
         if profile.name == name {
-            bail!("A profile with name {} already exists", name);
+            bail!("A profile with name {name} already exists");
         }
     }
     Ok(())
