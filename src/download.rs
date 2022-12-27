@@ -1,4 +1,4 @@
-use crate::{style_byte, TICK};
+use crate::{STYLE_BYTE, TICK};
 use anyhow::{anyhow, bail, Error, Result};
 use colored::Colorize;
 use fs_extra::{
@@ -19,7 +19,6 @@ use std::{
 };
 use tokio::{
     fs::{copy, create_dir_all, remove_file},
-
     sync::Semaphore,
     task::JoinSet,
 };
@@ -110,7 +109,7 @@ pub async fn download(
                 .map(|downloadable| downloadable.length)
                 .sum(),
         )
-        .with_style(style_byte()),
+        .with_style(STYLE_BYTE.clone()),
     ));
     progress_bar
         .force_lock()

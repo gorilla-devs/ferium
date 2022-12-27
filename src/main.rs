@@ -10,12 +10,12 @@ use dialoguer::theme::ColorfulTheme;
 use ferinth::Ferinth;
 use furse::Furse;
 use indicatif::ProgressStyle;
-use lazy_static::lazy_static;
 use libium::config::{
     self,
     structs::{Config, ModIdentifier, Modpack, Profile},
 };
 use octocrab::OctocrabBuilder;
+use once_cell::sync::Lazy;
 use online::tokio::check;
 use std::{
     env::{var, var_os},
@@ -25,29 +25,25 @@ use std::{
 use tokio::{runtime, task::JoinSet};
 
 const CROSS: &str = "×";
-lazy_static! {
-    pub static ref TICK: ColoredString = "✓".green();
-    pub static ref YELLOW_TICK: ColoredString = "✓".yellow();
-    pub static ref THEME: ColorfulTheme = ColorfulTheme::default();
-}
-
+pub static TICK: Lazy<ColoredString> = Lazy::new(|| "✓".green());
+pub static YELLOW_TICK: Lazy<ColoredString> = Lazy::new(|| "✓".yellow());
+pub static THEME: Lazy<ColorfulTheme> = Lazy::new(Default::default);
 #[allow(clippy::expect_used)]
-pub fn style_no() -> ProgressStyle {
+pub static STYLE_NO: Lazy<ProgressStyle> = Lazy::new(|| {
     ProgressStyle::default_bar()
         .template("{spinner} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
         .expect("Progess bar template parse failure")
         .progress_chars("#>-")
-}
-
+});
 #[allow(clippy::expect_used)]
-pub fn style_byte() -> ProgressStyle {
+pub static STYLE_BYTE: Lazy<ProgressStyle> = Lazy::new(|| {
     ProgressStyle::default_bar()
         .template(
             "{spinner} [{bytes_per_sec}] [{wide_bar:.cyan/blue}] {bytes:.cyan}/{total_bytes:.blue}",
         )
         .expect("Progess bar template parse failure")
         .progress_chars("#>-")
-}
+});
 
 fn main() -> ExitCode {
     let cli = Ferium::parse();

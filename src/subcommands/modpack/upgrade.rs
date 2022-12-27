@@ -1,6 +1,6 @@
 use crate::{
     download::{clean, download, read_overrides},
-    style_byte, TICK,
+    STYLE_BYTE, TICK,
 };
 use anyhow::Result;
 use colored::Colorize;
@@ -32,7 +32,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
     match &modpack.identifier {
         ModpackIdentifier::CurseForgeModpack(project_id) => {
             println!("{}", "Downloading Modpack".bold());
-            let progress_bar = ProgressBar::new(0).with_style(style_byte());
+            let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
             let modpack_file = download_curseforge_modpack(
                 &curseforge.clone(),
                 *project_id,
@@ -110,7 +110,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
         },
         ModpackIdentifier::ModrinthModpack(project_id) => {
             println!("{}", "Downloading Modpack".bold());
-            let progress_bar = ProgressBar::new(0).with_style(style_byte());
+            let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
             let modpack_file = download_modrinth_modpack(
                 &modrinth.clone(),
                 project_id,

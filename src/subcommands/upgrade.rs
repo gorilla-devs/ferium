@@ -1,6 +1,6 @@
 use crate::{
     download::{clean, download},
-    style_no, CROSS, TICK, YELLOW_TICK,
+    CROSS, STYLE_NO, TICK, YELLOW_TICK,
 };
 use anyhow::{anyhow, bail, Result};
 use colored::Colorize;
@@ -32,7 +32,7 @@ pub async fn upgrade(
     let profile = Arc::new(profile.clone());
     let to_download = Arc::new(Mutex::new(Vec::new()));
     let progress_bar = Arc::new(Mutex::new(
-        ProgressBar::new(profile.mods.len() as u64).with_style(style_no()),
+        ProgressBar::new(profile.mods.len() as u64).with_style(STYLE_NO.clone()),
     ));
     let backwards_compat_msg = Arc::new(AtomicBool::new(false));
     let error = Arc::new(AtomicBool::new(false));
