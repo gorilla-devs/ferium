@@ -14,13 +14,17 @@ Simply specify the mods or modpacks you use through the CLI, and in just one com
 
 - Download mods from multiple sources, namely [Modrinth](https://modrinth.com/mods), [CurseForge](https://curseforge.com/minecraft/mc-mods), and [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases)
 - Download modpacks from multiple sources, namely [Modrinth](https://modrinth.com/modpacks) and [CurseForge](https://curseforge.com/minecraft/modpacks)
-- Pleasing and beautiful UI
-  - Listing mods
-    ![Listing Mods](media/list.png)
-  - Listing mods verbosely
-    ![Listing Mods Verbosely](media/list%20verbose.png)
-  - Upgrading mods/modpacks
-    ![Upgrading Mods/Modpacks](media/upgrade.png)
+- <details>
+    <summary>Pleasing and beautiful UI</summary>
+
+    - Listing mods
+      ![Listing Mods](media/list.png)
+    - Listing mods verbosely
+      ![Listing Mods Verbosely](media/list%20verbose.png)
+    - Upgrading mods/modpacks
+      ![Upgrading Mods/Modpacks](media/upgrade.png)
+  </details>
+
 - It's super fast due to multithreading for network intensive tasks
   - It downloads [MMTP](https://www.curseforge.com/minecraft/modpacks/mats-mega-tech-pack), the largest modpack with around 400 mods, in just under a minute
   - Of course, the real world speed still depends on your internet connection
