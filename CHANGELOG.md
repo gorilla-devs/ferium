@@ -1,5 +1,10 @@
 # Changelog for Ferium
 
+## `v4.3.1`
+### 27.12.2022
+
+Switch to `once_cell`
+
 ## `v4.3.0`
 ### 26.12.2022
 
