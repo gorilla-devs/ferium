@@ -20,7 +20,6 @@ use online::tokio::check;
 use std::{
     env::{var, var_os},
     process::ExitCode,
-    sync::Arc,
 };
 use tokio::{runtime, task::JoinSet};
 
@@ -31,7 +30,7 @@ pub static THEME: Lazy<ColorfulTheme> = Lazy::new(Default::default);
 #[allow(clippy::expect_used)]
 pub static STYLE_NO: Lazy<ProgressStyle> = Lazy::new(|| {
     ProgressStyle::default_bar()
-        .template("{spinner} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
+        .template("{spinner} {elapsed} [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
         .expect("Progess bar template parse failure")
         .progress_chars("#>-")
 });
@@ -39,7 +38,7 @@ pub static STYLE_NO: Lazy<ProgressStyle> = Lazy::new(|| {
 pub static STYLE_BYTE: Lazy<ProgressStyle> = Lazy::new(|| {
     ProgressStyle::default_bar()
         .template(
-            "{spinner} [{bytes_per_sec}] [{wide_bar:.cyan/blue}] {bytes:.cyan}/{total_bytes:.blue}",
+            "{spinner} {bytes_per_sec} [{wide_bar:.cyan/blue}] {bytes:.cyan}/{total_bytes:.blue}",
         )
         .expect("Progess bar template parse failure")
         .progress_chars("#>-")
@@ -77,33 +76,29 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         return Ok(());
     }
 
-    let github = Arc::new(
-        cli_app
-            .github_token
-            .map_or_else(
-                || {
-                    var("GITHUB_TOKEN").map_or_else(
-                        |_| OctocrabBuilder::new(),
-                        |token| OctocrabBuilder::new().personal_token(token),
-                    )
-                },
-                |token| OctocrabBuilder::new().personal_token(token),
-            )
-            .build()?,
-    );
-    let modrinth = Arc::new(Ferinth::new(
+    let github = cli_app
+        .github_token
+        .map_or_else(
+            || {
+                var("GITHUB_TOKEN").map_or_else(
+                    |_| OctocrabBuilder::new(),
+                    |token| OctocrabBuilder::new().personal_token(token),
+                )
+            },
+            |token| OctocrabBuilder::new().personal_token(token),
+        )
+        .build()?;
+    let modrinth = Ferinth::new(
         "ferium",
         option_env!("CARGO_PKG_VERSION"),
         Some("theRookieCoder#1287"),
         None,
-    )?);
-    let curseforge = Arc::new(Furse::new(&cli_app.curseforge_api_key.unwrap_or_else(
-        || {
-            var("CURSEFORGE_API_KEY").unwrap_or_else(|_| {
-                "$2a$10$QbCxI6f4KxEs50QKwE2piu1t6oOA8ayOw27H9N/eaH3Sdp5NTWwvO".into()
-            })
-        },
-    )));
+    )?;
+    let curseforge = Furse::new(&cli_app.curseforge_api_key.unwrap_or_else(|| {
+        var("CURSEFORGE_API_KEY").unwrap_or_else(|_| {
+            "$2a$10$QbCxI6f4KxEs50QKwE2piu1t6oOA8ayOw27H9N/eaH3Sdp5NTWwvO".into()
+        })
+    }));
 
     let mut config_file = config::get_file(
         cli_app

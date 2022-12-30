@@ -9,9 +9,8 @@ use ferinth::{
 use furse::Furse;
 use itertools::Itertools;
 use octocrab::Octocrab;
-use std::sync::Arc;
 
-pub async fn curseforge(curseforge: Arc<Furse>, project_id: i32) -> Result<()> {
+pub async fn curseforge(curseforge: Furse, project_id: i32) -> Result<()> {
     let project = curseforge.get_mod(project_id).await?;
     println!(
         "
@@ -94,7 +93,7 @@ pub async fn modrinth(project: Project, team_members: Vec<TeamMember>) -> Result
     Ok(())
 }
 
-pub async fn github(github: Arc<Octocrab>, full_name: (String, String)) -> Result<()> {
+pub async fn github(github: Octocrab, full_name: (String, String)) -> Result<()> {
     let repo_handler = github.repos(&full_name.0, &full_name.1);
     let repo = repo_handler.get().await?;
     let releases = repo_handler.releases().list().send().await?;

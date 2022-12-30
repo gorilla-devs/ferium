@@ -17,6 +17,6 @@ report_fixme = "Always"
 report_todo = "Always"
 newline_style = "Unix"
 fn_single_line = true
-wrap_comments = true
+wrap_comments = false
 hard_tabs = false
 tab_spaces = 4

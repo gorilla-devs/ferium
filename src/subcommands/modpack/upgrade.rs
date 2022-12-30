@@ -21,7 +21,7 @@ use libium::{
     },
     HOME,
 };
-use std::{sync::Arc, time::Duration};
+use std::time::Duration;
 use tokio::spawn;
 
 #[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
@@ -169,12 +169,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
             "\n{}\n",
             format!("Downloading {} Mod Files", to_download.len()).bold()
         );
-        download(
-            Arc::new(modpack.output_dir.clone()),
-            to_download,
-            to_install,
-        )
-        .await?;
+        download(modpack.output_dir.clone(), to_download, to_install).await?;
     }
     println!("\n{}", install_msg.bold());
     Ok(())

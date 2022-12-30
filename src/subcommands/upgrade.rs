@@ -24,9 +24,9 @@ use std::{
 use tokio::{sync::Semaphore, task::JoinSet};
 
 pub async fn upgrade(
-    modrinth: Arc<Ferinth>,
-    curseforge: Arc<Furse>,
-    github: Arc<Octocrab>,
+    modrinth: Ferinth,
+    curseforge: Furse,
+    github: Octocrab,
     profile: &Profile,
 ) -> Result<()> {
     let profile = Arc::new(profile.clone());
@@ -37,6 +37,9 @@ pub async fn upgrade(
     let backwards_compat_msg = Arc::new(AtomicBool::new(false));
     let error = Arc::new(AtomicBool::new(false));
     let mut tasks = JoinSet::new();
+    let curseforge = Arc::new(curseforge);
+    let modrinth = Arc::new(modrinth);
+    let github = Arc::new(github);
 
     println!("{}\n", "Determining the Latest Compatible Versions".bold());
     let semaphore = Arc::new(Semaphore::new(75));
@@ -146,12 +149,7 @@ pub async fn upgrade(
         println!("\n{}", "All up to date!".bold());
     } else {
         println!("\n{}\n", "Downloading Mod Files".bold());
-        download(
-            Arc::new(profile.output_dir.clone()),
-            to_download,
-            to_install,
-        )
-        .await?;
+        download(profile.output_dir.clone(), to_download, to_install).await?;
     }
 
     if error.load(Ordering::Relaxed) {

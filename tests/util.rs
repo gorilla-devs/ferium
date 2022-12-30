@@ -1,14 +1,15 @@
-use std::process::Command;
-
-use std::fs::{copy, create_dir};
-use std::io::Result;
+use std::{
+    fs::{copy, create_dir},
+    io::Result,
+    process::Command,
+};
 
 pub fn run_command(args: Vec<&str>, config_file: Option<&str>) -> Result<()> {
     let mut args = args;
     let running = format!("./tests/configs/running/{}.json", rand::random::<u16>());
     if let Some(config_file) = config_file {
         let _ = create_dir("./tests/configs/running");
-        let template = format!("./tests/configs/{}.json", config_file);
+        let template = format!("./tests/configs/{config_file}.json");
         copy(template, &running)?;
     }
 

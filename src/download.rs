@@ -97,7 +97,7 @@ pub fn read_overrides(directory: &Path) -> Result<Vec<(OsString, PathBuf)>> {
 
 /// Download and install the files in `to_download` and `to_install` to `output_dir`
 pub async fn download(
-    output_dir: Arc<PathBuf>,
+    output_dir: PathBuf,
     to_download: Vec<Downloadable>,
     to_install: Vec<(OsString, PathBuf)>,
 ) -> Result<()> {
@@ -117,6 +117,7 @@ pub async fn download(
     let mut tasks = JoinSet::new();
     let semaphore = Arc::new(Semaphore::new(75));
     let client = Arc::new(Client::new());
+    let output_dir = Arc::new(output_dir);
     for downloadable in to_download {
         let permit = semaphore.clone().acquire_owned().await?;
         let progress_bar = progress_bar.clone();
