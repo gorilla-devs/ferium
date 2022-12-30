@@ -130,7 +130,8 @@ You can either have your own set of mods in what is called a 'profile', or insta
   - So to add [Sodium](https://github.com/CaffeineMC/sodium-fabric), you should run `ferium add CaffeineMC/sodium-fabric` (again, case-insensitive)
   - Note: The GitHub repository has to release JAR files in their Releases for ferium to download, or else it will refuse to be added
 - External mods
-  - If you want to use files that are not downloadable by ferium, place them in the `user` folder in the output directory. Files here will be copied to the output directory when upgrading
+  - If you want to use files that are not downloadable by ferium, place them in the `user` folder in the output directory. Files here will be copied to the output directory when upgrading.
+    - When Quilt is set as the mod loader, files in the `user` folder will not be copied to the output directory, as Quilt already loads mods in nested directories
 
 ### Adding Modpacks
 
