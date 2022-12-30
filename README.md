@@ -250,10 +250,10 @@ If you would like to make a feature request, check the [issues](https://github.c
 ## Building from Source or Working on ferium
 
 Firstly, you need the Rust toolchain which includes `cargo`, `rustup`, etc. You can install these from [the Rust website](https://www.rust-lang.org/tools/install).
-You'll also need the [`just`](https://github.com/casey/just#installation) command runner, which is basically a much better version of `make`.
+You can manually run cargo commands, but I recommend [`just`](https://github.com/casey/just#installation), a command runner that's basically a much better version of `make`.
 
-To build the project and install it to your Cargo binary directory, clone the project and run `just install`. If you want to install it for testing a development version, run `just` (alias for `just install-dev`).
+To build the project and install it to your Cargo binary directory, clone the project and run `just install`. If you want to install it for testing purposes run `just` (alias to `just install-dev`), which builds in debug mode.
 
-If you want to obtain executables for specific targets, you can run `just build-<target>` and replace `<target>` with `mac-intel`, `mac-arm` `win`, `win-gnu`, `linux`, or `linux-nogui`. The produced binaries will be zipped and moved to `out/`. `just build-linux-nogui` is for building binaries that don't need GTK, but they will not have a GUI file dialogue.
+You can run clippy lints using `just lint`, integration tests using `cargo test`, and delete all build and test artefacts using `just clean`.
 
-You can run clippy lints using `just lint`, integration tests using `cargo test`, and delete all the build and test artefacts using `just clean`.
+If you would like to see instructions for building for specific targets (e.g. Linux ARM), head over to the [workflow file](.github/workflows/build.yml).

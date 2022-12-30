@@ -2,13 +2,12 @@ name: Build
 
 on:
   push:
-    commits:
+    # Do not run on tag pushes
+    branches: '**'
     paths:
       - "**.rs"
       - ".github/workflows/build.yml"
       - "Cargo.lock"
-      - "Cargo.toml"
-      - "justfile"
   workflow_dispatch:
 
 jobs:
@@ -21,7 +20,8 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v3
-      - uses: extractions/setup-just@v1
+      - name: Create `out/`
+        run: mkdir out
 
       - name: Install Rust for macOS
         if: matrix.os == 'macos-latest'
@@ -59,14 +59,18 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          # install clang-14 on focal
+          sudo apt-get upgrade
+          sudo apt-get install gcc-mingw-w64-x86-64 musl musl-tools gcc-aarch64-linux-gnu
+          # Install Clang 14
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 14
-          sudo apt-get install gcc-mingw-w64-x86-64 musl musl-tools gcc-aarch64-linux-gnu
 
       - name: Lint code
-        run: just lint
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -D clippy::all -D clippy::exit -D clippy::perf -D clippy::cargo -D clippy::style -D clippy::nursery -D clippy::pedantic -D clippy::dbg_macro -D clippy::suspicious -D clippy::unwrap_used -D clippy::complexity -D clippy::create_dir -D clippy::correctness -W clippy::expect_used -A clippy::too-many-lines -A clippy::must-use-candidate -A clippy::multiple-crate-versions
 
       - name: Run tests
         if: matrix.os != 'ubuntu-latest'
@@ -83,35 +87,87 @@ jobs:
 
       - name: Build macOS Intel
         if: matrix.os == 'macos-latest'
-        run: just build-mac-intel
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --target=x86_64-apple-darwin --release
 
       - name: Build macOS ARM
         if: matrix.os == 'macos-latest'
-        run: just build-mac-arm
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --target=aarch64-apple-darwin --release
+      
+      - name: Zip macOS outputs
+        if: matrix.os == 'macos-latest'
+        run: |
+          zip -r out/ferium-macos-x64.zip -j target/x86_64-apple-darwin/release/ferium
+          zip -r out/ferium-macos-arm.zip -j target/aarch64-apple-darwin/release/ferium
 
       - name: Build Windows
         if: matrix.os == 'windows-latest'
-        run: just build-win
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --target=x86_64-pc-windows-msvc --release
+      - name: Zip Windows output
+        if: matrix.os == 'windows-latest'
+        run: Compress-Archive -Path "target\x86_64-pc-windows-msvc\release\ferium.exe" -DestinationPath "out\ferium-windows-msvc.zip"
 
       - name: Build Linux
         if: matrix.os == 'ubuntu-latest'
-        run: just build-linux
-
-      - name: Build Linux nogui
-        if: matrix.os == 'ubuntu-latest'
-        run: just build-linux-nogui
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --target=x86_64-unknown-linux-musl --release
 
       - name: Build ARM Linux
         if: matrix.os == 'ubuntu-latest'
-        run: just build-linux-arm64
+        uses: actions-rs/cargo@v1
+        with:
+          command: rustc
+          args: --target=aarch64-unknown-linux-musl --release -- -Clink-self-contained=yes -Clinker=rust-lld
+        env:
+          CC_aarch64_unknown_linux_musl: clang-14
+      
+      - name: Zip Linux outputs
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          zip -r out/ferium-linux.zip -j target/x86_64-unknown-linux-musl/release/ferium
+          zip -r out/ferium-linux-arm64.zip -j target/aarch64-unknown-linux-musl/release/ferium
+
+      - name: Build Linux nogui
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --target=x86_64-unknown-linux-musl --release --no-default-features
 
       - name: Build ARM Linux nogui
         if: matrix.os == 'ubuntu-latest'
-        run: just build-linux-arm64-nogui
+        uses: actions-rs/cargo@v1
+        with:
+          command: rustc
+          args: --target=aarch64-unknown-linux-musl --release --no-default-features -- -Clink-self-contained=yes -Clinker=rust-lld 
+        env:
+          CC_aarch64_unknown_linux_musl: clang-14
+      
+      - name: Zip Linux nogui outputs
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          zip -r out/ferium-linux-nogui.zip -j target/x86_64-unknown-linux-musl/release/ferium
+          zip -r out/ferium-linux-arm64-nogui.zip -j target/aarch64-unknown-linux-musl/release/ferium
 
       - name: Build Windows GNU
         if: matrix.os == 'ubuntu-latest'
-        run: just build-win-gnu
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --target=x86_64-pc-windows-gnu --release
+      - name: Zip Windows GNU output
+        if: matrix.os == 'ubuntu-latest'
+        run: zip -r out/ferium-windows-gnu.zip -j target/x86_64-pc-windows-gnu/release/ferium.exe
 
       - name: Upload build artefacts
         uses: actions/upload-artifact@v3
