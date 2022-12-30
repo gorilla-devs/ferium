@@ -1,7 +1,7 @@
 # Changelog for Ferium
 
 ## `v4.3.2`
-### TBD
+### 30.12.2022
 
 - Remove more unnecessary `Arc`s
 - Tweak progress bar styles
