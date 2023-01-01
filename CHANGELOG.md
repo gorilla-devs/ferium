@@ -1,5 +1,10 @@
 # Changelog for Ferium
 
+## `v4.3.3`
+### 01.01.2023
+
+Update dependencies and removed unnecessary ones
+
 ## `v4.3.2`
 ### 30.12.2022
 
