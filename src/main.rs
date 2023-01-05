@@ -378,7 +378,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
 fn get_active_profile(config: &mut Config) -> Result<&mut Profile> {
     match config.profiles.len() {
         0 => {
-            bail!("There are no profiles configured, add a profiles using `ferium profile create`")
+            bail!("There are no profiles configured, add a profile using `ferium profile create`")
         },
         1 => config.active_profile = 0,
         n if n <= config.active_profile => {
