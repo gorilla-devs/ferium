@@ -17,7 +17,7 @@ use fs_extra::dir::{copy, CopyOptions};
 use libium::{
     config::structs::{Config, ModLoader},
     file_picker::pick_folder,
-    misc::get_major_mc_versions,
+    misc::{get_all_major_mc_versions},
     HOME,
 };
 use std::{fs::read_dir, path::PathBuf};
@@ -44,9 +44,9 @@ pub fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
 }
 
 pub async fn pick_minecraft_version() -> Result<String> {
-    let mut latest_versions: Vec<String> = get_major_mc_versions(999).await?;
+    let mut latest_versions: Vec<String> = get_all_major_mc_versions().await?;
     let selected_version = Select::with_theme(&*THEME)
-        .with_prompt("Version of Minecraft:")
+        .with_prompt("Which version of Minecraft:")
         .max_length(4)
         .items(&latest_versions)
         .default(0)
