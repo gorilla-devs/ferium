@@ -1,5 +1,11 @@
 # Changelog for Ferium
 
+## `v4.3.4`
+### 15.01.2023
+
+- Update dependencies
+- Fix #262 by adding additional 'show more' options to the Minecraft version picker
+
 ## `v4.3.3`
 ### 01.01.2023
 

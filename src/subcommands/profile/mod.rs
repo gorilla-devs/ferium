@@ -13,11 +13,11 @@ use crate::THEME;
 use anyhow::{anyhow, bail, Result};
 use colored::Colorize;
 use dialoguer::{Confirm, Select};
+use ferinth::{structures::tag::GameVersionType, Ferinth};
 use fs_extra::dir::{copy, CopyOptions};
 use libium::{
     config::structs::{Config, ModLoader},
     file_picker::pick_folder,
-    misc::get_major_mc_versions,
     HOME,
 };
 use std::{fs::read_dir, path::PathBuf};
@@ -44,13 +44,37 @@ pub fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
 }
 
 pub async fn pick_minecraft_version() -> Result<String> {
-    let mut latest_versions: Vec<String> = get_major_mc_versions(10).await?;
+    let versions = Ferinth::default().list_game_versions().await?;
+    let mut major_versions = ["Show all", "Show release"] // Prepend additional options
+        .into_iter()
+        .chain(
+            versions
+                .iter()
+                .filter(|v| v.major) // Only get major versions
+                .map(|v| v.version.as_ref())
+                .collect::<Vec<_>>(),
+        )
+        .collect::<Vec<_>>();
     let selected_version = Select::with_theme(&*THEME)
         .with_prompt("Which version of Minecraft do you play?")
-        .items(&latest_versions)
-        .default(0)
+        .items(&major_versions)
+        .default(2)
         .interact()?;
-    Ok(latest_versions.swap_remove(selected_version))
+    match selected_version {
+        0 | 1 => {
+            let mut versions = versions
+                .into_iter()
+                .filter(|v| selected_version == 0 || v.version_type == GameVersionType::Release)
+                .map(|v| v.version)
+                .collect::<Vec<_>>();
+            let selected_version = Select::with_theme(&*THEME)
+                .with_prompt("Which version of Minecraft do you play?")
+                .items(&versions)
+                .interact()?;
+            Ok(versions.swap_remove(selected_version))
+        },
+        _ => Ok(major_versions.swap_remove(selected_version).to_owned()),
+    }
 }
 
 /// Check that there isn't already a profile with the same name
