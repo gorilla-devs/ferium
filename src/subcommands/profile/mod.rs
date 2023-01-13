@@ -44,9 +44,10 @@ pub fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
 }
 
 pub async fn pick_minecraft_version() -> Result<String> {
-    let mut latest_versions: Vec<String> = get_major_mc_versions(10).await?;
+    let mut latest_versions: Vec<String> = get_major_mc_versions(999).await?;
     let selected_version = Select::with_theme(&*THEME)
-        .with_prompt("Which version of Minecraft do you play?")
+        .with_prompt("Version of Minecraft:")
+        .max_length(4)
         .items(&latest_versions)
         .default(0)
         .interact()?;
