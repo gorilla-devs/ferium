@@ -39,43 +39,41 @@ https://user-images.githubusercontent.com/60034030/201951498-62d1e6d9-8edb-4399-
 
 ## Installation
 
-Ferium is a compiled, statically linked program that does not require external dependencies.
-On Linux, the regular version requires some sort of desktop environment that offers an XDG Desktop Portal. The `nogui` versions do not need this.
+Ferium builds from GitHub Releases do not require any external dependencies at runtime.  
+If you compile from source, using GCC to build will result in a binary that requires GCC to be available a runtime.  
+On Linux, the regular version requires some sort of desktop environment that offers an XDG Desktop Portal.
+The `nogui` versions do not need this, but there will not be any GUI file picker. So, you will have to manually enter in paths.
 
-Ferium is coming to more package managers soon!
-[Tracking Issue](https://github.com/theRookieCoder/ferium/issues/42)
+[Ferium is coming to more package managers soon!](https://github.com/theRookieCoder/ferium/issues/42)
 
-### Arch User Repository (Arch Linux)
+### Packages
 
-- [GUI](https://aur.archlinux.org/packages/ferium-gui-bin)
-- [GUI from Source](https://aur.archlinux.org/packages/ferium-gui-git)
-- [No GUI](https://aur.archlinux.org/packages/ferium-bin)
-- [No GUI from Source](https://aur.archlinux.org/packages/ferium-git)
+**Arch User Repository** for _Arch Linux_  
+[![AUR](https://repology.org/badge/version-for-repo/aur/ferium.svg)](https://aur.archlinux.org/packages?K=ferium)
 
-From source builds will install the Rust toolchain.
-GUI builds require any XDG compatible desktop environment to be available at runtime.
+| Installation method                             | GUI file dialogue                                                       | No GUI                                                      |
+|-------------------------------------------------|-------------------------------------------------------------------------|-------------------------------------------------------------|
+| Install pre-built binaries from GitHub Releases | **[ferium-gui-bin](https://aur.archlinux.org/packages/ferium-gui-bin)** | [ferium-bin](https://aur.archlinux.org/packages/ferium-bin) |
+| Build from source at the latest tag             | [ferium-gui](https://aur.archlinux.org/packages/ferium-gui)             | [ferium](https://aur.archlinux.org/packages/ferium)         |
+| Build from source using the latest commit       | [ferium-gui-git](https://aur.archlinux.org/packages/ferium-gui-git)     | [ferium-git](https://aur.archlinux.org/packages/ferium-git) |
 
-### Homebrew (macOS and Linux)
+From source builds will install the Rust toolchain and GCC.
 
-Available [here](https://formulae.brew.sh/formula/ferium) in the core formulae repository.
+**Homebrew** for _macOS_ or _Linux_  
+[![Homebrew](https://repology.org/badge/version-for-repo/homebrew/ferium.svg)](https://formulae.brew.sh/formula/ferium)  
+`brew install ferium`  
 
-Run `brew install ferium` to install.
+**Scoop** for _Windows_  
+[![Scoop](https://repology.org/badge/version-for-repo/scoop/ferium.svg)](https://scoop.sh/#/apps?q=ferium)  
+`scoop bucket add games && scoop install ferium`  
 
-### Scoop (Windows)
+**Pacstall** for _Ubuntu_  
+[![pacstall](https://repology.org/badge/version-for-repo/pacstall/ferium.svg)](https://pacstall.dev/packages/ferium-bin)  
+`pacstall -I ferium-bin`  
 
-Available [here](https://scoop.sh/#/apps?q=ferium) in Scoop's official games bucket.
-
-Run `scoop bucket add games` then `scoop install ferium` to install.
-
-### Pacstall (Ubuntu Linux)
-
-Available [here](https://pacstall.dev/packages/ferium-bin)
-
-Run `pacstall -I ferium-bin` to install.
-
-### Nix Packages
-
-Available [here](https://search.nixos.org/packages?channel=unstable&show=ferium&query=ferium) in the unstable channel.
+**Nix** for _NixOS_ or _Linux_  
+[![nixpkgs stable-22.11](https://repology.org/badge/version-for-repo/nix_stable_22_11/ferium.svg)](https://search.nixos.org/packages?show=ferium)  
+_See package page for installation instructions_
 
 ### Cargo Install (Cross Platform)
 
