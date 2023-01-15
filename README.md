@@ -25,11 +25,19 @@ Simply specify the mods or modpacks you use through the CLI, and in just one com
       ![Upgrading Mods/Modpacks](media/upgrade.png)
   </details>
 
-- It's super fast due to multithreading for network intensive tasks
-  - It downloads [MMTP](https://www.curseforge.com/minecraft/modpacks/mats-mega-tech-pack), the largest modpack with around 400 mods, in just under a minute
-  - Of course, the real world speed still depends on your internet connection
+- <details>
+    <summary>It's super fast due to multithreading for network intensive tasks</summary>
 
-https://user-images.githubusercontent.com/60034030/201951498-62d1e6d9-8edb-4399-b02c-f2562ae566e3.mp4
+    Your results may vary depending on your internet connection.
+
+    It downloads my modpack [Kupfur](https://github.com/theRookieCoder/Kupfur) with 79 mods in 15 seconds:
+
+    https://user-images.githubusercontent.com/60034030/212559027-2df10657-82a3-407c-875d-9981628bbfc2.mp4
+
+    It downloads [MMTP](https://www.curseforge.com/minecraft/modpacks/mats-mega-tech-pack), the largest modpack with around 400 mods, in just under a minute:
+
+    https://user-images.githubusercontent.com/60034030/201951498-62d1e6d9-8edb-4399-b02c-f2562ae566e3.mp4
+  </details>
 
 - Upgrade all your mods in one command, `ferium upgrade`
   - Ferium checks that the version being downloaded is the latest one compatible with the chosen mod loader and Minecraft version
