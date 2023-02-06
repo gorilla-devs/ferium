@@ -6,7 +6,7 @@ use dialoguer::{Confirm, Input, Select};
 use libium::{
     config::structs::{Config, ModLoader, Profile},
     file_picker::pick_folder,
-    misc::get_minecraft_dir,
+    get_minecraft_dir,
 };
 use std::path::PathBuf;
 
@@ -44,7 +44,7 @@ pub async fn create(
                 .with_prompt("Would you like to specify a custom mods directory?")
                 .interact()?
             {
-                if let Some(dir) = pick_folder(&selected_mods_dir, "Pick an output directory")? {
+                if let Some(dir) = pick_folder(&selected_mods_dir, "Pick an output directory", "Output Directory")? {
                     check_output_directory(&dir).await?;
                     selected_mods_dir = dir;
                 };

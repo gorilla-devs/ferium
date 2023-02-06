@@ -2,23 +2,27 @@ mod cli;
 mod download;
 mod subcommands;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use clap::{CommandFactory, Parser};
 use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
-use dialoguer::theme::ColorfulTheme;
+use dialoguer::{theme::ColorfulTheme, Input};
 use ferinth::Ferinth;
 use furse::Furse;
 use indicatif::ProgressStyle;
-use libium::config::{
-    self,
-    structs::{Config, ModIdentifier, Modpack, Profile},
+use libium::{
+    config::{
+        self,
+        structs::{Config, ModIdentifier, Modpack, Profile},
+    },
+    file_picker::pick_folder,
+    HOME,
 };
 use octocrab::OctocrabBuilder;
 use once_cell::sync::Lazy;
 use online::tokio::check;
 use std::{
-    env::{var, var_os},
+    env::{current_dir, var, var_os},
     process::ExitCode,
 };
 use tokio::{runtime, task::JoinSet};
@@ -31,7 +35,7 @@ pub static THEME: Lazy<ColorfulTheme> = Lazy::new(Default::default);
 pub static STYLE_NO: Lazy<ProgressStyle> = Lazy::new(|| {
     ProgressStyle::default_bar()
         .template("{spinner} {elapsed} [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
-        .expect("Progess bar template parse failure")
+        .expect("Progress bar template parse failure")
         .progress_chars("#>-")
 });
 #[allow(clippy::expect_used)]
@@ -40,7 +44,7 @@ pub static STYLE_BYTE: Lazy<ProgressStyle> = Lazy::new(|| {
         .template(
             "{spinner} {bytes_per_sec} [{wide_bar:.cyan/blue}] {bytes:.cyan}/{total_bytes:.blue}",
         )
-        .expect("Progess bar template parse failure")
+        .expect("Progress bar template parse failure")
         .progress_chars("#>-")
 });
 
@@ -62,7 +66,6 @@ fn main() -> ExitCode {
     }
 }
 
-#[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
 async fn actual_main(cli_app: Ferium) -> Result<()> {
     // The complete command should not require a config.
     // See [#139](https://github.com/gorilla-devs/ferium/issues/139) for why this might be a problem.
@@ -340,6 +343,86 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             ProfileSubCommands::Delete { profile_name } => {
                 subcommands::profile::delete(&mut config, profile_name)?;
             },
+            ProfileSubCommands::Export {
+                // platform,
+                modpack_version,
+                summary,
+                mod_loader_version,
+                overrides,
+                output_dir,
+            } => {
+                // } => match platform {
+                //     cli::Platform::Modrinth => {
+                check_internet().await?;
+                let profile = get_active_profile(&mut config)?;
+                check_empty_profile(profile)?;
+
+                subcommands::profile::export::modrinth(
+                    modrinth,
+                    curseforge,
+                    github,
+                    profile,
+                    if let Some(modpack_version) = modpack_version {
+                        modpack_version
+                    } else {
+                        Input::with_theme(&*THEME)
+                            .with_prompt("What is the modpack's version?")
+                            .interact_text()?
+                    },
+                    if let Some(summary) = summary {
+                        Some(summary)
+                    } else {
+                        let summary: String = Input::with_theme(&*THEME)
+                            .with_prompt("Optionally, provide a short description of your modpack:")
+                            .allow_empty(true)
+                            .interact_text()?;
+                        if summary.is_empty() {
+                            None
+                        } else {
+                            Some(summary)
+                        }
+                    },
+                    if let Some(output_dir) = output_dir {
+                        output_dir
+                    } else {
+                        eprint!(
+                            "{} ",
+                            "Pick a directory to output the modpack file to".bold()
+                        );
+                        pick_folder(
+                            &current_dir().unwrap_or_else(|_| HOME.join("documents")),
+                            "Pick a directory to output the modpack file to",
+                            "Output directory",
+                        )?
+                        .context("Please provide a directory to output the modpack file to")?
+                    },
+                    if let Some(overrides_dir) = overrides {
+                        if let Some(overrides_dir) = overrides_dir {
+                            Some(overrides_dir)
+                        } else {
+                            eprint!("{} ", "Optionally, pick an overrides directory".bold());
+                            pick_folder(
+                                &HOME,
+                                "Pick an overrides directory",
+                                "Overrides Directory",
+                            )?
+                        }
+                    } else {
+                        None
+                    },
+                    // if let Some(mod_loader_version) = mod_loader_version {
+                    //     mod_loader_version
+                    // } else {
+                    //     match profile.mod_loader {
+                    //         Quilt => {},
+                    //     }
+                    // },
+                    mod_loader_version,
+                )
+                .await?;
+            },
+            //     cli::Platform::CurseForge => todo!(),
+            // },
             ProfileSubCommands::List => {
                 if config.profiles.is_empty() {
                     bail!("There are no profiles configured, create a profile using `ferium profile create`")

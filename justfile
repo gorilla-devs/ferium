@@ -18,9 +18,12 @@ lint:
         -D clippy::create_dir     \
         -D clippy::correctness     \
         -W clippy::expect_used      \
-        -A clippy::too-many-lines    \
-        -A clippy::must-use-candidate \
+        -A clippy::cast-sign-loss    \
+        -A clippy::too-many-lines     \
+        -A clippy::large-enum-variant  \
+        -A clippy::must-use-candidate   \
         -A clippy::multiple-crate-versions \
+        -A clippy::cast-possible-truncation \
 
 # Install Ferium to cargo's binary folder
 install:

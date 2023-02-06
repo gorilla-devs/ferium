@@ -1,6 +1,7 @@
 mod configure;
 mod create;
 mod delete;
+pub mod export;
 mod list;
 mod switch;
 pub use configure::configure;
@@ -112,8 +113,12 @@ pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
             .with_prompt("Would like to create a backup?")
             .interact()?
         {
-            let backup_dir = pick_folder(&HOME, "Where should the backup be made?")?
-                .ok_or_else(|| anyhow!("Please pick a backup directory"))?;
+            let backup_dir = pick_folder(
+                &HOME,
+                "Where should the backup be made?",
+                "Output Directory",
+            )?
+            .ok_or_else(|| anyhow!("Please pick a backup directory"))?;
             create_dir_all(&backup_dir).await?;
             copy(output_dir, backup_dir, &CopyOptions::new())?;
         }

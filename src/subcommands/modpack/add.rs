@@ -9,7 +9,7 @@ use itertools::Itertools;
 use libium::{
     config::structs::{Config, Modpack, ModpackIdentifier},
     file_picker::pick_folder,
-    misc::get_minecraft_dir,
+    get_minecraft_dir,
     modpack::add,
 };
 use std::path::PathBuf;
@@ -27,8 +27,12 @@ pub async fn curseforge(
     println!("Where should the modpack be installed to?");
     let output_dir = match output_dir {
         Some(some) => some,
-        None => pick_folder(&get_minecraft_dir(), "Pick an output directory")?
-            .ok_or_else(|| anyhow!("Please pick an output directory"))?,
+        None => pick_folder(
+            &get_minecraft_dir(),
+            "Pick an output directory",
+            "Output Directory",
+        )?
+        .ok_or_else(|| anyhow!("Please pick an output directory"))?,
     };
     check_output_directory(&output_dir)?;
     let install_overrides = match install_overrides {
@@ -70,7 +74,7 @@ pub async fn modrinth(
     println!("Where should the modpack be installed to?");
     let output_dir = match output_dir {
         Some(some) => some,
-        None => pick_folder(&get_minecraft_dir(), "Pick an output directory")?
+        None => pick_folder(&get_minecraft_dir(), "Pick an output directory", "Output Directory")?
             .ok_or_else(|| anyhow!("Please pick an output directory"))?,
     };
     check_output_directory(&output_dir)?;

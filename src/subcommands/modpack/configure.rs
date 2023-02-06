@@ -17,7 +17,7 @@ pub fn configure(
             modpack.output_dir = output_dir;
         },
         None => {
-            if let Some(dir) = pick_folder(&modpack.output_dir, "Pick an output directory")? {
+            if let Some(dir) = pick_folder(&modpack.output_dir, "Pick an output directory", "Output Directory")? {
                 check_output_directory(&dir)?;
                 modpack.output_dir = dir;
             }
