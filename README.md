@@ -56,7 +56,8 @@ The `nogui` versions do not need this, but there will not be any GUI file picker
 
 ### Packages
 
-**Arch User Repository** for _Arch Linux_  
+#### Arch User Repository for _Arch Linux_
+
 [![AUR](https://repology.org/badge/version-for-repo/aur/ferium.svg)](https://aur.archlinux.org/packages?K=ferium)
 
 | Installation method                             | GUI file dialogue                                                       | No GUI                                                      |
@@ -65,22 +66,22 @@ The `nogui` versions do not need this, but there will not be any GUI file picker
 | Build from source at the latest tag             | [ferium-gui](https://aur.archlinux.org/packages/ferium-gui)             | [ferium](https://aur.archlinux.org/packages/ferium)         |
 | Build from source using the latest commit       | [ferium-gui-git](https://aur.archlinux.org/packages/ferium-gui-git)     | [ferium-git](https://aur.archlinux.org/packages/ferium-git) |
 
-From source builds will install the Rust toolchain and GCC.
+From-source builds will install the Rust toolchain and GCC.
 
-**Homebrew** for _macOS_ or _Linux_  
+#### Homebrew for _macOS_ or _Linux_
 [![Homebrew](https://repology.org/badge/version-for-repo/homebrew/ferium.svg)](https://formulae.brew.sh/formula/ferium)  
 `brew install ferium`  
 
-**Scoop** for _Windows_  
+#### Scoop for _Windows_
 [![Scoop](https://repology.org/badge/version-for-repo/scoop/ferium.svg)](https://scoop.sh/#/apps?q=ferium)  
 `scoop bucket add games && scoop install ferium`  
 
-**Pacstall** for _Ubuntu_  
+#### Pacstall for _Ubuntu_
 [![pacstall](https://repology.org/badge/version-for-repo/pacstall/ferium.svg)](https://pacstall.dev/packages/ferium-bin)  
 `pacstall -I ferium-bin`  
 
-**Nix** for _NixOS_ or _Linux_  
-[![nixpkgs stable-22.11](https://repology.org/badge/version-for-repo/nix_stable_22_11/ferium.svg)](https://search.nixos.org/packages?show=ferium)  
+#### Nix for _NixOS_ or _Linux_
+[![nixpkgs unstable package](https://repology.org/badge/version-for-repo/nix_unstable/ferium.svg)](https://repology.org/project/ferium/versions)  
 _See package page for installation instructions_
 
 ### Cargo Install (Cross Platform)
@@ -116,27 +117,31 @@ You can either have your own set of mods in what is called a 'profile', or insta
 
 ### Adding Mods
 
-- Modrinth Mods
+- Modrinth
   - `ferium add project_id`
   - Where `project_id` is the slug or project id of the mod
     - For example, [Sodium](https://modrinth.com/mod/sodium) has the slug `sodium` and a project id `AANobbMI`
     - You can find the slug in the website url (`modrinth.com/mod/<slug>`), and the project id at the bottom of the left sidebar under 'Technical information'
   - So to add [Sodium](https://modrinth.com/mod/sodium), you should run `ferium add sodium` or `ferium add AANobbMI`
-- CurseForge Mods
+- CurseForge
   - `ferium add project_id`
   - Where `project_id` is the project id of the mod
     - For example, [Terralith](https://www.curseforge.com/minecraft/mc-mods/terralith) has a project id `513688`
     - You can find the project id at the top of the right sidebar under 'About Project'
   - So to add [Terralith](https://www.curseforge.com/minecraft/mc-mods/terralith), you should run `ferium add 513688`
-- GitHub 'Mods'
+- GitHub
   - `ferium add owner/name`
   - Where `owner` is the username of the owner of the repository and `name` is the name of the repository (both case-insensitive)
     - For example [Sodium's repository](https://github.com/CaffeineMC/sodium-fabric) has the id `CaffeineMC/sodium-fabric`
     - You can find these at the top left part of the repository's page as a big 'owner / name'
   - So to add [Sodium](https://github.com/CaffeineMC/sodium-fabric), you should run `ferium add CaffeineMC/sodium-fabric` (again, case-insensitive)
   - Note: The GitHub repository has to release JAR files in their Releases for ferium to download, or else it will refuse to be added
-- External mods
-  - If you want to use files that are not downloadable by ferium, place them in the `user` folder in the output directory. Files here will be copied to the output directory when upgrading
+
+#### Add External Mods
+
+If you want to use files that are not downloadable by ferium, place them in the `user` folder in the output directory. Files here will be copied to the output directory when upgrading.
+
+> Warning: Profiles with the Quilt mod loader selected will not copy their `user` mods, this is because Quilt loads mods from nested directories as well (for loader versions above `0.18.1-beta.3`)
 
 ### Adding Modpacks
 
