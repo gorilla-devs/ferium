@@ -355,11 +355,24 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             check_empty_profile(profile)?;
             subcommands::remove(profile, mod_names)?;
         },
-        SubCommands::Upgrade => {
+        SubCommands::Upgrade { all_profiles } => {
             check_internet().await?;
-            let profile = get_active_profile(&mut config)?;
-            check_empty_profile(profile)?;
-            subcommands::upgrade(modrinth, curseforge, github, profile).await?;
+            if all_profiles {
+                for profile in &config.profiles {
+                    check_empty_profile(&profile)?;
+                    subcommands::upgrade(
+                        modrinth.clone(),
+                        curseforge.clone(),
+                        github.clone(),
+                        &profile,
+                    )
+                    .await?;
+                }
+            } else {
+                let profile = get_active_profile(&mut config)?;
+                check_empty_profile(profile)?;
+                subcommands::upgrade(modrinth, curseforge, github, profile).await?;
+            }
         },
     };
 

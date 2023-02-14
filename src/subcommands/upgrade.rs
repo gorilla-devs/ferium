@@ -41,6 +41,11 @@ pub async fn upgrade(
     let modrinth = Arc::new(modrinth);
     let github = Arc::new(github);
 
+    println!(
+        "{} Working on profile {}",
+        "==>".green().bold(),
+        profile.name.bold()
+    );
     println!("{}\n", "Determining the Latest Compatible Versions".bold());
     let semaphore = Arc::new(Semaphore::new(75));
     progress_bar

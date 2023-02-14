@@ -86,8 +86,12 @@ pub enum SubCommands {
         /// A case-insensitive list of names of a mods to remove
         mod_names: Vec<String>,
     },
-    /// Download and install the latest version of the mods specified
-    Upgrade,
+    /// Download and install the latest version of the mods of the selected profile
+    Upgrade {
+        /// Instead of only working on the selected profile, work on all profiles
+        #[clap(long, action=clap::ArgAction::SetTrue)]
+        all_profiles: bool,
+    },
 }
 
 #[derive(Subcommand)]
