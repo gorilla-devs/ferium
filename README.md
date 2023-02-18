@@ -4,7 +4,7 @@
 [![licence badge](https://img.shields.io/github/license/theRookieCoder/ferium?style=for-the-badge)](https://github.com/theRookieCoder/ferium/blob/main/LICENSE.txt)
 [![copyleft badge](https://img.shields.io/static/v1?label=&message=Copyleft&style=for-the-badge&labelColor=silver&color=silver&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAQAAAC0NkA6AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QA/4ePzL8AAAAHdElNRQfjAxYBNgYPa+9oAAAEM0lEQVRYw6WYb0zVVRjHP9wQW7umA0xoKNSC+6bSNkzetKZbaVu19aLpfOGcbcw/S+uNbikuNwMsVyE3XVsro7VEXjS3ylmLxkRtC9crHGjCAv9AATK4CoZye8Hl/J7n/M7v8rvX57w55/lznt/583yf5/xyCEOlrKaSCp6ggCiQYJheLvMHv9HHA1MZ++kmmaZ1UUNZ9g6eo4X7aR3Mtvs0syJzB0U0MR3KgddOsiQTFxsZzdDBTLvFetd0OT5OHo1U+7j9tNJBN4MkgChFVLCS1Sz1aR7jHf5Lv4Yov1hfN8YRKgP1V9LIuGVxhmg6Fwv4XalPcJD8OTe3gA+YVHYXgt3kWato46nQp1jOWWs1eW7Fz5VaLbkZ3cdc6pX9UfeNkvd+a1aRtV3Fle+mLeGWEO/0mT/EWo7SxhBjjNDPKfbxtMPNVjHLKMVa+I0Q1lmG89nDTWdctPGqz80hIT+uAWRaGOqzeJEraQOw2YrzXNqNbJrlnqDFsCeJKZO3uDtnnN+wNq6cCSM74SGtd1wHlfrOkHAyyDPKrk5codIZ1n7DSlAoVF9iKjRq/cVCYZnPmJHsnWF1GcYRobiQf3yA3sr7VPM2cXp9br5Va2k0/EsAy4SixKh6a5LT6rQibGBAyaeV9SohWQabzeBvhUcTaoqPHHhdTKfSOaWk1wx/E8TN4CuhssW6pjnOCF/KiNrOxULWZPgNEbEJF4VKFT2mdbGLpNNJPzVqC9eKkTdbDK4ajy9ngVaPiHuU5AshWWe4VyIsMuwbWTi5Q7sYlYj+TdNbFBHpJZEV8vao8sOjMS8VRh64MkumrRhSh5UQ+T278s+jQdF/1PTGI4yaweNZuHiYF1RsyCiapdFcengyNajgZyP4RBhP8RpDAU42KcxqE30vNK7KYJQpploFY1NgnfmvApYiZxpskLAi6/PFVh454HBRyJ9K5yclvS5hJQggP7YA8vvZzJCi1+m3NKoUYnj8Eg31jSonDFuTTPEju9nIZuq55IP6FvUJ3iF0zjBqApLWOu6FTlp9FCgM90rX9/zpt1Z9z56QLkasatnLRfe8TT5pmHetQqI6RAoesB5A5aIy/s5jrxAl0VmrJHqFvrQuflCwCPM4Jy71s1L0tTA75IPzAyo5ea3D8eg5LORf2mWqnGaXz3Q+b3CcDm6nCtBfqeV5R+xsUyf1mC3eoBLp9qzAcocquN90qRxTW/Fhxk+Hw8o+HvQIOqPU2qkI7SLGeauAmhf8YrygVCepU0HmpkLqLaQ7nz43Ra3VJBknzqpA/SrivofpaduF64n9Kdt83OupJ/YA48ACiolRyRpHovuMd5kKs8PrA+JirjbsvlFBlE9DyP8qXnQ3+eNiblpOc+gfOCc0gGRGpeyzymq7dbLXSmch/q24qIQ1VBKjjMLUT7UheunmIq2qQgmg/wHquM6d9tIV7AAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxOS0wMy0yMlQwMTo1NDowNiswMDowMOIizoUAAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTktMDMtMjJUMDE6NTQ6MDYrMDA6MDCTf3Y5AAAAAElFTkSuQmCC)](https://en.wikipedia.org/wiki/Copyleft)
 
-> Check out ferium's sister projects [ferinth](https://github.com/theRookieCoder/ferinth) and [furse](https://github.com/theRookieCoder/furse).
+> Check out ferium's sister projects [ferinth](https://github.com/gorilla-devs/ferinth) and [furse](https://github.com/gorilla-devs/furse)  
 > They are Rust wrappers for the official Modrinth and CurseForge APIs respectively
 
 Ferium is a fast and feature rich CLI program for downloading and updating Minecraft mods from [Modrinth](https://modrinth.com/mods), [CurseForge](https://curseforge.com/minecraft/mc-mods), and [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases), and modpacks from [Modrinth](https://modrinth.com/modpacks) and [CurseForge](https://curseforge.com/minecraft/modpacks).
@@ -48,17 +48,20 @@ Simply specify the mods or modpacks you use through the CLI, and in just one com
 ## Installation
 
 Ferium builds from GitHub Releases do not require any external dependencies at runtime.  
-If you compile from source, using GCC to build will result in a binary that requires GCC to be available a runtime.  
+If you compile from source, using GCC to build will result in binaries that require GCC to be available at runtime.  
 On Linux, the regular version requires some sort of desktop environment that offers an XDG Desktop Portal.
-The `nogui` versions do not need this, but there will not be any GUI file picker. So, you will have to manually enter in paths.
-
-[Ferium is coming to more package managers soon!](https://github.com/theRookieCoder/ferium/issues/42)
+The `nogui` versions do not need this as they don't have a GUI file picker, making these variants suitable for servers.
 
 ### Packages
 
-#### Arch User Repository for _Arch Linux_
+[Coming to more package managers soon™](https://github.com/theRookieCoder/ferium/issues/42)
+
+#### [Arch User Repository](https://aur.archlinux.org) for _Arch Linux_
 
 [![AUR](https://repology.org/badge/version-for-repo/aur/ferium.svg)](https://aur.archlinux.org/packages?K=ferium)
+
+> **Warning**  
+> From-source builds will install the Rust toolchain and GCC
 
 | Installation method                             | GUI file dialogue                                                       | No GUI                                                      |
 |-------------------------------------------------|-------------------------------------------------------------------------|-------------------------------------------------------------|
@@ -66,39 +69,51 @@ The `nogui` versions do not need this, but there will not be any GUI file picker
 | Build from source at the latest tag             | [ferium-gui](https://aur.archlinux.org/packages/ferium-gui)             | [ferium](https://aur.archlinux.org/packages/ferium)         |
 | Build from source using the latest commit       | [ferium-gui-git](https://aur.archlinux.org/packages/ferium-gui-git)     | [ferium-git](https://aur.archlinux.org/packages/ferium-git) |
 
-From-source builds will install the Rust toolchain and GCC.
+#### [Homebrew](https://brew.sh) for _macOS_ or _Linux_
+[![Homebrew](https://repology.org/badge/version-for-repo/homebrew/ferium.svg)](https://formulae.brew.sh/formula/ferium)
+```bash
+brew install ferium
+```
 
-#### Homebrew for _macOS_ or _Linux_
-[![Homebrew](https://repology.org/badge/version-for-repo/homebrew/ferium.svg)](https://formulae.brew.sh/formula/ferium)  
-`brew install ferium`  
+#### [Scoop](https://scoop.sh) for _Windows_
+[![Scoop](https://repology.org/badge/version-for-repo/scoop/ferium.svg)](https://scoop.sh/#/apps?q=ferium)
+```bash
+scoop bucket add games
+scoop install ferium
+```
 
-#### Scoop for _Windows_
-[![Scoop](https://repology.org/badge/version-for-repo/scoop/ferium.svg)](https://scoop.sh/#/apps?q=ferium)  
-`scoop bucket add games && scoop install ferium`  
+#### [Pacstall](https://pacstall.dev) for _Ubuntu_
+[![Pacstall](https://repology.org/badge/version-for-repo/pacstall/ferium.svg)](https://pacstall.dev/packages/ferium-bin)
+```bash
+pacstall -I ferium-bin
+```
 
-#### Pacstall for _Ubuntu_
-[![pacstall](https://repology.org/badge/version-for-repo/pacstall/ferium.svg)](https://pacstall.dev/packages/ferium-bin)  
-`pacstall -I ferium-bin`  
+#### [Nixpkgs](https://nixos.wiki/wiki/Nixpkgs) for _NixOS_ or _Linux_
+[![Nixpkgs unstable](https://repology.org/badge/version-for-repo/nix_unstable/ferium.svg)](https://search.nixos.org/packages?show=ferium&channel=unstable)
+> **Note**  
+> See package page for installation instructions
 
-#### Nix for _NixOS_ or _Linux_
-[![nixpkgs unstable package](https://repology.org/badge/version-for-repo/nix_unstable/ferium.svg)](https://repology.org/project/ferium/versions)  
-_See package page for installation instructions_
+#### [crates.io](https://crates.io) for the _Rust toolchain_
+[![crates.io](https://repology.org/badge/version-for-repo/crates_io/rust:ferium.svg)](https://crates.io/crates/ferium)
+```bash
+cargo install ferium
+```
+> **Warning**  
+> Remember to use an add-on like [cargo-update](https://crates.io/crates/cargo-update) to keep ferium updated to the latest version!
 
-### Cargo Install (Cross Platform)
+#### [GitHub Releases](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases) for _any platform_
+[![GitHub Releases](https://img.shields.io/github/v/release/gorilla-devs/ferium?color=bright-green&label=github%20releases)](https://github.com/gorilla-devs/ferium/releases)
+> **Warning**  
+> You will have to manually download and install every time there is a new update
 
-If you have the Rust toolchain installed, you can compile and install ferium from source by running `cargo install ferium`.
-
-Remember to use an add-on like [cargo-update](https://crates.io/crates/cargo-update) to keep ferium updated to the latest version!
-
-### GitHub Releases (Manual - Cross Platform)
-
-1. Download the asset suitable for your operating system from [the latest release](https://github.com/theRookieCoder/ferium/releases/latest)
+1. Download the asset suitable for your operating system from [the latest release](https://github.com/gorilla-devs/ferium/releases/latest)
 2. Unzip the file and move it to a folder in your path, e.g. `~/bin`
 3. Remember to check the releases page for any updates!
 
 ## Overview / Help Page
 
-> Note! A lot of ferium's backend is in a separate project [libium](https://github.com/theRookieCoder/libium).
+> **Note**
+> A lot of ferium's backend is in a separate project [libium](https://github.com/theRookieCoder/libium).
 > It deals with things such as the config, adding mod(pack)s, upgrading, file pickers, etc
 
 Ferium stores profile and modpack information in its config file. By default it is located at `~/.config/ferium/config.json`, but you can change this in 2 ways. You can set the `FERIUM_CONFIG_FILE` environment variable or set the `--config-file` global command flag, the flag always takes precedence.
@@ -141,7 +156,8 @@ You can either have your own set of mods in what is called a 'profile', or insta
 
 If you want to use files that are not downloadable by ferium, place them in the `user` folder in the output directory. Files here will be copied to the output directory when upgrading.
 
-> Warning: Profiles with the Quilt mod loader selected will not copy their `user` mods, this is because Quilt loads mods from nested directories as well (for loader versions above `0.18.1-beta.3`)
+> **Warning**  
+> Profiles with the Quilt mod loader selected will not copy their `user` mods, this is because Quilt loads mods from nested directories as well (for loader versions above `0.18.1-beta.3`)
 
 ### Adding Modpacks
 
@@ -160,7 +176,9 @@ If you want to use files that are not downloadable by ferium, place them in the 
 
 ### Upgrading Mods
 
-> If your output directory is not empty when setting it, ferium will offer to create a backup. Please do so if it contains any files you would like to keep
+> **Note**  
+> If your output directory is not empty when setting it, ferium will offer to create a backup.
+> Please do so if it contains any files you would like to keep
 
 Now after adding all your mods, run `ferium upgrade` to download all of them to your output directory.
 This defaults to `.minecraft/mods`, where `.minecraft` is the default Minecraft resources directory. You don't need to worry about this if you play with Mojang's launcher (unless you changed the resources directory).
@@ -168,11 +186,14 @@ You can choose to pick a custom output directory during profile creation or [cha
 
 If ferium fails to download a mod, it will print its name in red and give the reason. It will continue downloading the rest of the mods and will exit with an error.
 
-**WARNING:** _When upgrading, any files not downloaded by ferium will be moved to the `.old` folder in the output directory_
+> **Warning**  
+> _When upgrading, any files not downloaded by ferium will be moved to the `.old` folder in the output directory_
 
 ### Upgrading Modpacks
 
-> If your output directory's `mods` and `resourcepacks` are not empty when setting it, ferium will offer to create a backup. Please do so if it contains any files you would like to keep
+> **Note**  
+> If your output directory's `mods` and `resourcepacks` are not empty when setting it, ferium will offer to create a backup.
+> Please do so if it contains any files you would like to keep
 
 Now after adding all your mods, run `ferium modpack upgrade` to download the modpack to your output directory.
 This defaults to `.minecraft`, which is the default Minecraft resources directory. You don't need to worry about this if you play with Mojang's launcher (unless you changed the resources directory).
@@ -180,7 +201,8 @@ You can choose to pick a custom output directory when adding modpacks or [change
 
 If ferium fails to download a mod, it will print its name in red and give the reason. It will continue downloading the rest of the mods and will exit with an error.
 
-**WARNING:** _If you choose to install modpack overrides, your existing configs may be overwritten_
+> **Warning**  
+> If you choose to install modpack overrides, your existing configs may be overwritten
 
 ### Managing Mods
 
