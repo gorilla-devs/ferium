@@ -112,9 +112,9 @@ cargo install ferium
 
 ## Overview / Help Page
 
-> **Note**
-> A lot of ferium's backend is in a separate project [libium](https://github.com/theRookieCoder/libium).
-> It deals with things such as the config, adding mod(pack)s, upgrading, file pickers, etc
+> **Note**  
+> A lot of ferium's backend is in a separate project [libium](https://github.com/theRookieCoder/libium).  
+> It deals with things such as the config, adding mod(pack)s, upgrading, file pickers, etc.
 
 Ferium stores profile and modpack information in its config file. By default it is located at `~/.config/ferium/config.json`, but you can change this in 2 ways. You can set the `FERIUM_CONFIG_FILE` environment variable or set the `--config-file` global command flag, the flag always takes precedence.
 
@@ -187,7 +187,7 @@ You can choose to pick a custom output directory during profile creation or [cha
 If ferium fails to download a mod, it will print its name in red and give the reason. It will continue downloading the rest of the mods and will exit with an error.
 
 > **Warning**  
-> _When upgrading, any files not downloaded by ferium will be moved to the `.old` folder in the output directory_
+> When upgrading, any files not downloaded by ferium will be moved to the `.old` folder in the output directory
 
 ### Upgrading Modpacks
 
