@@ -59,12 +59,11 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get upgrade
           sudo apt-get install gcc-mingw-w64-x86-64 musl musl-tools gcc-aarch64-linux-gnu
           # Install Clang 14
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
-          sudo ./llvm.sh 14
+          sudo ./llvm.sh 15
 
       - name: Lint code
         uses: actions-rs/cargo@v1
