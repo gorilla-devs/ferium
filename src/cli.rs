@@ -254,8 +254,8 @@ pub enum DependencyLevel {
 
 #[derive(Clone, PartialEq, Eq, ValueEnum)]
 pub enum Platform {
-    /// The Modrinth modding platform (https://modrinth.com)
+    /// The [Modrinth](https://modrinth.com) modding platform
     Modrinth,
-    /// The CurseForge modding platform (https://curseforge.com)
+    /// The [CurseForge](https://curseforge.com) modding platform
     CurseForge,
 }
