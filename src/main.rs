@@ -113,49 +113,36 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
     match cli_app.subcommand {
         SubCommands::Complete { .. } => unreachable!(),
         SubCommands::Add {
-            identifier,
+            identifiers,
             dont_check_game_version,
             dont_check_mod_loader,
             dependencies,
         } => {
             let profile = get_active_profile(&mut config)?;
             check_internet().await?;
-            if let Ok(project_id) = identifier.parse::<i32>() {
-                subcommands::add::curseforge(
+            let mut error = false;
+            for identifier in identifiers {
+                match subcommands::add::add_mod(
+                    identifier,
                     &curseforge,
-                    project_id,
+                    &github,
+                    &modrinth,
                     profile,
-                    Some(!dont_check_game_version),
-                    Some(!dont_check_mod_loader),
-                    dependencies,
+                    dont_check_game_version,
+                    dont_check_mod_loader,
+                    &dependencies,
                 )
-                .await?;
-            } else if identifier.split('/').count() == 2 {
-                let split = identifier.split('/').collect::<Vec<_>>();
-                subcommands::add::github(
-                    github.repos(split[0], split[1]),
-                    profile,
-                    Some(!dont_check_game_version),
-                    Some(!dont_check_mod_loader),
-                )
-                .await?;
-            } else if let Err(err) = subcommands::add::modrinth(
-                &modrinth,
-                &identifier,
-                profile,
-                Some(!dont_check_game_version),
-                Some(!dont_check_mod_loader),
-                dependencies,
-            )
-            .await
-            {
-                return Err(
-                    if err.to_string() == ferinth::Error::NotBase62.to_string() {
-                        anyhow!("Invalid indentifier")
-                    } else {
-                        err
+                .await
+                {
+                    Ok(_) => {},
+                    Err(e) => {
+                        eprintln!("{}", e.to_string().red().bold());
+                        error = true;
                     },
-                );
+                }
+            }
+            if error {
+                return Err(anyhow!(""));
             }
         },
         SubCommands::List { verbose, markdown } => {
@@ -216,21 +203,17 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 }
             } else {
                 for mod_ in &profile.mods {
-                    println!(
-                        "{:45} {}",
-                        mod_.name.bold(),
-                        match &mod_.identifier {
-                            ModIdentifier::CurseForgeProject(id) =>
-                                format!("{:10} {}", "CurseForge".red(), id.to_string().dimmed()),
-                            ModIdentifier::ModrinthProject(id) =>
-                                format!("{:10} {}", "Modrinth".green(), id.dimmed()),
-                            ModIdentifier::GitHubRepository(name) => format!(
-                                "{:10} {}",
-                                "GitHub".purple(),
-                                format!("{}/{}", name.0, name.1).dimmed()
-                            ),
-                        },
-                    );
+                    println!("{:45} {}", mod_.name.bold(), match &mod_.identifier {
+                        ModIdentifier::CurseForgeProject(id) =>
+                            format!("{:10} {}", "CurseForge".red(), id.to_string().dimmed()),
+                        ModIdentifier::ModrinthProject(id) =>
+                            format!("{:10} {}", "Modrinth".green(), id.dimmed()),
+                        ModIdentifier::GitHubRepository(name) => format!(
+                            "{:10} {}",
+                            "GitHub".purple(),
+                            format!("{}/{}", name.0, name.1).dimmed()
+                        ),
+                    },);
                 }
             }
         },
