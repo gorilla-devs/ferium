@@ -1,6 +1,6 @@
 format_code_in_doc_comments = true
-enum_discrim_align_threshold = 20
-struct_field_align_threshold = 20
+# enum_discrim_align_threshold = 20
+# struct_field_align_threshold = 20
 condense_wildcard_suffixes = true
 match_block_trailing_comma = true
 normalize_doc_attributes = true
