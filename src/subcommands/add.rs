@@ -149,7 +149,7 @@ pub async fn modrinth(
             }
 
             if dependency.dependency_type == DependencyType::Required {
-                eprint!("Adding required dependency {}... ", id.dimmed());
+                eprint!("  ⮱ Adding required dependency {}... ", id.dimmed());
                 let project = modrinth.get_project(&id).await?;
                 match add::modrinth(modrinth, &project, profile, None, None).await {
                     Ok(_) => {
@@ -182,9 +182,9 @@ pub async fn modrinth(
                 && (dependencies == &Some(DependencyLevel::All) || dependencies.is_none())
             {
                 if dependencies == &Some(DependencyLevel::All) {
-                    eprint!("Adding optional dependency {}... ", id.dimmed());
+                    eprint!("  ⮱ Adding optional dependency {}... ", id.dimmed());
                 } else {
-                    eprint!("Checking optional dependency {}... ", id.dimmed());
+                    eprint!("  ⮱ Checking optional dependency {}... ", id.dimmed());
                 }
                 let project = modrinth.get_project(&id).await?;
                 match add::modrinth(modrinth, &project, profile, None, None).await {
@@ -196,7 +196,7 @@ pub async fn modrinth(
                         if dependencies == &Some(DependencyLevel::All)
                             || match Confirm::with_theme(&*THEME)
                                 .with_prompt(format!(
-                                    "Add optional dependency {} ({})?",
+                                    "  ⮱ Add optional dependency {} ({})?",
                                     project.title.bold(),
                                     format!("https://modrinth.com/mod/{}", project.slug)
                                         .blue()
@@ -241,7 +241,7 @@ pub async fn modrinth(
 
     if !project.donation_urls.is_empty() {
         println!(
-            "Consider supporting the mod creator on {}",
+            "  ⮱ Consider supporting the mod creator on {}",
             project
                 .donation_urls
                 .iter()
@@ -293,7 +293,10 @@ pub async fn curseforge(
         for dependency in &latest_file.dependencies {
             let id = dependency.mod_id;
             if dependency.relation_type == FileRelationType::RequiredDependency {
-                eprint!("Adding required dependency {}... ", id.to_string().dimmed());
+                eprint!(
+                    "  ⮱ Adding required dependency {}... ",
+                    id.to_string().dimmed()
+                );
                 let project = curseforge.get_mod(id).await?;
                 match add::curseforge(curseforge, &project, profile, None, None).await {
                     Ok(_) => {
@@ -326,10 +329,13 @@ pub async fn curseforge(
                 && (dependencies == &Some(DependencyLevel::All) || dependencies.is_none())
             {
                 if dependencies == &Some(DependencyLevel::All) {
-                    eprint!("Adding optional dependency {}... ", id.to_string().dimmed());
+                    eprint!(
+                        "  ⮱ Adding optional dependency {}... ",
+                        id.to_string().dimmed()
+                    );
                 } else {
                     eprint!(
-                        "Checking optional dependency {}... ",
+                        "  ⮱ Checking optional dependency {}... ",
                         id.to_string().dimmed()
                     );
                 }
@@ -343,7 +349,7 @@ pub async fn curseforge(
                         if dependencies == &Some(DependencyLevel::All)
                             || Confirm::with_theme(&*THEME)
                                 .with_prompt(format!(
-                                    "Add optional dependency {} ({})?",
+                                    "  ⮱ Add optional dependency {} ({})?",
                                     project.name.bold(),
                                     project.links.website_url.to_string().blue().underline()
                                 ))

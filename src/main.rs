@@ -136,7 +136,11 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 {
                     Ok(_) => {},
                     Err(e) => {
-                        eprintln!("{}", e.to_string().red().bold());
+                        if e.to_string() == libium::add::Error::AlreadyAdded.to_string() {
+                            println!("{} Already added", *TICK);
+                        } else {
+                            eprintln!("{}", e.to_string().red().bold());
+                        }
                         error = true;
                     },
                 }
