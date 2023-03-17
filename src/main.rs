@@ -149,7 +149,11 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 return Err(anyhow!(""));
             }
         },
-        SubCommands::List { verbose, markdown } => {
+        SubCommands::List {
+            verbose,
+            markdown,
+            export,
+        } => {
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
             if verbose {
@@ -207,17 +211,27 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 }
             } else {
                 for mod_ in &profile.mods {
-                    println!("{:45} {}", mod_.name.bold(), match &mod_.identifier {
-                        ModIdentifier::CurseForgeProject(id) =>
-                            format!("{:10} {}", "CurseForge".red(), id.to_string().dimmed()),
-                        ModIdentifier::ModrinthProject(id) =>
-                            format!("{:10} {}", "Modrinth".green(), id.dimmed()),
-                        ModIdentifier::GitHubRepository(name) => format!(
-                            "{:10} {}",
-                            "GitHub".purple(),
-                            format!("{}/{}", name.0, name.1).dimmed()
-                        ),
-                    },);
+                    if export {
+                        match &mod_.identifier {
+                            ModIdentifier::CurseForgeProject(id) => println!("{}", id),
+                            ModIdentifier::ModrinthProject(id) => println!("{}", id),
+                            ModIdentifier::GitHubRepository(name) => {
+                                println!("{}/{}", name.0, name.1)
+                            },
+                        }
+                    } else {
+                        println!("{:45} {}", mod_.name.bold(), match &mod_.identifier {
+                            ModIdentifier::CurseForgeProject(id) =>
+                                format!("{:10} {}", "CurseForge".red(), id.to_string().dimmed()),
+                            ModIdentifier::ModrinthProject(id) =>
+                                format!("{:10} {}", "Modrinth".green(), id.dimmed()),
+                            ModIdentifier::GitHubRepository(name) => format!(
+                                "{:10} {}",
+                                "GitHub".purple(),
+                                format!("{}/{}", name.0, name.1).dimmed()
+                            ),
+                        },);
+                    }
                 }
             }
         },

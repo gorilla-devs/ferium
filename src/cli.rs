@@ -67,6 +67,8 @@ pub enum SubCommands {
         /// Useful for creating modpack mod lists.
         /// Complements the verbose flag.
         markdown: bool,
+        #[clap(long, short)]
+        export: bool,
     },
     #[clap(arg_required_else_help = true)]
     /// Add, configure, delete, switch, list, or upgrade modpacks
