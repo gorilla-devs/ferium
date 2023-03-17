@@ -90,7 +90,11 @@ pub enum SubCommands {
         mod_names: Vec<String>,
     },
     /// Download and install the latest version of the mods specified
-    Upgrade,
+    Upgrade {
+        #[clap(long, short)]
+        /// Don’t print compatible mods
+        less: bool,
+    },
 }
 
 #[derive(Subcommand)]

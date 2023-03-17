@@ -28,6 +28,7 @@ pub async fn upgrade(
     curseforge: Furse,
     github: Octocrab,
     profile: &Profile,
+    less: bool,
 ) -> Result<()> {
     let profile = Arc::new(profile.clone());
     let to_download = Arc::new(Mutex::new(Vec::new()));
@@ -41,7 +42,7 @@ pub async fn upgrade(
     let modrinth = Arc::new(modrinth);
     let github = Arc::new(github);
 
-    println!("{}\n", "Determining the Latest Compatible Versions".bold());
+    println!("{}", "Determining the Latest Compatible Versions".bold());
     let semaphore = Arc::new(Semaphore::new(75));
     progress_bar
         .force_lock()
@@ -71,17 +72,19 @@ pub async fn upgrade(
             let progress_bar = progress_bar.force_lock();
             match result {
                 Ok((downloadable, backwards_compat)) => {
-                    progress_bar.println(format!(
-                        "{} {:43} {}",
-                        if backwards_compat {
-                            backwards_compat_msg.store(true, Ordering::Relaxed);
-                            YELLOW_TICK.clone()
-                        } else {
-                            TICK.clone()
-                        },
-                        mod_.name,
-                        downloadable.filename().dimmed()
-                    ));
+                    if !less {
+                        progress_bar.println(format!(
+                            "{} {:43} {}",
+                            if backwards_compat {
+                                backwards_compat_msg.store(true, Ordering::Relaxed);
+                                YELLOW_TICK.clone()
+                            } else {
+                                TICK.clone()
+                            },
+                            mod_.name,
+                            downloadable.filename().dimmed()
+                        ));
+                    }
                     {
                         let mut to_download = to_download.force_lock();
                         to_download.push(downloadable);
