@@ -153,7 +153,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             .await
             {
                 return Err(
-                    if err.to_string() == ferinth::Error::NotBase62.to_string() {
+                    if err.to_string() == ferinth::Error::InvalidIDorSlug.to_string() {
                         anyhow!("Invalid indentifier")
                     } else {
                         err
@@ -263,7 +263,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 .await
                 {
                     return Err(
-                        if err.to_string() == ferinth::Error::NotBase62.to_string() {
+                        if err.to_string() == ferinth::Error::InvalidIDorSlug.to_string() {
                             anyhow!("Invalid indentifier")
                         } else {
                             err

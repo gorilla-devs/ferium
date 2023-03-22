@@ -4,10 +4,15 @@ on:
   push:
     # Do not run on tag pushes
     branches: '**'
+    # Only run when;
     paths:
+      # any Rust code has changed,
       - "**.rs"
+      # this workflow has changed,
       - ".github/workflows/build.yml"
+      # dependencies have changed,
       - "Cargo.lock"
+  # or a rebuild is manually called.
   workflow_dispatch:
 
 jobs:
@@ -18,10 +23,13 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
     steps:
       - uses: actions/checkout@v3
       - name: Create `out/`
         run: mkdir out
+
+      # Install Rust on the various platforms
 
       - name: Install Rust for macOS
         if: matrix.os == 'macos-latest'
@@ -36,19 +44,20 @@ jobs:
         with:
           toolchain: stable
 
-      - name: Install Windows GNU toolchain for Linux
+      - name: Install Windows GNU toolchain
         if: matrix.os == 'ubuntu-latest'
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           target: x86_64-pc-windows-gnu
-      - name: Install musl toolchain for linux
+      - name: Install Linux musl toolchain
         if: matrix.os == 'ubuntu-latest'
         uses: actions-rs/toolchain@v1
         with:
+          default: true
           toolchain: stable
           target: x86_64-unknown-linux-musl
-      - name: Install musl toolchain for ARM64
+      - name: Install Linux musl toolchain for ARM64
         if: matrix.os == 'ubuntu-latest'
         uses: actions-rs/toolchain@v1
         with:
@@ -60,10 +69,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install gcc-mingw-w64-x86-64 musl musl-tools gcc-aarch64-linux-gnu
-          # Install Clang 14
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 15
+          curl https://apt.llvm.org/llvm.sh | bash -s 16
+
+      - name: Install Rust cache
+        uses: Swatinem/rust-cache@v2
 
       - name: Lint code
         uses: actions-rs/cargo@v1
@@ -76,13 +85,8 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-
-      - name: Run Linux tests
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --target=x86_64-unknown-linux-musl --no-default-features
+          # Linux CIs don't have GUIs
+          args: --no-default-features
 
       - name: Build macOS Intel
         if: matrix.os == 'macos-latest'
@@ -104,7 +108,7 @@ jobs:
           zip -r out/ferium-macos-x64.zip -j target/x86_64-apple-darwin/release/ferium
           zip -r out/ferium-macos-arm.zip -j target/aarch64-apple-darwin/release/ferium
 
-      - name: Build Windows
+      - name: Build Windows MSVC
         if: matrix.os == 'windows-latest'
         uses: actions-rs/cargo@v1
         with:
@@ -128,7 +132,7 @@ jobs:
           command: rustc
           args: --target=aarch64-unknown-linux-musl --release -- -Clink-self-contained=yes -Clinker=rust-lld
         env:
-          CC_aarch64_unknown_linux_musl: clang-14
+          CC_aarch64_unknown_linux_musl: clang-16
       
       - name: Zip Linux outputs
         if: matrix.os == 'ubuntu-latest'
@@ -150,7 +154,7 @@ jobs:
           command: rustc
           args: --target=aarch64-unknown-linux-musl --release --no-default-features -- -Clink-self-contained=yes -Clinker=rust-lld 
         env:
-          CC_aarch64_unknown_linux_musl: clang-14
+          CC_aarch64_unknown_linux_musl: clang-16
       
       - name: Zip Linux nogui outputs
         if: matrix.os == 'ubuntu-latest'
