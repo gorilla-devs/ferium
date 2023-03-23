@@ -1,24 +1,48 @@
+#![deny(
+    clippy::all,
+    clippy::perf,
+    clippy::cargo,
+    clippy::style,
+    clippy::pedantic,
+    clippy::suspicious,
+    clippy::complexity,
+    clippy::create_dir,
+    clippy::unwrap_used,
+    clippy::correctness
+)]
+#![warn(clippy::dbg_macro, clippy::expect_used)]
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::multiple_crate_versions,
+    clippy::large_enum_variant,
+    clippy::too_many_lines
+)]
+
 mod cli;
 mod download;
 mod subcommands;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use clap::{CommandFactory, Parser};
 use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
-use dialoguer::theme::ColorfulTheme;
+use dialoguer::{theme::ColorfulTheme, Input};
 use ferinth::Ferinth;
 use furse::Furse;
 use indicatif::ProgressStyle;
-use libium::config::{
-    self,
-    structs::{Config, ModIdentifier, Modpack, Profile},
+use libium::{
+    config::{
+        self,
+        structs::{Config, ModIdentifier, Modpack, Profile},
+    },
+    file_picker::pick_folder,
+    HOME,
 };
 use octocrab::OctocrabBuilder;
 use once_cell::sync::Lazy;
 use online::tokio::check;
 use std::{
-    env::{var, var_os},
+    env::{current_dir, var, var_os},
     process::ExitCode,
 };
 use tokio::{runtime, task::JoinSet};
@@ -31,7 +55,7 @@ pub static THEME: Lazy<ColorfulTheme> = Lazy::new(Default::default);
 pub static STYLE_NO: Lazy<ProgressStyle> = Lazy::new(|| {
     ProgressStyle::default_bar()
         .template("{spinner} {elapsed} [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
-        .expect("Progess bar template parse failure")
+        .expect("Progress bar template parse failure")
         .progress_chars("#>-")
 });
 #[allow(clippy::expect_used)]
@@ -40,7 +64,7 @@ pub static STYLE_BYTE: Lazy<ProgressStyle> = Lazy::new(|| {
         .template(
             "{spinner} {bytes_per_sec} [{wide_bar:.cyan/blue}] {bytes:.cyan}/{total_bytes:.blue}",
         )
-        .expect("Progess bar template parse failure")
+        .expect("Progress bar template parse failure")
         .progress_chars("#>-")
 });
 
@@ -62,7 +86,6 @@ fn main() -> ExitCode {
     }
 }
 
-#[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
 async fn actual_main(cli_app: Ferium) -> Result<()> {
     // The complete command should not require a config.
     // See [#139](https://github.com/gorilla-devs/ferium/issues/139) for why this might be a problem.
@@ -150,14 +173,14 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             .await
             {
                 return Err(
-                    if err.to_string() == ferinth::Error::NotBase62.to_string() {
+                    if err.to_string() == ferinth::Error::InvalidIDorSlug.to_string() {
                         anyhow!("Invalid indentifier")
                     } else {
                         err
                     },
                 );
             }
-        },
+        }
         SubCommands::List { verbose, markdown } => {
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
@@ -169,14 +192,14 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                         match &mod_.identifier {
                             ModIdentifier::CurseForgeProject(project_id) => {
                                 subcommands::list::curseforge_md(&curseforge, *project_id).await?;
-                            },
+                            }
                             ModIdentifier::ModrinthProject(project_id) => {
                                 subcommands::list::modrinth_md(&modrinth, project_id.clone())
                                     .await?;
-                            },
+                            }
                             ModIdentifier::GitHubRepository(full_name) => {
                                 subcommands::list::github_md(&github, full_name.clone()).await?;
-                            },
+                            }
                         };
                     } else {
                         let mut mr_ids = Vec::<&str>::new();
@@ -186,14 +209,14 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                                     curseforge.clone(),
                                     *project_id,
                                 ));
-                            },
+                            }
                             ModIdentifier::ModrinthProject(project_id) => mr_ids.push(project_id),
                             ModIdentifier::GitHubRepository(full_name) => {
                                 tasks.spawn(subcommands::list::github(
                                     github.clone(),
                                     full_name.clone(),
                                 ));
-                            },
+                            }
                         };
                         let mr_projects = modrinth.get_multiple_projects(&mr_ids).await?;
                         let mr_teams_members = modrinth
@@ -233,7 +256,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     );
                 }
             }
-        },
+        }
         SubCommands::Modpack { subcommand } => match subcommand {
             ModpackSubCommands::Add {
                 identifier,
@@ -260,14 +283,14 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 .await
                 {
                     return Err(
-                        if err.to_string() == ferinth::Error::NotBase62.to_string() {
+                        if err.to_string() == ferinth::Error::InvalidIDorSlug.to_string() {
                             anyhow!("Invalid indentifier")
                         } else {
                             err
                         },
                     );
                 }
-            },
+            }
             ModpackSubCommands::Configure {
                 output_dir,
                 install_overrides,
@@ -277,19 +300,19 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     output_dir,
                     install_overrides,
                 )?;
-            },
+            }
             ModpackSubCommands::Delete { modpack_name } => {
                 subcommands::modpack::delete(&mut config, modpack_name)?;
-            },
+            }
             ModpackSubCommands::List => {
                 if config.modpacks.is_empty() {
                     bail!("There are no modpacks configured, add a modpack using `ferium modpack add`")
                 }
                 subcommands::modpack::list(&config);
-            },
+            }
             ModpackSubCommands::Switch { modpack_name } => {
                 subcommands::modpack::switch(&mut config, modpack_name)?;
-            },
+            }
             ModpackSubCommands::Upgrade => {
                 check_internet().await?;
                 subcommands::modpack::upgrade(
@@ -298,7 +321,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     get_active_modpack(&mut config)?,
                 )
                 .await?;
-            },
+            }
         },
         SubCommands::Profile { subcommand } => match subcommand {
             ProfileSubCommands::Configure {
@@ -316,7 +339,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     output_dir,
                 )
                 .await?;
-            },
+            }
             ProfileSubCommands::Create {
                 import,
                 game_version,
@@ -336,31 +359,111 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     output_dir,
                 )
                 .await?;
-            },
+            }
             ProfileSubCommands::Delete { profile_name } => {
                 subcommands::profile::delete(&mut config, profile_name)?;
-            },
+            }
+            ProfileSubCommands::Export {
+                // platform,
+                modpack_version,
+                summary,
+                mod_loader_version,
+                overrides,
+                output_dir,
+            } => {
+                // } => match platform {
+                //     cli::Platform::Modrinth => {
+                check_internet().await?;
+                let profile = get_active_profile(&mut config)?;
+                check_empty_profile(profile)?;
+
+                subcommands::profile::export::modrinth(
+                    modrinth,
+                    curseforge,
+                    github,
+                    profile,
+                    if let Some(modpack_version) = modpack_version {
+                        modpack_version
+                    } else {
+                        Input::with_theme(&*THEME)
+                            .with_prompt("What is the modpack's version?")
+                            .interact_text()?
+                    },
+                    if let Some(summary) = summary {
+                        Some(summary)
+                    } else {
+                        let summary: String = Input::with_theme(&*THEME)
+                            .with_prompt("Optionally, provide a short description of your modpack:")
+                            .allow_empty(true)
+                            .interact_text()?;
+                        if summary.is_empty() {
+                            None
+                        } else {
+                            Some(summary)
+                        }
+                    },
+                    if let Some(output_dir) = output_dir {
+                        output_dir
+                    } else {
+                        eprint!(
+                            "{} ",
+                            "Pick a directory to output the modpack file to".bold()
+                        );
+                        pick_folder(
+                            &current_dir().unwrap_or_else(|_| HOME.join("documents")),
+                            "Pick a directory to output the modpack file to",
+                            "Output directory",
+                        )?
+                        .context("Please provide a directory to output the modpack file to")?
+                    },
+                    if let Some(overrides_dir) = overrides {
+                        if let Some(overrides_dir) = overrides_dir {
+                            Some(overrides_dir)
+                        } else {
+                            eprint!("{} ", "Optionally, pick an overrides directory".bold());
+                            pick_folder(
+                                &HOME,
+                                "Pick an overrides directory",
+                                "Overrides Directory",
+                            )?
+                        }
+                    } else {
+                        None
+                    },
+                    // if let Some(mod_loader_version) = mod_loader_version {
+                    //     mod_loader_version
+                    // } else {
+                    //     match profile.mod_loader {
+                    //         Quilt => {},
+                    //     }
+                    // },
+                    mod_loader_version,
+                )
+                .await?;
+            }
+            //     cli::Platform::CurseForge => todo!(),
+            // },
             ProfileSubCommands::List => {
                 if config.profiles.is_empty() {
                     bail!("There are no profiles configured, create a profile using `ferium profile create`")
                 }
                 subcommands::profile::list(&config);
-            },
+            }
             ProfileSubCommands::Switch { profile_name } => {
                 subcommands::profile::switch(&mut config, profile_name)?;
-            },
+            }
         },
         SubCommands::Remove { mod_names } => {
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
             subcommands::remove(profile, mod_names)?;
-        },
+        }
         SubCommands::Upgrade => {
             check_internet().await?;
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
             subcommands::upgrade(modrinth, curseforge, github, profile).await?;
-        },
+        }
     };
 
     config.profiles.iter_mut().for_each(|profile| {
@@ -379,7 +482,7 @@ fn get_active_profile(config: &mut Config) -> Result<&mut Profile> {
     match config.profiles.len() {
         0 => {
             bail!("There are no profiles configured, add a profile using `ferium profile create`")
-        },
+        }
         1 => config.active_profile = 0,
         n if n <= config.active_profile => {
             println!(
@@ -389,7 +492,7 @@ fn get_active_profile(config: &mut Config) -> Result<&mut Profile> {
                     .bold()
             );
             subcommands::profile::switch(config, None)?;
-        },
+        }
         _ => (),
     }
     Ok(&mut config.profiles[config.active_profile])
@@ -408,7 +511,7 @@ fn get_active_modpack(config: &mut Config) -> Result<&mut Modpack> {
                     .bold()
             );
             subcommands::modpack::switch(config, None)?;
-        },
+        }
         _ => (),
     }
     Ok(&mut config.modpacks[config.active_modpack])
@@ -433,7 +536,7 @@ async fn check_internet() -> Result<()> {
             Ok(_) => {
                 println!("{}", *TICK);
                 Ok(())
-            },
+            }
             Err(_) => Err(anyhow!(
                 "{CROSS} Ferium requires an internet connection to work"
             )),

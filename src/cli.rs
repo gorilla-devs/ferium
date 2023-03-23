@@ -145,6 +145,36 @@ pub enum ProfileSubCommands {
         /// The name of the profile to delete
         profile_name: Option<String>,
     },
+    /// Export a profile to a modpack file
+    ///
+    /// Choose between CurseForge and Modrinth file formats us
+    ///
+    Export {
+        // #[clap(value_enum)]
+        // /// The platform to export to
+        // platform: Platform,
+        #[clap(long)]
+        /// The version of the modpack
+        modpack_version: Option<String>,
+        #[clap(long)]
+        /// A short, optional description of this modpack
+        summary: Option<String>,
+        // #[clap(long)]
+        /// The version of the mod loader to load the modpack with
+        // mod_loader_version: Option<String>,
+        mod_loader_version: String,
+        #[clap(long)]
+        #[allow(clippy::option_option)]
+        #[clap(value_hint(ValueHint::DirPath))]
+        /// Whether to include an overrides directory
+        /// Optionally, provide the overrides directory from the CLI
+        overrides: Option<Option<PathBuf>>,
+        #[clap(long)]
+        #[allow(clippy::option_option)]
+        #[clap(value_hint(ValueHint::DirPath))]
+        /// The directory to output the modpack file to
+        output_dir: Option<PathBuf>,
+    },
     /// List all the profiles with their data
     List,
     /// Switch between different profiles
@@ -220,4 +250,12 @@ pub enum DependencyLevel {
     Required,
     /// Add all dependencies
     All,
+}
+
+#[derive(Clone, PartialEq, Eq, ValueEnum)]
+pub enum Platform {
+    /// The [Modrinth](https://modrinth.com) modding platform
+    Modrinth,
+    /// The [CurseForge](https://curseforge.com) modding platform
+    CurseForge,
 }

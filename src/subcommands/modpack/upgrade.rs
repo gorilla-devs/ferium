@@ -2,7 +2,7 @@ use crate::{
     download::{clean, download, read_overrides},
     STYLE_BYTE, TICK,
 };
-use anyhow::Result;
+use anyhow::{Context, Result};
 use colored::Colorize;
 use ferinth::Ferinth;
 use furse::Furse;
@@ -11,9 +11,9 @@ use itertools::Itertools;
 use libium::{
     config::structs::{Modpack, ModpackIdentifier},
     modpack::{
-        curseforge::{deser_manifest, read_manifest_file},
+        curseforge::{read_manifest_file, structs::Manifest},
         extract_zip,
-        modrinth::{deser_metadata, read_metadata_file},
+        modrinth::{read_metadata_file, structs::Metadata},
     },
     upgrade::{
         modpack_downloadable::{download_curseforge_modpack, download_modrinth_modpack},
@@ -38,14 +38,18 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                 *project_id,
                 |total| {
                     progress_bar.enable_steady_tick(Duration::from_millis(100));
-                    progress_bar.set_length(total);
+                    progress_bar.set_length(total as u64);
                 },
                 |additional| {
                     progress_bar.inc(additional as u64);
                 },
             )
             .await?;
-            let manifest = deser_manifest(&read_manifest_file(&modpack_file)?)?;
+            let manifest: Manifest = serde_json::from_str(
+                &read_manifest_file(modpack_file.try_clone().await?)
+                    .await?
+                    .context("Does not contain manifest")?,
+            )?;
             progress_bar.finish_and_clear();
 
             eprint!("\n{}", "Determining files to download... ".bold());
@@ -60,7 +64,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                 match file.try_into() {
                     Ok(downloadable) => {
                         to_download.push(downloadable);
-                    },
+                    }
                     Err(DistributionDeniedError(mod_id, file_id)) => {
                         if !msg_shown {
                             println!("\n{}", "The following mod(s) have denied 3rd parties such as Ferium from downloading it".red().bold());
@@ -79,7 +83,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                             );
                             Ok::<(), furse::Error>(())
                         }));
-                    },
+                    }
                 }
             }
 
@@ -107,7 +111,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                 extract_zip(modpack_file, &tmp_dir).await?;
                 to_install = read_overrides(&tmp_dir.join(manifest.overrides))?;
             }
-        },
+        }
         ModpackIdentifier::ModrinthModpack(project_id) => {
             println!("{}", "Downloading Modpack".bold());
             let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
@@ -116,14 +120,18 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                 project_id,
                 |total| {
                     progress_bar.enable_steady_tick(Duration::from_millis(100));
-                    progress_bar.set_length(total);
+                    progress_bar.set_length(total as u64);
                 },
                 |additional| {
                     progress_bar.inc(additional as u64);
                 },
             )
             .await?;
-            let metadata = deser_metadata(&read_metadata_file(&modpack_file)?)?;
+            let metadata: Metadata = serde_json::from_str(
+                &read_metadata_file(modpack_file.try_clone().await?)
+                    .await?
+                    .context("Does not contain metadata file")?,
+            )?;
             progress_bar.finish_and_clear();
 
             for file in metadata.files {
@@ -148,7 +156,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                 extract_zip(modpack_file, &tmp_dir).await?;
                 to_install = read_overrides(&tmp_dir.join("overrides"))?;
             }
-        },
+        }
     }
     clean(
         &modpack.output_dir.join("mods"),

@@ -101,12 +101,12 @@ pub async fn download(
     to_download: Vec<Downloadable>,
     to_install: Vec<(OsString, PathBuf)>,
 ) -> Result<()> {
-    create_dir_all(&*output_dir).await?;
+    create_dir_all(&output_dir).await?;
     let progress_bar = Arc::new(Mutex::new(
         ProgressBar::new(
             to_download
                 .iter()
-                .map(|downloadable| downloadable.length)
+                .map(|downloadable| downloadable.length as u64)
                 .sum(),
         )
         .with_style(STYLE_BYTE.clone()),
