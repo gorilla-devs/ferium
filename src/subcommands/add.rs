@@ -1,3 +1,6 @@
+// CurseForge IDs shouldn't be seperated
+#![allow(clippy::unreadable_literal)]
+
 use crate::{cli::DependencyLevel, CROSS, THEME, TICK};
 use anyhow::{bail, Result};
 use colored::Colorize;
@@ -91,9 +94,17 @@ pub async fn modrinth(
                 break;
             };
 
-            // Replace Fabric API with Quilted Fabric API on Quilt
-            if profile.mod_loader == ModLoader::Quilt && id == "P7dR8mSH" {
-                id = "qvIfYCYJ".into();
+            if profile.mod_loader == ModLoader::Quilt {
+                // Fabric API
+                if id == "P7dR8mSH" {
+                    // Quilted Fabric API
+                    id = "qvIfYCYJ".into();
+                }
+                // Fabric Language Kotlin
+                if id == "Ha28R6CL" {
+                    // Quilt Kotlin Libraries
+                    id = "lwVhp9o5".into();
+                }
             }
 
             if dependency.dependency_type == DependencyType::Required {
@@ -236,7 +247,20 @@ pub async fn curseforge(
     });
     if dependencies != Some(DependencyLevel::None) {
         for dependency in &latest_file.dependencies {
-            let id = dependency.mod_id;
+            let mut id = dependency.mod_id;
+            if profile.mod_loader == ModLoader::Quilt {
+                // Fabric API
+                if id == 306612 {
+                    // Quilted Fabric API
+                    id = 634179;
+                }
+                // Fabric Language Kotlin
+                if id == 308769 {
+                    // Quilt Kotlin Libraries
+                    id = 720410;
+                }
+            }
+
             if dependency.relation_type == FileRelationType::RequiredDependency {
                 eprint!("Adding required dependency {}... ", id.to_string().dimmed());
                 let project = curseforge.get_mod(id).await?;

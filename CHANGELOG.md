@@ -3,13 +3,15 @@
 ## `v4.4.0`
 ### 23.03.2023
 
-- Improve workflows
-- Move lints in-code
+- Updated dependencies
+- Improved workflows
+- Moved clippy lints to be in-code
   - Removed `lint` just recipe
   - Removed lint flags from `build.yml`
-- [#285](https://github.com/gorilla-devs/ferium/issues/285): Removed `rustfmt.toml`
-- Update dependencies
+- Fixed [#285](https://github.com/gorilla-devs/ferium/issues/285)
 - Refactor `upgrade.rs`
+- Fixed [#274](https://github.com/gorilla-devs/ferium/issues/274)
+- Added dependency overrides to CurseForge too
 
 ## `v4.3.4`
 ### 15.01.2023
