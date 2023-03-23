@@ -1,3 +1,6 @@
+// Allow `expect()`s for mutex poisons
+#![allow(clippy::expect_used)]
+
 use crate::{STYLE_BYTE, TICK};
 use anyhow::{anyhow, bail, Error, Result};
 use colored::Colorize;
@@ -7,7 +10,7 @@ use fs_extra::{
 };
 use indicatif::ProgressBar;
 use itertools::Itertools;
-use libium::{mutex_ext::MutexExt, upgrade::Downloadable};
+use libium::upgrade::Downloadable;
 use reqwest::Client;
 use size::Size;
 use std::{
@@ -112,7 +115,8 @@ pub async fn download(
         .with_style(STYLE_BYTE.clone()),
     ));
     progress_bar
-        .force_lock()
+        .lock()
+        .expect("Mutex poisoned")
         .enable_steady_tick(Duration::from_millis(100));
     let mut tasks = JoinSet::new();
     let semaphore = Arc::new(Semaphore::new(75));
@@ -127,18 +131,24 @@ pub async fn download(
             let _permit = permit;
             let (length, filename) = downloadable
                 .download(&client, &output_dir, |additional| {
-                    progress_bar.force_lock().inc(additional as u64);
+                    progress_bar
+                        .lock()
+                        .expect("Mutex poisoned")
+                        .inc(additional as u64);
                 })
                 .await?;
-            progress_bar.force_lock().println(format!(
-                "{} Downloaded {:7} {}",
-                &*TICK,
-                Size::from_bytes(length)
-                    .format()
-                    .with_base(size::Base::Base10)
-                    .to_string(),
-                filename.dimmed(),
-            ));
+            progress_bar
+                .lock()
+                .expect("Mutex poisoned")
+                .println(format!(
+                    "{} Downloaded {:7} {}",
+                    &*TICK,
+                    Size::from_bytes(length)
+                        .format()
+                        .with_base(size::Base::Base10)
+                        .to_string(),
+                    filename.dimmed(),
+                ));
             Ok::<(), Error>(())
         });
     }

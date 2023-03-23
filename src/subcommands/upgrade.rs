@@ -1,3 +1,6 @@
+// Allow `expect()`s for mutex poisons
+#![allow(clippy::expect_used)]
+
 use crate::{
     download::{clean, download},
     CROSS, STYLE_NO, TICK, YELLOW_TICK,
@@ -12,16 +15,12 @@ use furse::{structures::file_structs::File, Furse};
 use indicatif::ProgressBar;
 use libium::{
     config::structs::{ModIdentifier, ModLoader, Profile},
-    mutex_ext::MutexExt,
     upgrade::{mod_downloadable, DistributionDeniedError, Downloadable},
 };
 use octocrab::{models::repos::Asset, Octocrab};
 use std::{
     fs::read_dir,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc, Mutex,
-    },
+    sync::{Arc, Mutex},
     time::Duration,
 };
 use tokio::{sync::Semaphore, task::JoinSet};
@@ -55,21 +54,20 @@ impl TryFrom<PlatformDownloadable> for Downloadable {
 
 /// Get the latest compatible downloadable for the mods in `profile`
 ///
-/// If an error occures with a resolving task, instead of failing immediately, the error return flag is set to true
+/// If an error occures with a resolving task, instead of failing immediately,
+/// resolution will continue and the error return flag is set to true.
 pub async fn get_platform_downloadables(
     modrinth: Ferinth,
     curseforge: Furse,
     github: Octocrab,
     profile: &Profile,
 ) -> Result<(Vec<PlatformDownloadable>, bool)> {
-    let profile = Arc::new(profile.clone());
     let to_download = Arc::new(Mutex::new(Vec::new()));
     let progress_bar = Arc::new(Mutex::new(
         ProgressBar::new(profile.mods.len() as u64).with_style(STYLE_NO.clone()),
     ));
-    let backwards_compat_msg = Arc::new(AtomicBool::new(false));
-    let error = Arc::new(AtomicBool::new(false));
     let mut tasks = JoinSet::new();
+    let profile = Arc::new(profile.clone());
     let curseforge = Arc::new(curseforge);
     let modrinth = Arc::new(modrinth);
     let github = Arc::new(github);
@@ -77,17 +75,16 @@ pub async fn get_platform_downloadables(
     println!("{}\n", "Determining the Latest Compatible Versions".bold());
     let semaphore = Arc::new(Semaphore::new(75));
     progress_bar
-        .force_lock()
+        .lock()
+        .expect("Mutex poisoned")
         .enable_steady_tick(Duration::from_millis(100));
     for mod_ in &profile.mods {
         let permit = semaphore.clone().acquire_owned().await?;
-        let backwards_compat_msg = backwards_compat_msg.clone();
         let to_download = to_download.clone();
         let progress_bar = progress_bar.clone();
         let curseforge = curseforge.clone();
         let modrinth = modrinth.clone();
         let profile = profile.clone();
-        let error = error.clone();
         let github = github.clone();
         let mod_ = mod_.clone();
         tasks.spawn(async move {
@@ -143,13 +140,13 @@ pub async fn get_platform_downloadables(
                     )
                 }
             };
-            let progress_bar = progress_bar.force_lock();
+            let progress_bar = progress_bar.lock().expect("Mutex poisoned");
+            progress_bar.inc(1);
             match result {
                 Ok((downloadable, backwards_compat)) => {
                     progress_bar.println(format!(
                         "{} {:43} {}",
                         if backwards_compat {
-                            backwards_compat_msg.store(true, Ordering::Relaxed);
                             YELLOW_TICK.clone()
                         } else {
                             TICK.clone()
@@ -158,8 +155,11 @@ pub async fn get_platform_downloadables(
                         downloadable.filename().dimmed()
                     ));
                     {
-                        let mut to_download = to_download.force_lock();
-                        to_download.push(downloadable);
+                        to_download
+                            .lock()
+                            .expect("Mutex poisoned")
+                            .push(downloadable);
+                        Ok((false, backwards_compat))
                     }
                 }
                 Err(err) => {
@@ -175,21 +175,24 @@ pub async fn get_platform_downloadables(
                         "{}",
                         format!("{CROSS} {:43} {err}", mod_.name).red()
                     ));
-                    error.store(true, Ordering::Relaxed);
+                    Ok((true, false))
                 }
             }
-            progress_bar.inc(1);
-            Ok(())
         });
     }
+
+    let mut error = false;
+    let mut backwards_compat = false;
     while let Some(res) = tasks.join_next().await {
-        res??;
+        let res = res??;
+        error |= res.0;
+        backwards_compat |= res.1;
     }
     Arc::try_unwrap(progress_bar)
         .map_err(|_| anyhow!("Failed to run threads to completion"))?
         .into_inner()?
         .finish_and_clear();
-    if backwards_compat_msg.load(Ordering::Relaxed) {
+    if backwards_compat {
         println!(
             "{}",
             "Fabric mod using Quilt backwards compatibility".yellow()
@@ -199,7 +202,7 @@ pub async fn get_platform_downloadables(
         Arc::try_unwrap(to_download)
             .map_err(|_| anyhow!("Failed to run threads to completion"))?
             .into_inner()?,
-        error.load(Ordering::Relaxed),
+        error,
     ))
 }
 
