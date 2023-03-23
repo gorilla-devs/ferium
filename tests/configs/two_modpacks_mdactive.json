@@ -4,15 +4,15 @@
     "profiles": [],
     "modpacks": [
         {
-            "name": "RLCraft",
+            "name": "CF Fabulously Optimised",
             "output_dir": "./tests/cf_modpack",
             "install_overrides": true,
             "identifier": {
-                "CurseForgeModpack": 285109
+                "CurseForgeModpack": 396246
             }
         },
         {
-            "name": "Fabulously Optimised",
+            "name": "MR Fabulously Optimised",
             "output_dir": "./tests/md_modpack",
             "install_overrides": true,
             "identifier": {

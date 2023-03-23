@@ -236,7 +236,12 @@ fn profile_switch() -> Result {
 #[test]
 fn modpack_switch() -> Result {
     run_command(
-        vec!["modpack", "switch", "--modpack-name", "RLCraft"],
+        vec![
+            "modpack",
+            "switch",
+            "--modpack-name",
+            "CF Fabulously Optimised",
+        ],
         Some("two_modpacks_mdactive"),
     )
 }
@@ -295,7 +300,12 @@ fn delete_profile() -> Result {
 #[test]
 fn delete_modpack() -> Result {
     run_command(
-        vec!["modpack", "delete", "--modpack-name", "RLCraft"],
+        vec![
+            "modpack",
+            "delete",
+            "--modpack-name",
+            "CF Fabulously Optimised",
+        ],
         Some("two_modpacks_mdactive"),
     )
 }
