@@ -1,3 +1,6 @@
+// Octocrab uses i64 even when negative values make no sense (e.g. download count)
+#![allow(clippy::cast_sign_loss)]
+
 use crate::{
     download::{clean, download},
     subcommands::upgrade::{self, PlatformDownloadable},

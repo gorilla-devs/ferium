@@ -1,3 +1,23 @@
+#![deny(
+    clippy::all,
+    clippy::perf,
+    clippy::cargo,
+    clippy::style,
+    clippy::pedantic,
+    clippy::suspicious,
+    clippy::complexity,
+    clippy::create_dir,
+    clippy::unwrap_used,
+    clippy::correctness
+)]
+#![warn(clippy::dbg_macro, clippy::expect_used)]
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::multiple_crate_versions,
+    clippy::large_enum_variant,
+    clippy::too_many_lines
+)]
+
 mod cli;
 mod download;
 mod subcommands;

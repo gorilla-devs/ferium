@@ -9,10 +9,7 @@ authors = [
     "Daniel Hauck (SolidTux)",
 ]
 description = "Fast CLI program for managing Minecraft mods and modpacks from Modrinth, CurseForge, and Github Releases"
-exclude = [
-    "tests",
-    "media",
-] # Don't need tests and media for installing using crates.io
+exclude = [".github", "tests", "media"]
 repository = "https://github.com/gorilla-devs/ferium"
 categories = ["command-line-utilities"]
 readme = "README.md"
