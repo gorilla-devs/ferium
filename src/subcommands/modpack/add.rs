@@ -74,8 +74,12 @@ pub async fn modrinth(
     println!("Where should the modpack be installed to?");
     let output_dir = match output_dir {
         Some(some) => some,
-        None => pick_folder(&get_minecraft_dir(), "Pick an output directory", "Output Directory")?
-            .ok_or_else(|| anyhow!("Please pick an output directory"))?,
+        None => pick_folder(
+            &get_minecraft_dir(),
+            "Pick an output directory",
+            "Output Directory",
+        )?
+        .ok_or_else(|| anyhow!("Please pick an output directory"))?,
     };
     check_output_directory(&output_dir)?;
     let install_overrides = match install_overrides {

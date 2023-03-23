@@ -15,13 +15,17 @@ pub fn configure(
         Some(output_dir) => {
             check_output_directory(&output_dir)?;
             modpack.output_dir = output_dir;
-        },
+        }
         None => {
-            if let Some(dir) = pick_folder(&modpack.output_dir, "Pick an output directory", "Output Directory")? {
+            if let Some(dir) = pick_folder(
+                &modpack.output_dir,
+                "Pick an output directory",
+                "Output Directory",
+            )? {
                 check_output_directory(&dir)?;
                 modpack.output_dir = dir;
             }
-        },
+        }
     }
     modpack.install_overrides = if let Some(install_overrides) = install_overrides {
         install_overrides

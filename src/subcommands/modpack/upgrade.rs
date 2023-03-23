@@ -64,7 +64,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                 match file.try_into() {
                     Ok(downloadable) => {
                         to_download.push(downloadable);
-                    },
+                    }
                     Err(DistributionDeniedError(mod_id, file_id)) => {
                         if !msg_shown {
                             println!("\n{}", "The following mod(s) have denied 3rd parties such as Ferium from downloading it".red().bold());
@@ -83,7 +83,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                             );
                             Ok::<(), furse::Error>(())
                         }));
-                    },
+                    }
                 }
             }
 
@@ -111,7 +111,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                 extract_zip(modpack_file, &tmp_dir).await?;
                 to_install = read_overrides(&tmp_dir.join(manifest.overrides))?;
             }
-        },
+        }
         ModpackIdentifier::ModrinthModpack(project_id) => {
             println!("{}", "Downloading Modpack".bold());
             let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
@@ -156,7 +156,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                 extract_zip(modpack_file, &tmp_dir).await?;
                 to_install = read_overrides(&tmp_dir.join("overrides"))?;
             }
-        },
+        }
     }
     clean(
         &modpack.output_dir.join("mods"),

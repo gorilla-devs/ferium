@@ -42,8 +42,12 @@ pub fn check_output_directory(output_dir: &Path) -> Result<()> {
                 .with_prompt("Would like to create a backup?")
                 .interact()?
             {
-                let backup_dir = pick_folder(&HOME, "Where should the backup be made?", "Output Directory")?
-                    .ok_or_else(|| anyhow!("Please pick an output directory"))?;
+                let backup_dir = pick_folder(
+                    &HOME,
+                    "Where should the backup be made?",
+                    "Output Directory",
+                )?
+                .ok_or_else(|| anyhow!("Please pick an output directory"))?;
                 copy(check_dir, backup_dir, &CopyOptions::new())?;
             }
         }

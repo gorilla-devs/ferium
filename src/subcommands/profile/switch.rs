@@ -15,7 +15,7 @@ pub fn switch(config: &mut Config, profile_name: Option<String>) -> Result<()> {
             Some(selection) => {
                 config.active_profile = selection;
                 Ok(())
-            },
+            }
             None => Err(anyhow!("The profile provided does not exist")),
         }
     } else {

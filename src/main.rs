@@ -160,7 +160,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     },
                 );
             }
-        },
+        }
         SubCommands::List { verbose, markdown } => {
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
@@ -172,14 +172,14 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                         match &mod_.identifier {
                             ModIdentifier::CurseForgeProject(project_id) => {
                                 subcommands::list::curseforge_md(&curseforge, *project_id).await?;
-                            },
+                            }
                             ModIdentifier::ModrinthProject(project_id) => {
                                 subcommands::list::modrinth_md(&modrinth, project_id.clone())
                                     .await?;
-                            },
+                            }
                             ModIdentifier::GitHubRepository(full_name) => {
                                 subcommands::list::github_md(&github, full_name.clone()).await?;
-                            },
+                            }
                         };
                     } else {
                         let mut mr_ids = Vec::<&str>::new();
@@ -189,14 +189,14 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                                     curseforge.clone(),
                                     *project_id,
                                 ));
-                            },
+                            }
                             ModIdentifier::ModrinthProject(project_id) => mr_ids.push(project_id),
                             ModIdentifier::GitHubRepository(full_name) => {
                                 tasks.spawn(subcommands::list::github(
                                     github.clone(),
                                     full_name.clone(),
                                 ));
-                            },
+                            }
                         };
                         let mr_projects = modrinth.get_multiple_projects(&mr_ids).await?;
                         let mr_teams_members = modrinth
@@ -236,7 +236,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     );
                 }
             }
-        },
+        }
         SubCommands::Modpack { subcommand } => match subcommand {
             ModpackSubCommands::Add {
                 identifier,
@@ -270,7 +270,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                         },
                     );
                 }
-            },
+            }
             ModpackSubCommands::Configure {
                 output_dir,
                 install_overrides,
@@ -280,19 +280,19 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     output_dir,
                     install_overrides,
                 )?;
-            },
+            }
             ModpackSubCommands::Delete { modpack_name } => {
                 subcommands::modpack::delete(&mut config, modpack_name)?;
-            },
+            }
             ModpackSubCommands::List => {
                 if config.modpacks.is_empty() {
                     bail!("There are no modpacks configured, add a modpack using `ferium modpack add`")
                 }
                 subcommands::modpack::list(&config);
-            },
+            }
             ModpackSubCommands::Switch { modpack_name } => {
                 subcommands::modpack::switch(&mut config, modpack_name)?;
-            },
+            }
             ModpackSubCommands::Upgrade => {
                 check_internet().await?;
                 subcommands::modpack::upgrade(
@@ -301,7 +301,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     get_active_modpack(&mut config)?,
                 )
                 .await?;
-            },
+            }
         },
         SubCommands::Profile { subcommand } => match subcommand {
             ProfileSubCommands::Configure {
@@ -319,7 +319,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     output_dir,
                 )
                 .await?;
-            },
+            }
             ProfileSubCommands::Create {
                 import,
                 game_version,
@@ -339,10 +339,10 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     output_dir,
                 )
                 .await?;
-            },
+            }
             ProfileSubCommands::Delete { profile_name } => {
                 subcommands::profile::delete(&mut config, profile_name)?;
-            },
+            }
             ProfileSubCommands::Export {
                 // platform,
                 modpack_version,
@@ -420,7 +420,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     mod_loader_version,
                 )
                 .await?;
-            },
+            }
             //     cli::Platform::CurseForge => todo!(),
             // },
             ProfileSubCommands::List => {
@@ -428,22 +428,22 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     bail!("There are no profiles configured, create a profile using `ferium profile create`")
                 }
                 subcommands::profile::list(&config);
-            },
+            }
             ProfileSubCommands::Switch { profile_name } => {
                 subcommands::profile::switch(&mut config, profile_name)?;
-            },
+            }
         },
         SubCommands::Remove { mod_names } => {
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
             subcommands::remove(profile, mod_names)?;
-        },
+        }
         SubCommands::Upgrade => {
             check_internet().await?;
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
             subcommands::upgrade(modrinth, curseforge, github, profile).await?;
-        },
+        }
     };
 
     config.profiles.iter_mut().for_each(|profile| {
@@ -462,7 +462,7 @@ fn get_active_profile(config: &mut Config) -> Result<&mut Profile> {
     match config.profiles.len() {
         0 => {
             bail!("There are no profiles configured, add a profile using `ferium profile create`")
-        },
+        }
         1 => config.active_profile = 0,
         n if n <= config.active_profile => {
             println!(
@@ -472,7 +472,7 @@ fn get_active_profile(config: &mut Config) -> Result<&mut Profile> {
                     .bold()
             );
             subcommands::profile::switch(config, None)?;
-        },
+        }
         _ => (),
     }
     Ok(&mut config.profiles[config.active_profile])
@@ -491,7 +491,7 @@ fn get_active_modpack(config: &mut Config) -> Result<&mut Modpack> {
                     .bold()
             );
             subcommands::modpack::switch(config, None)?;
-        },
+        }
         _ => (),
     }
     Ok(&mut config.modpacks[config.active_modpack])
@@ -516,7 +516,7 @@ async fn check_internet() -> Result<()> {
             Ok(_) => {
                 println!("{}", *TICK);
                 Ok(())
-            },
+            }
             Err(_) => Err(anyhow!(
                 "{CROSS} Ferium requires an internet connection to work"
             )),

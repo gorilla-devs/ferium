@@ -65,7 +65,7 @@ pub async fn configure(
                             check_output_directory(&dir).await?;
                             profile.output_dir = dir;
                         }
-                    },
+                    }
                     1 => profile.game_version = pick_minecraft_version().await?,
                     2 => profile.mod_loader = pick_mod_loader(Some(&profile.mod_loader))?,
                     3 => {
@@ -74,7 +74,7 @@ pub async fn configure(
                             .default(profile.name.clone())
                             .interact_text()?;
                         profile.name = name;
-                    },
+                    }
                     4 => break,
                     _ => unreachable!(),
                 }

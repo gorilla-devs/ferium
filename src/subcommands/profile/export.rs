@@ -69,7 +69,7 @@ pub async fn modrinth(
             PlatformDownloadable::GitHub(asset) => {
                 calculate_hashes.push(asset.clone());
                 to_download.push(asset.into());
-            },
+            }
         }
     }
 

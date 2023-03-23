@@ -113,7 +113,7 @@ pub async fn get_platform_downloadables(
                         || Err(mod_downloadable::Error::NoCompatibleFile),
                         |ok| Ok((PlatformDownloadable::CurseForge(ok.0), ok.1)),
                     )
-                },
+                }
                 ModIdentifier::ModrinthProject(project_id) => {
                     mod_downloadable::get_latest_compatible_version(
                         &modrinth.list_versions(project_id).await?,
@@ -124,7 +124,7 @@ pub async fn get_platform_downloadables(
                         || Err(mod_downloadable::Error::NoCompatibleFile),
                         |ok| Ok((PlatformDownloadable::Modrinth(ok.0, ok.1), ok.2)),
                     )
-                },
+                }
                 ModIdentifier::GitHubRepository(full_name) => {
                     mod_downloadable::get_latest_compatible_asset(
                         &github
@@ -141,7 +141,7 @@ pub async fn get_platform_downloadables(
                         || Err(mod_downloadable::Error::NoCompatibleFile),
                         |ok| Ok((PlatformDownloadable::GitHub(ok.0), ok.1)),
                     )
-                },
+                }
             };
             let progress_bar = progress_bar.force_lock();
             match result {
@@ -161,7 +161,7 @@ pub async fn get_platform_downloadables(
                         let mut to_download = to_download.force_lock();
                         to_download.push(downloadable);
                     }
-                },
+                }
                 Err(err) => {
                     if let mod_downloadable::Error::ModrinthError(
                         ferinth::Error::RateLimitExceeded(_),
@@ -176,7 +176,7 @@ pub async fn get_platform_downloadables(
                         format!("{CROSS} {:43} {err}", mod_.name).red()
                     ));
                     error.store(true, Ordering::Relaxed);
-                },
+                }
             }
             progress_bar.inc(1);
             Ok(())

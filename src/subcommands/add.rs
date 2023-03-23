@@ -117,14 +117,14 @@ pub async fn modrinth(
                                 should_check_mod_loader
                             },
                         });
-                    },
+                    }
                     Err(err) => {
                         if matches!(err, add::Error::AlreadyAdded) {
                             println!("{} Already added", *TICK);
                         } else {
                             bail!(err);
                         }
-                    },
+                    }
                 };
             } else if dependency.dependency_type == DependencyType::Optional
                 && (dependencies == Some(DependencyLevel::All) || dependencies.is_none())
@@ -170,14 +170,14 @@ pub async fn modrinth(
                                 println!("{} {}", *TICK, project.title.bold());
                             }
                         }
-                    },
+                    }
                     Err(err) => {
                         if matches!(err, add::Error::AlreadyAdded) {
                             println!("{} Already added", *TICK);
                         } else {
                             println!("{}", format!("{CROSS} {err}").yellow());
                         }
-                    },
+                    }
                 };
             }
         }
@@ -258,14 +258,14 @@ pub async fn curseforge(
                                 should_check_mod_loader
                             },
                         });
-                    },
+                    }
                     Err(err) => {
                         if matches!(err, add::Error::AlreadyAdded) {
                             println!("{} Already added", *TICK);
                         } else {
                             bail!(err);
                         }
-                    },
+                    }
                 };
             } else if dependency.relation_type == FileRelationType::OptionalDependency
                 && (dependencies == Some(DependencyLevel::All) || dependencies.is_none())
@@ -312,14 +312,14 @@ pub async fn curseforge(
                                 println!("{} {}", *TICK, project.name.bold());
                             }
                         }
-                    },
+                    }
                     Err(err) => {
                         if matches!(err, add::Error::AlreadyAdded) {
                             println!("{} Already added", *TICK);
                         } else {
                             println!("{}", format!("{CROSS} {err}").yellow());
                         }
-                    },
+                    }
                 };
             }
         }

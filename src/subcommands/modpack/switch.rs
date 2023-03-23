@@ -16,7 +16,7 @@ pub fn switch(config: &mut Config, modpack_name: Option<String>) -> Result<()> {
             Some(selection) => {
                 config.active_modpack = selection;
                 Ok(())
-            },
+            }
             None => Err(anyhow!("The modpack provided does not exist")),
         }
     } else {

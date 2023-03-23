@@ -33,7 +33,7 @@ pub async fn create(
                 mod_loader,
                 mods: Vec::new(),
             }
-        },
+        }
         (None, None, None, None) => {
             let mut selected_mods_dir = get_minecraft_dir().join("mods");
             println!(
@@ -44,7 +44,11 @@ pub async fn create(
                 .with_prompt("Would you like to specify a custom mods directory?")
                 .interact()?
             {
-                if let Some(dir) = pick_folder(&selected_mods_dir, "Pick an output directory", "Output Directory")? {
+                if let Some(dir) = pick_folder(
+                    &selected_mods_dir,
+                    "Pick an output directory",
+                    "Output Directory",
+                )? {
                     check_output_directory(&dir).await?;
                     selected_mods_dir = dir;
                 };
@@ -66,7 +70,7 @@ pub async fn create(
                                 .bold()
                         );
                         continue;
-                    },
+                    }
                 }
             };
 
@@ -79,10 +83,10 @@ pub async fn create(
                 game_version: selected_version,
                 mod_loader: super::pick_mod_loader(None)?,
             }
-        },
+        }
         _ => {
             bail!("Provide at least the name, game version, and mod loader options to create a profile")
-        },
+        }
     };
 
     if let Some(from) = import {

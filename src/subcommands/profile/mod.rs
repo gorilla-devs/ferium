@@ -73,7 +73,7 @@ pub async fn pick_minecraft_version() -> Result<String> {
                 .items(&versions)
                 .interact()?;
             Ok(versions.swap_remove(selected_version))
-        },
+        }
         _ => Ok(major_versions.swap_remove(selected_version).to_owned()),
     }
 }
