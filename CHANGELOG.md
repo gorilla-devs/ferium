@@ -12,10 +12,12 @@
 - Refactor `upgrade.rs`
 - Fixed [#274](https://github.com/gorilla-devs/ferium/issues/274)
 - Added dependency overrides to CurseForge too
-- Fix [#266](https://github.com/gorilla-devs/ferium/issues/266)
-- Improve CLI doc comments
-- Tweak integration tests
-- Make `--threads` global argument configure tokio worker thread count
+- Fiedx [#266](https://github.com/gorilla-devs/ferium/issues/266)
+- Improved CLI documentation
+- Tweaked integration tests
+- Made `--threads` global argument configure tokio worker thread count
+- Properly batched Modrinth verbose list requests
+- Updated local name cache when verbose listing
 
 ## `v4.3.4`
 ### 15.01.2023
