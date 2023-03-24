@@ -70,7 +70,7 @@ fn main() -> ExitCode {
     builder.enable_all();
     builder.thread_name("ferium-worker");
     if let Some(threads) = cli.threads {
-        builder.max_blocking_threads(threads);
+        builder.worker_threads(threads);
     }
     #[allow(clippy::expect_used)] // No error handling yet
     let runtime = builder.build().expect("Could not initialise Tokio runtime");

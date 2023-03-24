@@ -13,6 +13,9 @@
 - Fixed [#274](https://github.com/gorilla-devs/ferium/issues/274)
 - Added dependency overrides to CurseForge too
 - Fix [#266](https://github.com/gorilla-devs/ferium/issues/266)
+- Improve CLI doc comments
+- Tweak integration tests
+- Make `--threads` global argument configure tokio worker thread count
 
 ## `v4.3.4`
 ### 15.01.2023

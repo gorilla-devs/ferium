@@ -13,19 +13,22 @@ pub struct Ferium {
     #[clap(subcommand)]
     pub subcommand: SubCommands,
     #[clap(long, short)]
-    /// The limit for additional threads spawned by the Tokio runtime
+    /// Sets the number of worker threads the tokio runtime will use.
+    /// You can also use the environment variable `TOKIO_WORKER_THREADS`.
     pub threads: Option<usize>,
     #[clap(long)]
     /// Set a GitHub personal access token for increasing the GitHub API rate limit.
-    /// You can also use the environment variable `GITHUB_TOKEN`
+    /// You can also use the environment variable `GITHUB_TOKEN`.
     pub github_token: Option<String>,
     #[clap(long)]
     /// Set a custom CurseForge API key.
-    /// You can also use the environment variable `CURSEFORGE_API_KEY`
+    /// You can also use the environment variable `CURSEFORGE_API_KEY`.
     pub curseforge_api_key: Option<String>,
-    #[clap(long)]
+    #[clap(long, short)]
     #[clap(value_hint(ValueHint::FilePath))]
-    /// Set the file to read the config from. Does not change the cache and tmp directories
+    /// Set the file to read the config from.
+    /// This does not change the `cache` and `tmp` directories.
+    /// You can also use the environment variable `CONFIG_FILE`.
     pub config_file: Option<PathBuf>,
 }
 
@@ -35,8 +38,9 @@ pub enum SubCommands {
     Add {
         /// The identifier of the mod/project/repository
         ///
-        /// The Modrinth project ID is specified at the bottom of the left sidebar under 'Technical information'. You can also use the project slug in the URL.
-        /// The CurseForge mod ID is specified at the top of the right sidebar under 'About Project'.
+        /// The Modrinth project ID is specified at the bottom of the left sidebar under 'Technical information'.
+        /// You can also use the project slug in the URL.
+        /// The CurseForge project ID is specified at the top of the right sidebar under 'About Project'.
         /// The GitHub identifier is the repository's full name, e.g. `gorilla-devs/ferium`.
         identifier: String,
         #[clap(long)]
@@ -50,17 +54,18 @@ pub enum SubCommands {
         /// Select which dependencies should be added
         dependencies: Option<DependencyLevel>,
     },
-    /// Generate shell auto completions to stdout for the specified shell
+    /// Print shell auto completions for the specified shell
     Complete {
+        #[clap(value_enum)]
         /// The shell to generate auto completions for
         shell: Shell,
     },
     /// List all the mods in the profile, and with some their metadata if verbose
     List {
         #[clap(long, short)]
-        /// Show information about the mod
+        /// Show additional information about the mod
         verbose: bool,
-        #[clap(long)]
+        #[clap(long, short)]
         /// Output information in markdown format and alphabetical order
         ///
         /// Useful for creating modpack mod lists.
@@ -79,79 +84,71 @@ pub enum SubCommands {
         #[clap(subcommand)]
         subcommand: ProfileSubCommands,
     },
-    /// Remove a mod or repository from the profile
-    ///
-    /// Optionally, provide a list of names of the mods to remove
+    /// Remove mods and repositories from the profile.
+    /// Optionally, provide a list of names or IDs of the mods to remove.
     Remove {
-        /// A case-insensitive list of names of a mods to remove
+        /// List of project IDs or case-insensitive names of mods to remove
         mod_names: Vec<String>,
     },
-    /// Download and install the latest version of the mods specified
+    /// Download and install the latest compatible version of your mods
     Upgrade,
 }
 
 #[derive(Subcommand)]
 pub enum ProfileSubCommands {
-    /// Configure the current profile's Minecraft version, mod loader, and output directory
-    ///
-    /// Optionally, provide setting(s) to change as option(s)
+    /// Configure the current profile's name, Minecraft version, mod loader, and output directory.
+    /// Optionally, provide the settings to change as arguments.
     Configure {
-        #[clap(long)]
+        #[clap(long, short = 'v')]
         /// The Minecraft version to check compatibility for
         game_version: Option<String>,
-        #[clap(long)]
+        #[clap(long, short)]
         #[clap(value_enum)]
         /// The mod loader to check compatibility for
         mod_loader: Option<ModLoader>,
-        #[clap(long)]
+        #[clap(long, short)]
         /// The name of the profile
         name: Option<String>,
-        #[clap(long)]
+        #[clap(long, short)]
         #[clap(value_hint(ValueHint::DirPath))]
         /// The directory to output mods to
         output_dir: Option<PathBuf>,
     },
-    /// Create a new profile
-    ///
-    /// Optionally provide all the options, to create the profile without the UI.
+    /// Create a new profile.
+    /// Optionally, provide the settings as arguments.
     /// Use the import flag to import mods from another profile.
     Create {
-        #[clap(long)]
+        #[clap(long, short)]
         #[allow(clippy::option_option)]
-        /// Copy over the mods from an existing profile
-        ///
-        /// Optionally, provide the name of the profile to import mods from
+        /// Copy over the mods from an existing profile.
+        /// Optionally, provide the name of the profile to import mods from.
         import: Option<Option<String>>,
-        #[clap(long)]
+        #[clap(long, short = 'v')]
         /// The Minecraft version to check compatibility for
         game_version: Option<String>,
-        #[clap(long)]
+        #[clap(long, short)]
         #[clap(value_enum)]
         /// The mod loader to check compatibility for
         mod_loader: Option<ModLoader>,
-        #[clap(long)]
+        #[clap(long, short)]
         /// The name of the profile
         name: Option<String>,
-        #[clap(long)]
+        #[clap(long, short)]
         #[clap(value_hint(ValueHint::DirPath))]
         /// The directory to output mods to
         output_dir: Option<PathBuf>,
     },
-    /// Delete a profile
-    ///
-    /// Optionally, provide the name of the profile to delete
+    /// Delete a profile.
+    /// Optionally, provide the name of the profile to delete.
     Delete {
-        #[clap(long)]
         /// The name of the profile to delete
         profile_name: Option<String>,
     },
     /// List all the profiles with their data
     List,
-    /// Switch between different profiles
-    ///
-    /// Optionally, provide the name of the profile to switch to
+    /// Switch between different profiles.
+    /// Optionally, provide the name of the profile to switch to.
     Switch {
-        #[clap(long)]
         /// The name of the profile to switch to
         profile_name: Option<String>,
     },
@@ -163,48 +160,42 @@ pub enum ModpackSubCommands {
     Add {
         /// The identifier of the modpack/project
         ///
-        /// The Modrinth project ID is specified at the bottom of the left sidebar under 'Technical information'. You can also use the project slug for this
-        /// The CurseForge mod ID is specified at the top of the right sidebar under 'About Project'
+        /// The Modrinth project ID is specified at the bottom of the left sidebar under 'Technical information'.
+        /// You can also use the project slug for this.
+        /// The CurseForge project ID is specified at the top of the right sidebar under 'About Project'.
         identifier: String,
-        #[clap(long)]
+        #[clap(long, short)]
         #[clap(value_hint(ValueHint::DirPath))]
         /// The Minecraft instance directory to install the modpack to
         output_dir: Option<PathBuf>,
-        #[clap(long)]
-        /// Whether to install the modpack's overrides to the output directory
-        ///
-        /// This will override existing files
+        #[clap(long, short)]
+        /// Whether to install the modpack's overrides to the output directory.
+        /// This will override existing files when upgrading.
         install_overrides: Option<bool>,
     },
-    /// Configure the current modpack's output directory
-    ///
-    /// Optionally, provide the output directory as an option
+    /// Configure the current modpack's output directory and installation of overrides.
+    /// Optionally, provide the settings to change as arguments.
     Configure {
-        #[clap(long)]
+        #[clap(long, short)]
         #[clap(value_hint(ValueHint::DirPath))]
         /// The Minecraft instance directory to install the modpack to
         output_dir: Option<PathBuf>,
-        #[clap(long)]
-        /// Whether to install the modpack's overrides to the output directory
-        ///
-        /// This may overwrite existing files
+        #[clap(long, short)]
+        /// Whether to install the modpack's overrides to the output directory.
+        /// This will override existing files when upgrading.
         install_overrides: Option<bool>,
     },
-    /// Delete a modpack
-    ///
-    /// Optionally, provide the name of the modpack to delete
+    /// Delete a modpack.
+    /// Optionally, provide the name of the modpack to delete.
     Delete {
-        #[clap(long)]
         /// The name of the modpack to delete
         modpack_name: Option<String>,
     },
     /// List all the modpacks
     List,
-    /// Switch between different modpacks
-    ///
-    /// Optionally, provide the name of the modpack to switch to
+    /// Switch between different modpacks.
+    /// Optionally, provide the name of the modpack to switch to.
     Switch {
-        #[clap(long)]
         /// The name of the modpack to switch to
         modpack_name: Option<String>,
     },

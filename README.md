@@ -64,7 +64,7 @@ The `nogui` versions do not need this as they don't have a GUI file picker, maki
 > From-source builds will install the Rust toolchain and GCC
 
 | Installation method                             | GUI file dialogue                                                       | No GUI                                                      |
-|-------------------------------------------------|-------------------------------------------------------------------------|-------------------------------------------------------------|
+| ----------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------- |
 | Install pre-built binaries from GitHub Releases | **[ferium-gui-bin](https://aur.archlinux.org/packages/ferium-gui-bin)** | [ferium-bin](https://aur.archlinux.org/packages/ferium-bin) |
 | Build from source at the latest tag             | [ferium-gui](https://aur.archlinux.org/packages/ferium-gui)             | [ferium](https://aur.archlinux.org/packages/ferium)         |
 | Build from source using the latest commit       | [ferium-gui-git](https://aur.archlinux.org/packages/ferium-gui-git)     | [ferium-git](https://aur.archlinux.org/packages/ferium-git) |
@@ -208,8 +208,8 @@ If ferium fails to download a mod, it will print its name in red and give the re
 
 You can see all the mods in your current profile by running `ferium list`. If you want to see more information about them, you can run `ferium list -v` or `ferium list --verbose`.
 
-You can remove any of your mods by running `ferium remove`, selecting the ones you would like to remove by using the space key, and pressing enter once you're done.
-You can also provide the names of the mods to remove as arguments. Mod names with spaces have to be given in quotes (`ferium remove "ok zoomer"`) or the spaces should be escaped (`ferium remove ok\ zoomer`).
+You can remove any of your mods by running `ferium remove`, selecting the ones you would like to remove by using the space key, and pressing enter once you're done. You can also provide the names or IDs of the mods to remove as arguments.
+Mod names with spaces have to be given in quotes (`ferium remove "ok zoomer"`) or the spaces should be escaped (`ferium remove ok\ zoomer`). Mod names and GitHub repository identifiers are case insensitive.
 
 #### Check Overrides
 

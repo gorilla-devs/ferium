@@ -228,7 +228,7 @@ fn md_modpack_upgrade() -> Result {
 #[test]
 fn profile_switch() -> Result {
     run_command(
-        vec!["profile", "switch", "--profile-name", "Profile Two"],
+        vec!["profile", "switch", "Profile Two"],
         Some("two_profiles_one_empty"),
     )
 }
@@ -236,12 +236,7 @@ fn profile_switch() -> Result {
 #[test]
 fn modpack_switch() -> Result {
     run_command(
-        vec![
-            "modpack",
-            "switch",
-            "--modpack-name",
-            "CF Fabulously Optimised",
-        ],
+        vec!["modpack", "switch", "CF Fabulously Optimised"],
         Some("two_modpacks_mdactive"),
     )
 }
@@ -282,7 +277,7 @@ fn remove_fail() {
 }
 
 #[test]
-fn remove_all() -> Result {
+fn remove_name() -> Result {
     run_command(
         vec!["remove", "starlight (fabric)", "incendium", "sodium-fabric"],
         Some("one_profile_full"),
@@ -290,9 +285,17 @@ fn remove_all() -> Result {
 }
 
 #[test]
+fn remove_id() -> Result {
+    run_command(
+        vec!["remove", "H8CaAYZC", "591388", "caffeinemc/sodium-fabric"],
+        Some("one_profile_full"),
+    )
+}
+
+#[test]
 fn delete_profile() -> Result {
     run_command(
-        vec!["profile", "delete", "--profile-name", "Profile Two"],
+        vec!["profile", "delete", "Profile Two"],
         Some("two_profiles_one_empty"),
     )
 }
@@ -300,12 +303,7 @@ fn delete_profile() -> Result {
 #[test]
 fn delete_modpack() -> Result {
     run_command(
-        vec![
-            "modpack",
-            "delete",
-            "--modpack-name",
-            "CF Fabulously Optimised",
-        ],
+        vec!["modpack", "delete", "CF Fabulously Optimised"],
         Some("two_modpacks_mdactive"),
     )
 }
