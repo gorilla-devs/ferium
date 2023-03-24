@@ -21,7 +21,7 @@ default = ["gui"]
 gui = ["libium/gui"]
 
 [dependencies]
-octocrab = { version = "0.18", default-features = false, features = ["rustls"] }
+octocrab = { version = "0.19", default-features = false, features = ["rustls"] }
 reqwest = { version = "0.11", default-features = false, features = [
     "rustls-tls",
 ] }
@@ -44,11 +44,8 @@ colored = "2.0"
 ferinth = "2.7"
 libium = "1.23"
 anyhow = "1.0"
-semver = "1.0"
-bytes = "1.1"
 furse = "1.5"
 size = "0.4"
-url = "2.3"
 
 [dev-dependencies]
 rand = "0.8"
