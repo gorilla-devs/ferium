@@ -12,7 +12,7 @@
 - Refactor `upgrade.rs`
 - Fixed [#274](https://github.com/gorilla-devs/ferium/issues/274)
 - Added dependency overrides to CurseForge too
-- Fiedx [#266](https://github.com/gorilla-devs/ferium/issues/266)
+- Fixed [#266](https://github.com/gorilla-devs/ferium/issues/266)
 - Improved CLI documentation
 - Tweaked integration tests
 - Made `--threads` global argument configure tokio worker thread count
