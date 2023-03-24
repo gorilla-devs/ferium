@@ -80,7 +80,6 @@ jobs:
           command: clippy
 
       - name: Run tests
-        if: matrix.os != 'ubuntu-latest'
         uses: actions-rs/cargo@v1
         with:
           command: test
