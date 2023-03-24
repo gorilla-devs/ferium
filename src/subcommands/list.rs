@@ -8,9 +8,10 @@ use ferinth::{
 };
 use furse::Furse;
 use itertools::Itertools;
+use libium::config::structs::ModIdentifier;
 use octocrab::Octocrab;
 
-pub async fn curseforge(curseforge: Furse, project_id: i32) -> Result<()> {
+pub async fn curseforge(curseforge: Furse, project_id: i32) -> Result<(ModIdentifier, String)> {
     let project = curseforge.get_mod(project_id).await?;
     println!(
         "
@@ -50,11 +51,11 @@ pub async fn curseforge(curseforge: Furse, project_id: i32) -> Result<()> {
             .magenta(),
     );
 
-    Ok(())
+    Ok((ModIdentifier::CurseForgeProject(project_id), project.name))
 }
 
-#[allow(clippy::unused_async)]
-pub async fn modrinth(project: Project, team_members: Vec<TeamMember>) -> Result<()> {
+#[allow(clippy::needless_pass_by_value)]
+pub fn modrinth(project: Project, team_members: Vec<TeamMember>) -> (ModIdentifier, String) {
     println!(
         "
 {}
@@ -85,15 +86,25 @@ pub async fn modrinth(project: Project, team_members: Vec<TeamMember>) -> Result
             .to_string()
             .cyan(),
         project.categories.iter().format(", ").to_string().magenta(),
-        project.license.name,
+        {
+            if project.license.name.is_empty() {
+                "Custom"
+            } else {
+                &project.license.name
+            }
+        },
         project.license.url.map_or(String::new(), |url| {
             format!(" ({})", url.to_string().blue().underline())
         }),
     );
-    Ok(())
+
+    (ModIdentifier::ModrinthProject(project.id), project.title)
 }
 
-pub async fn github(github: Octocrab, full_name: (String, String)) -> Result<()> {
+pub async fn github(
+    github: Octocrab,
+    full_name: (String, String),
+) -> Result<(ModIdentifier, String)> {
     let repo_handler = github.repos(&full_name.0, &full_name.1);
     let repo = repo_handler.get().await?;
     let releases = repo_handler.releases().list().send().await?;
@@ -117,7 +128,7 @@ pub async fn github(github: Octocrab, full_name: (String, String)) -> Result<()>
   Authors:      {}
   Topics:       {}
   License:      {}",
-        repo.name.bold(),
+        &repo.name.bold(),
         repo.description
             .map_or(String::new(), |description| {
                 format!("\n  {description}")
@@ -128,7 +139,7 @@ pub async fn github(github: Octocrab, full_name: (String, String)) -> Result<()>
         repo.full_name.unwrap().dimmed(),
         "Yes".green(),
         downloads.to_string().yellow(),
-        repo.owner.unwrap().login.cyan(),
+        repo.owner.as_ref().unwrap().login.cyan(),
         repo.topics.map_or("".into(), |topics| topics
             .iter()
             .format(", ")
@@ -143,7 +154,7 @@ pub async fn github(github: Octocrab, full_name: (String, String)) -> Result<()>
         )),
     );
 
-    Ok(())
+    Ok((ModIdentifier::GitHubRepository(full_name), repo.name))
 }
 
 pub async fn curseforge_md(curseforge: &Furse, project_id: i32) -> Result<()> {

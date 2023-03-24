@@ -8,6 +8,7 @@
     clippy::complexity,
     clippy::create_dir,
     clippy::unwrap_used,
+    clippy::expect_used, // use anyhow::Context instead
     clippy::correctness
 )]
 #![warn(clippy::dbg_macro, clippy::expect_used)]
@@ -22,7 +23,7 @@ mod cli;
 mod download;
 mod subcommands;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use clap::{CommandFactory, Parser};
 use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
@@ -183,6 +184,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             if verbose {
                 check_internet().await?;
                 let mut tasks = JoinSet::new();
+                let mut mr_ids = Vec::<&str>::new();
                 for mod_ in &profile.mods {
                     if markdown {
                         match &mod_.identifier {
@@ -198,7 +200,6 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                             }
                         };
                     } else {
-                        let mut mr_ids = Vec::<&str>::new();
                         match &mod_.identifier {
                             ModIdentifier::CurseForgeProject(project_id) => {
                                 tasks.spawn(subcommands::list::curseforge(
@@ -214,24 +215,36 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                                 ));
                             }
                         };
-                        let mr_projects = modrinth.get_multiple_projects(&mr_ids).await?;
-                        let mr_teams_members = modrinth
-                            .list_multiple_teams_members(
-                                &mr_projects
-                                    .iter()
-                                    .map(|p| &p.team as &str)
-                                    .collect::<Vec<_>>(),
-                            )
-                            .await?;
-                        for (project, team_members) in
-                            mr_projects.into_iter().zip(mr_teams_members.into_iter())
-                        {
-                            tasks.spawn(subcommands::list::modrinth(project, team_members));
-                        }
                     }
                 }
+
+                eprint!("Querying Modrinth mod metadata... ");
+                let mr_projects = modrinth.get_multiple_projects(&mr_ids).await?;
+                let mr_teams_members = modrinth
+                    .list_multiple_teams_members(
+                        &mr_projects
+                            .iter()
+                            .map(|p| &p.team as &str)
+                            .collect::<Vec<_>>(),
+                    )
+                    .await?;
+                println!("{}", &*TICK);
+                for (project, team_members) in
+                    mr_projects.into_iter().zip(mr_teams_members.into_iter())
+                {
+                    tasks.spawn(
+                        async move { Ok(subcommands::list::modrinth(project, team_members)) },
+                    );
+                }
+
                 while let Some(res) = tasks.join_next().await {
-                    res??;
+                    let (id, name) = res??;
+                    profile
+                        .mods
+                        .iter_mut()
+                        .find(|mod_| mod_.identifier == id)
+                        .context("Could not find expected mod")?
+                        .name = name;
                 }
             } else {
                 for mod_ in &profile.mods {
@@ -385,7 +398,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
     config.profiles.iter_mut().for_each(|profile| {
         profile
             .mods
-            .sort_by_cached_key(|mod_| mod_.name.to_lowercase());
+            .sort_unstable_by_key(|mod_| mod_.name.to_lowercase());
     });
     // Update config file with possibly edited config
     config::write_file(&mut config_file, &config).await?;
