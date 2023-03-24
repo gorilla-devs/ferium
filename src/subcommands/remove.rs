@@ -1,19 +1,25 @@
 use crate::THEME;
 use anyhow::{bail, Result};
+use colored::Colorize;
 use dialoguer::MultiSelect;
-use libium::config::structs::Profile;
+use itertools::Itertools;
+use libium::config::structs::{ModIdentifier, Profile};
 
-/// Display a list of mods and repos in the profile to select from and remove selected ones
-pub fn remove(profile: &mut Profile, mod_names: Vec<String>) -> Result<()> {
-    let names = profile
-        .mods
-        .iter()
-        .map(|mod_| &mod_.name)
-        .collect::<Vec<_>>();
-    let mut items_to_remove = if mod_names.is_empty() {
+/// If `to_remove` is empty, display a list of projects in the profile to select from and remove selected ones
+///
+/// Else, search the given strings with the projects' name and IDs and remove them
+pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
+    let mut indices_to_remove = if to_remove.is_empty() {
         match MultiSelect::with_theme(&*THEME)
             .with_prompt("Select mods to remove")
-            .items(&names)
+            .items(
+                &profile
+                    .mods
+                    .iter()
+                    .map(|mod_| &mod_.name)
+                    .collect::<Vec<_>>(),
+            )
+            .report(false)
             .interact_opt()?
         {
             Some(items_to_remove) => items_to_remove,
@@ -21,25 +27,38 @@ pub fn remove(profile: &mut Profile, mod_names: Vec<String>) -> Result<()> {
         }
     } else {
         let mut items_to_remove = Vec::new();
-        for mod_name in mod_names {
-            if let Some(index) = names
-                .iter()
-                .position(|name| name.to_lowercase() == mod_name.to_lowercase())
-            {
+        for to_remove in to_remove {
+            if let Some(index) = profile.mods.iter().position(|mod_| {
+                mod_.name.to_lowercase() == to_remove.to_lowercase()
+                    || match &mod_.identifier {
+                        ModIdentifier::CurseForgeProject(id) => id.to_string() == to_remove,
+                        ModIdentifier::ModrinthProject(id) => id == &to_remove,
+                        ModIdentifier::GitHubRepository((owner, name)) => {
+                            format!("{owner}/{name}").to_lowercase() == to_remove.to_lowercase()
+                        }
+                    }
+            }) {
                 items_to_remove.push(index);
             } else {
-                bail!("A mod called {mod_name} is not present in this profile");
+                bail!("A mod with ID or name {to_remove} is not present in this profile");
             }
         }
         items_to_remove
     };
 
     // Sort the indices in ascending order to fix moving indices during removal
-    items_to_remove.sort_unstable();
-    items_to_remove.reverse();
-    for index in items_to_remove {
-        profile.mods.swap_remove(index);
+    indices_to_remove.sort_unstable();
+    indices_to_remove.reverse();
+
+    let mut removed = Vec::new();
+    for index in indices_to_remove {
+        removed.push(profile.mods.swap_remove(index).name);
     }
+
+    println!(
+        "Removed {}",
+        removed.iter().map(|txt| txt.bold()).format(", ")
+    );
 
     Ok(())
 }

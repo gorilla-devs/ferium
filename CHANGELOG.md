@@ -1,7 +1,7 @@
 # Changelog for Ferium
 
 ## `v4.4.0`
-### 23.03.2023
+### 24.03.2023
 
 - Updated dependencies
 - Improved workflows
@@ -12,6 +12,7 @@
 - Refactor `upgrade.rs`
 - Fixed [#274](https://github.com/gorilla-devs/ferium/issues/274)
 - Added dependency overrides to CurseForge too
+- Fix [#266](https://github.com/gorilla-devs/ferium/issues/266)
 
 ## `v4.3.4`
 ### 15.01.2023
