@@ -29,6 +29,7 @@ body:
         - Windows
         - Linux
         - macOS
+        - other (Specify in Additional Information)
     validations:
       required: true
 
@@ -38,8 +39,7 @@ body:
       description: The bug you encountered might have been fixed in a newer version, make sure you have the [latest version](https://github.com/gorilla-devs/ferium/releases/latest).
       options:
         - label: I am using the latest version of ferium
-    validations:
-      required: true
+          required: true
 
   - type: textarea
     attributes:
