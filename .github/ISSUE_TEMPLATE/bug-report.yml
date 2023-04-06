@@ -1,0 +1,48 @@
+name: Bug Report
+description: File a bug report.
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: Description
+      description: Describe the bug that occurs.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: How can you reproduce this bug? You can also describe how you encountered the bug if you're unsure of how to make it happen again.
+      placeholder: |
+        For example:
+        1. Run `ferium ...`
+        2. ... doesn't properly change
+        3. Run command again
+        4. ... changes properly
+        ...
+
+  - type: dropdown
+    attributes:
+      label: Operating System
+      description: The operating system are you encountered the bug on.
+      options:
+        - Windows
+        - Linux
+        - macOS
+    validations:
+      required: true
+
+  - type: checkboxes
+    attributes:
+      label: Are you using the latest version of ferium?
+      description: The bug you encountered might have been fixed in a newer version, make sure you have the [latest version](https://github.com/gorilla-devs/ferium/releases/latest).
+      options:
+        - label: I am using the latest version of ferium
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Additional Information
+      description: Any additional information you would like to provide. You can even drop images or videos here.
+

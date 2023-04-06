@@ -1,0 +1,24 @@
+name: Feature Request
+description: Suggest a new feature for the project.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    attributes:
+      label: The Problem
+      description: What problem do you have, that this feature could resolve?
+      placeholder: |
+        For example:
+        I cannot do ...
+        I have to do ... every time.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Your Solution(s)
+      description: Have you thought of ways ferium can solve your problem? If so, share them here.
+      placeholder: |
+        For example:
+        Ferium could do ...
+        Instead of doing ..., ferium should ... instead.
+
