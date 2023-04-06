@@ -19,6 +19,6 @@ body:
       description: Have you thought of ways ferium can solve your problem? If so, share them here.
       placeholder: |
         For example:
-        Ferium could do ...
+        Ferium should do ...
         Instead of doing ..., ferium should ... instead.
 
