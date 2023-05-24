@@ -61,6 +61,7 @@ pub async fn get_platform_downloadables(
     curseforge: Furse,
     github: Octocrab,
     profile: &Profile,
+    short: bool,
 ) -> Result<(Vec<PlatformDownloadable>, bool)> {
     let to_download = Arc::new(Mutex::new(Vec::new()));
     let progress_bar = Arc::new(Mutex::new(
@@ -72,7 +73,7 @@ pub async fn get_platform_downloadables(
     let modrinth = Arc::new(modrinth);
     let github = Arc::new(github);
 
-    println!("{}\n", "Determining the Latest Compatible Versions".bold());
+    println!("{}", "Determining the Latest Compatible Versions".bold());
     let semaphore = Arc::new(Semaphore::new(75));
     progress_bar
         .lock()
@@ -144,16 +145,18 @@ pub async fn get_platform_downloadables(
             progress_bar.inc(1);
             match result {
                 Ok((downloadable, backwards_compat)) => {
-                    progress_bar.println(format!(
-                        "{} {:43} {}",
-                        if backwards_compat {
-                            YELLOW_TICK.clone()
-                        } else {
-                            TICK.clone()
-                        },
-                        mod_.name,
-                        downloadable.filename().dimmed()
-                    ));
+                    if !short {
+                        progress_bar.println(format!(
+                            "{} {:43} {}",
+                            if backwards_compat {
+                                YELLOW_TICK.clone()
+                            } else {
+                                TICK.clone()
+                            },
+                            mod_.name,
+                            downloadable.filename().dimmed()
+                        ));
+                    }
                     {
                         to_download
                             .lock()
@@ -211,9 +214,10 @@ pub async fn upgrade(
     curseforge: Furse,
     github: Octocrab,
     profile: &Profile,
+    short: bool,
 ) -> Result<()> {
     let (to_download, error) =
-        get_platform_downloadables(modrinth, curseforge, github, profile).await?;
+        get_platform_downloadables(modrinth, curseforge, github, profile, short).await?;
     let mut to_download = to_download
         .into_iter()
         .map(TryInto::try_into)

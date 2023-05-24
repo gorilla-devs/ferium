@@ -90,8 +90,12 @@ pub enum SubCommands {
         /// List of project IDs or case-insensitive names of mods to remove
         mod_names: Vec<String>,
     },
-    /// Download and install the latest compatible version of your mods
-    Upgrade,
+    /// Download and install the latest version of the mods specified
+    Upgrade {
+        #[clap(long, short)]
+        /// Don’t print compatible mods
+        short: bool,
+    },
 }
 
 #[derive(Subcommand)]
