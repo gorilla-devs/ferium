@@ -181,7 +181,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         SubCommands::List { verbose, markdown } => {
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
-            if verbose {
+            if verbose || markdown {
                 check_internet().await?;
                 let mut tasks = JoinSet::new();
                 let mut mr_ids = Vec::<&str>::new();
@@ -249,19 +249,19 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             } else {
                 for mod_ in &profile.mods {
                     println!(
-                        "{:45} {}",
-                        mod_.name.bold(),
+                        "{} {}",
                         match &mod_.identifier {
                             ModIdentifier::CurseForgeProject(id) =>
-                                format!("{:10} {}", "CurseForge".red(), id.to_string().dimmed()),
+                                format!("{:10} {:8}", "CurseForge".red(), id.to_string().dimmed()),
                             ModIdentifier::ModrinthProject(id) =>
-                                format!("{:10} {}", "Modrinth".green(), id.dimmed()),
+                                format!("{:10} {:8}", "Modrinth".green(), id.dimmed()),
                             ModIdentifier::GitHubRepository(name) => format!(
-                                "{:10} {}",
+                                "{:10} {:24}",
                                 "GitHub".purple(),
                                 format!("{}/{}", name.0, name.1).dimmed()
                             ),
                         },
+                        mod_.name.bold(),
                     );
                 }
             }
