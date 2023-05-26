@@ -303,6 +303,6 @@ You can manually run cargo commands, but I recommend [`just`](https://just.syste
 To build the project and install it to your Cargo binary directory, clone the project and run `just install`.
 If you want to install it for testing purposes run `just` (alias to `just install-dev`), which builds in debug mode.
 
-You can run integration tests using `cargo test`, linters using `cargo clippy`, and delete all build and test artefacts using `just clean`.
+You can run integration tests using `cargo test`, linters using `cargo clippy`, and delete all build and test artifacts using `just clean`.
 
 If you would like to see instructions for building for specific targets (e.g. Linux ARM), have a look at the [workflow file](.github/workflows/build.yml). If you're still confused, [create a discussion](https://github.com/gorilla-devs/ferium/discussions/new?category=q-a) and I will help you out.
