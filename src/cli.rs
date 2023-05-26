@@ -143,6 +143,8 @@ pub enum ProfileSubCommands {
         /// The name of the profile to delete
         profile_name: Option<String>,
     },
+    /// Show active profile's information
+    Info,
     /// List all the profiles with their data
     List,
     /// Switch between different profiles.
