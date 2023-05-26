@@ -66,10 +66,9 @@ pub enum SubCommands {
         /// Show additional information about the mod
         verbose: bool,
         #[clap(long, short)]
-        /// Output information in markdown format and alphabetical order
-        ///
+        /// Like verbose, but outputs information in markdown format and ordered alphabetically
+        /// 
         /// Useful for creating modpack mod lists.
-        /// Complements the verbose flag.
         markdown: bool,
     },
     #[clap(arg_required_else_help = true)]
