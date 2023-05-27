@@ -377,18 +377,13 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 subcommands::profile::delete(&mut config, profile_name)?;
             }
             ProfileSubCommands::Info => {
-                if config.profiles.is_empty() {
-                    bail!("There are no profiles configured, create a profile using `ferium profile create`")
-                }
                 println!(
                     "{}",
                     subcommands::profile::info(get_active_profile(&mut config)?, false)
                 );
             }
             ProfileSubCommands::List => {
-                if config.profiles.is_empty() {
-                    bail!("There are no profiles configured, create a profile using `ferium profile create`")
-                }
+                check_any_profile(&config)?;
                 subcommands::profile::list(&config);
             }
             ProfileSubCommands::Switch { profile_name } => {
@@ -421,10 +416,8 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
 
 /// Get the active profile with error handling
 fn get_active_profile(config: &mut Config) -> Result<&mut Profile> {
+    check_any_profile(config)?;
     match config.profiles.len() {
-        0 => {
-            bail!("There are no profiles configured, add a profile using `ferium profile create`")
-        }
         1 => config.active_profile = 0,
         n if n <= config.active_profile => {
             println!(
@@ -463,6 +456,14 @@ fn get_active_modpack(config: &mut Config) -> Result<&mut Modpack> {
 fn check_empty_profile(profile: &Profile) -> Result<()> {
     if profile.mods.is_empty() {
         bail!("Your currently selected profile is empty! Run `ferium help` to see how to add mods");
+    }
+    Ok(())
+}
+
+/// Check if there are any profiles configured
+fn check_any_profile(config: &Config) -> Result<()> {
+    if config.profiles.is_empty() {
+        bail!("There are no profiles configured, add a profile using `ferium profile create`")
     }
     Ok(())
 }
