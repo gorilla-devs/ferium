@@ -10,7 +10,7 @@ pub fn list(config: &Config) {
             .profiles
             .iter()
             .enumerate()
-            .map(|(i, profile)| info(profile, i == config.active_profile))
+            .map(|(i, profile)| info::profile(profile, i == config.active_profile))
             .join("\n\n")
     );
 }

@@ -1,8 +1,8 @@
 use colored::Colorize;
 use libium::config::structs::Profile;
 
-pub fn info(profile: &Profile, show_active_indicator: bool) -> String {
-    return format!(
+pub fn profile(profile: &Profile, show_active_indicator: bool) -> String {
+    format!(
         "\
 {}
   Output directory:  {}
@@ -10,7 +10,10 @@ pub fn info(profile: &Profile, show_active_indicator: bool) -> String {
   Mod Loader:        {}
   Mods:              {}",
         if show_active_indicator {
-            format!("{} (active)", profile.name).bright_yellow().bold().underline()
+            format!("{} (active)", profile.name)
+                .bright_yellow()
+                .bold()
+                .underline()
         } else {
             profile.name.bold()
         },
@@ -18,22 +21,22 @@ pub fn info(profile: &Profile, show_active_indicator: bool) -> String {
         profile.game_version.green(),
         format!("{:?}", profile.mod_loader).purple(),
         profile.mods.len().to_string().yellow(),
-    );
+    )
 }
 
-pub fn info_md(profile: &Profile) -> String {
-    return format!(
+pub fn profile_md(profile: &Profile) -> String {
+    format!(
         "\
 # {}
 
 |                   |                 |
 |-------------------|:----------------|
 | Minecraft Version | _{}_            |
-| Mod Loader        | {}              |
+| Mod Loader        | {:?}            |
 | Mods              | {}              |",
         profile.name,
         profile.game_version,
-        format!("{:?}", profile.mod_loader),
-        profile.mods.len().to_string(),
-    );
+        profile.mod_loader,
+        profile.mods.len(),
+    )
 }

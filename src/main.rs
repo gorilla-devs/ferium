@@ -178,9 +178,9 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             println!(
                 "{}\n",
                 if markdown {
-                    subcommands::profile::info_md(profile)
+                    subcommands::profile::info::profile_md(profile)
                 } else {
-                    subcommands::profile::info(profile, false)
+                    subcommands::profile::info::profile(profile, false)
                 }
             );
             check_empty_profile(profile)?;
@@ -365,7 +365,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             ProfileSubCommands::Info => {
                 println!(
                     "{}",
-                    subcommands::profile::info(get_active_profile(&mut config)?, false)
+                    subcommands::profile::info::profile(get_active_profile(&mut config)?, false)
                 );
             }
             ProfileSubCommands::List => {

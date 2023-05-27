@@ -1,13 +1,12 @@
 mod configure;
 mod create;
 mod delete;
-mod info;
+pub mod info;
 mod list;
 mod switch;
 pub use configure::configure;
 pub use create::create;
 pub use delete::delete;
-pub use info::{info, info_md};
 pub use list::list;
 pub use switch::switch;
 
