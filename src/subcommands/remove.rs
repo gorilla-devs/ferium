@@ -1,8 +1,7 @@
-use crate::THEME;
+use crate::{get_oneline_mod_info, THEME};
 use anyhow::{bail, Result};
 use colored::Colorize;
 use dialoguer::MultiSelect;
-use itertools::Itertools;
 use libium::config::structs::{ModIdentifier, Profile};
 
 /// If `to_remove` is empty, display a list of projects in the profile to select from and remove selected ones
@@ -52,13 +51,13 @@ pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
 
     let mut removed = Vec::new();
     for index in indices_to_remove {
-        removed.push(profile.mods.swap_remove(index).name);
+        removed.push(profile.mods.swap_remove(index));
     }
 
-    println!(
-        "Removed {}",
-        removed.iter().map(|txt| txt.bold()).format(", ")
-    );
+    println!("{}", "Removed:".red());
+    for mod_ in removed {
+        println!("  {}", get_oneline_mod_info(&mod_));
+    }
 
     Ok(())
 }

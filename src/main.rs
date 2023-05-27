@@ -33,7 +33,7 @@ use furse::Furse;
 use indicatif::ProgressStyle;
 use libium::config::{
     self,
-    structs::{Config, ModIdentifier, Modpack, Profile},
+    structs::{Config, Mod, ModIdentifier, Modpack, Profile},
 };
 use octocrab::OctocrabBuilder;
 use once_cell::sync::Lazy;
@@ -252,21 +252,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 }
             } else {
                 for mod_ in &profile.mods {
-                    println!(
-                        "{} {}",
-                        match &mod_.identifier {
-                            ModIdentifier::CurseForgeProject(id) =>
-                                format!("{:10} {:8}", "CurseForge".red(), id.to_string().dimmed()),
-                            ModIdentifier::ModrinthProject(id) =>
-                                format!("{:10} {:8}", "Modrinth".green(), id.dimmed()),
-                            ModIdentifier::GitHubRepository(name) => format!(
-                                "{:10} {:24}",
-                                "GitHub".purple(),
-                                format!("{}/{}", name.0, name.1).dimmed()
-                            ),
-                        },
-                        mod_.name.bold(),
-                    );
+                    println!("{}", get_oneline_mod_info(mod_));
                 }
             }
         }
@@ -484,4 +470,22 @@ async fn check_internet() -> Result<()> {
     client.get("https://api.github.com/").send().await?;
 
     Ok(())
+}
+
+fn get_oneline_mod_info(mod_: &Mod) -> String {
+    format!(
+        "{} {}",
+        match &mod_.identifier {
+            ModIdentifier::CurseForgeProject(id) =>
+                format!("{:10} {:8}", "CurseForge".red(), id.to_string().dimmed()),
+            ModIdentifier::ModrinthProject(id) =>
+                format!("{:10} {:8}", "Modrinth".green(), id.dimmed()),
+            ModIdentifier::GitHubRepository(name) => format!(
+                "{:10} {:24}",
+                "GitHub".purple(),
+                format!("{}/{}", name.0, name.1).dimmed()
+            ),
+        },
+        mod_.name.bold(),
+    )
 }
