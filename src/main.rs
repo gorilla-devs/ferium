@@ -76,6 +76,7 @@ fn main() -> ExitCode {
     let runtime = builder.build().expect("Could not initialise Tokio runtime");
     if let Err(err) = runtime.block_on(actual_main(cli)) {
         eprintln!("{}", err.to_string().red().bold());
+        hint_on_error(err);
         ExitCode::FAILURE
     } else {
         ExitCode::SUCCESS
@@ -488,4 +489,17 @@ fn get_oneline_mod_info(mod_: &Mod) -> String {
         },
         mod_.name.bold(),
     )
+}
+
+fn hint_on_error(err: anyhow::Error) {
+    match err.downcast_ref::<libium::add::Error>() {
+        Some(libium::add::Error::Incompatible) => {
+            eprintln!(
+                "{}",
+                "Hint: Use --dont-check-game-version and/or --dont-check-mod-loader to override checks. \
+                 Use `ferium add --help` to learn more.".dimmed()
+            );
+        }
+        _ => {}
+    }
 }
