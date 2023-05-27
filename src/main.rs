@@ -175,6 +175,14 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         }
         SubCommands::List { verbose, markdown } => {
             let profile = get_active_profile(&mut config)?;
+            println!(
+                "{}\n",
+                if markdown {
+                    subcommands::profile::info_md(profile)
+                } else {
+                    subcommands::profile::info(profile, false)
+                }
+            );
             check_empty_profile(profile)?;
             if verbose || markdown {
                 check_internet().await?;
@@ -372,7 +380,10 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 if config.profiles.is_empty() {
                     bail!("There are no profiles configured, create a profile using `ferium profile create`")
                 }
-                println!("{}", subcommands::profile::info(get_active_profile(&mut config)?, true));
+                println!(
+                    "{}",
+                    subcommands::profile::info(get_active_profile(&mut config)?, true)
+                );
             }
             ProfileSubCommands::List => {
                 if config.profiles.is_empty() {
