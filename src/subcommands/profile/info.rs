@@ -4,16 +4,15 @@ use libium::config::structs::Profile;
 pub fn info(profile: &Profile, show_active_indicator: bool) -> String {
     return format!(
         "\
-{}{}
+{}
   Output directory:  {}
   Minecraft Version: {}
   Mod Loader:        {}
   Mods:              {}",
-        profile.name.bold(),
         if show_active_indicator {
-            " (active)".green().bold()
+            format!("{} (active)", profile.name).bright_yellow().bold().underline()
         } else {
-            "".normal()
+            profile.name.bold()
         },
         profile.output_dir.display().to_string().blue().underline(),
         profile.game_version.green(),

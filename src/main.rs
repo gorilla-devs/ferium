@@ -382,7 +382,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 }
                 println!(
                     "{}",
-                    subcommands::profile::info(get_active_profile(&mut config)?, true)
+                    subcommands::profile::info(get_active_profile(&mut config)?, false)
                 );
             }
             ProfileSubCommands::List => {
