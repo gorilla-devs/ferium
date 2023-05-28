@@ -60,6 +60,7 @@ pub enum SubCommands {
         /// The shell to generate auto completions for
         shell: Shell,
     },
+    #[clap(alias = "mods")]
     /// List all the mods in the profile, and with some their metadata if verbose
     List {
         #[clap(long, short)]
