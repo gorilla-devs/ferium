@@ -193,6 +193,8 @@ pub enum ModpackSubCommands {
         /// The name of the modpack to delete
         modpack_name: Option<String>,
     },
+    /// Show active profile's information
+    Info,
     /// List all the modpacks
     List,
     /// Switch between different modpacks.

@@ -304,6 +304,12 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             ModpackSubCommands::Delete { modpack_name } => {
                 subcommands::modpack::delete(&mut config, modpack_name)?;
             }
+            ModpackSubCommands::Info => {
+                println!(
+                    "{}",
+                    subcommands::modpack::info(get_active_modpack(&mut config)?, false)
+                );
+            }
             ModpackSubCommands::List => {
                 if config.modpacks.is_empty() {
                     bail!("There are no modpacks configured, add a modpack using `ferium modpack add`")
