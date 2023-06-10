@@ -116,7 +116,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
     )?;
     let curseforge = Furse::new(&cli_app.curseforge_api_key.unwrap_or_else(|| {
         var("CURSEFORGE_API_KEY").unwrap_or_else(|_| {
-            "$2a$10$QbCxI6f4KxEs50QKwE2piu1t6oOA8ayOw27H9N/eaH3Sdp5NTWwvO".into()
+            "$2a$10$sI.yRk4h4R49XYF94IIijOrO4i3W3dAFZ4ssOlNE10GYrDhc2j8K.".into()
         })
     }));
 
