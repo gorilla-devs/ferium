@@ -1,5 +1,15 @@
 # Changelog for Ferium
 
+## `v4.4.1`
+### 07.08.23
+
+- Update dependencies
+  - Fix [#363](https://github.com/gorilla-devs/ferium/issues/363) by updating ferinth
+- Defer GitHub client builder since a [recent regression](https://github.com/XAMPPRocky/octocrab/issues/396) leads to `build()` taking a very long time on macOS
+  - Commands like verbose listing, adding github mods, and upgrading will take longer to start up as a result
+- Include the new CurseForge API key
+- [#310](https://github.com/gorilla-devs/ferium/issues/310): Ping the APIs themselves to check for an internet connection instead of using `online`
+
 ## `v4.4.0`
 ### 24.03.2023
 

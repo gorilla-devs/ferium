@@ -37,7 +37,6 @@ use libium::config::{
 };
 use octocrab::OctocrabBuilder;
 use once_cell::sync::Lazy;
-use online::tokio::check;
 use std::{
     env::{var, var_os},
     process::ExitCode,
@@ -96,27 +95,23 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         return Ok(());
     }
 
-    let github = cli_app
-        .github_token
-        .map_or_else(
-            || {
-                var("GITHUB_TOKEN").map_or_else(
-                    |_| OctocrabBuilder::new(),
-                    |token| OctocrabBuilder::new().personal_token(token),
-                )
-            },
-            |token| OctocrabBuilder::new().personal_token(token),
-        )
-        .build()?;
+    let mut github = OctocrabBuilder::new();
+    if let Some(token) = cli_app.github_token {
+        github = github.personal_token(token);
+    } else if let Ok(token) = var("GITHUB_TOKEN") {
+        github = github.personal_token(token);
+    }
+
     let modrinth = Ferinth::new(
         "ferium",
         option_env!("CARGO_PKG_VERSION"),
-        Some("theRookieCoder#1287"),
+        Some("Discord: therookiecoder"),
         None,
     )?;
+
     let curseforge = Furse::new(&cli_app.curseforge_api_key.unwrap_or_else(|| {
         var("CURSEFORGE_API_KEY").unwrap_or_else(|_| {
-            "$2a$10$QbCxI6f4KxEs50QKwE2piu1t6oOA8ayOw27H9N/eaH3Sdp5NTWwvO".into()
+            "$2a$10$sI.yRk4h4R49XYF94IIijOrO4i3W3dAFZ4ssOlNE10GYrDhc2j8K.".into()
         })
     }));
 
@@ -153,7 +148,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             } else if identifier.split('/').count() == 2 {
                 let split = identifier.split('/').collect::<Vec<_>>();
                 subcommands::add::github(
-                    github.repos(split[0], split[1]),
+                    github.build()?.repos(split[0], split[1]),
                     profile,
                     Some(!dont_check_game_version),
                     Some(!dont_check_mod_loader),
@@ -183,6 +178,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             check_empty_profile(profile)?;
             if verbose {
                 check_internet().await?;
+                let github = github.build()?;
                 let mut tasks = JoinSet::new();
                 let mut mr_ids = Vec::<&str>::new();
                 for mod_ in &profile.mods {
@@ -391,7 +387,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             check_internet().await?;
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
-            subcommands::upgrade(modrinth, curseforge, github, profile).await?;
+            subcommands::upgrade(modrinth, curseforge, github.build()?, profile).await?;
         }
     };
 
@@ -456,21 +452,18 @@ fn check_empty_profile(profile: &Profile) -> Result<()> {
 
 /// Check for an internet connection
 async fn check_internet() -> Result<()> {
-    if check(Some(1)).await.is_err() {
-        // If it takes more than 1 second
-        // show that we're checking the internet connection
-        // and check for 4 more seconds
-        eprint!("Checking internet connection... ");
-        match check(Some(4)).await {
-            Ok(_) => {
-                println!("{}", *TICK);
-                Ok(())
-            }
-            Err(_) => Err(anyhow!(
-                "{CROSS} Ferium requires an internet connection to work"
-            )),
-        }
-    } else {
-        Ok(())
-    }
+    let client = reqwest::Client::default();
+    client
+        .get(&*ferinth::BASE_URL.as_ref())
+        .send()
+        .await?
+        .error_for_status()?;
+    client
+        .get("https://api.curseforge.com/")
+        .send()
+        .await?
+        .error_for_status()?;
+    client.get("https://api.github.com/").send().await?;
+
+    Ok(())
 }
