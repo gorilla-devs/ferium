@@ -454,7 +454,7 @@ fn check_empty_profile(profile: &Profile) -> Result<()> {
 async fn check_internet() -> Result<()> {
     let client = reqwest::Client::default();
     client
-        .get(&*ferinth::BASE_URL.as_ref())
+        .get(ferinth::BASE_URL.as_ref())
         .send()
         .await?
         .error_for_status()?;
