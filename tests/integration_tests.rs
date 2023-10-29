@@ -307,3 +307,21 @@ fn delete_modpack() -> Result {
         Some("two_modpacks_mdactive"),
     )
 }
+
+// A Test that checks the info subcommand
+#[test]
+fn profile_info() -> Result {
+    run_command(
+        vec!["profile", "info"],
+        Some("one_profile_full"),
+    )
+}
+
+// A Test that checks the info subcommand for modpacks
+#[test]
+fn modpack_info() -> Result {
+    run_command(
+        vec!["modpack", "info"],
+        Some("two_modpacks_mdactive"),
+    )
+}

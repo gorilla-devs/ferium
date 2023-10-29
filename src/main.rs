@@ -33,7 +33,7 @@ use furse::Furse;
 use indicatif::ProgressStyle;
 use libium::config::{
     self,
-    structs::{Config, ModIdentifier, Modpack, Profile},
+    structs::{Config, Mod, ModIdentifier, Modpack, Profile},
 };
 use octocrab::OctocrabBuilder;
 use once_cell::sync::Lazy;
@@ -76,6 +76,7 @@ fn main() -> ExitCode {
     let runtime = builder.build().expect("Could not initialise Tokio runtime");
     if let Err(err) = runtime.block_on(actual_main(cli)) {
         eprintln!("{}", err.to_string().red().bold());
+        hint_on_error(&err);
         ExitCode::FAILURE
     } else {
         ExitCode::SUCCESS
@@ -175,8 +176,16 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         }
         SubCommands::List { verbose, markdown } => {
             let profile = get_active_profile(&mut config)?;
+            println!(
+                "{}\n",
+                if markdown {
+                    subcommands::profile::info::profile_md(profile)
+                } else {
+                    subcommands::profile::info::profile(profile, false)
+                }
+            );
             check_empty_profile(profile)?;
-            if verbose {
+            if verbose || markdown {
                 check_internet().await?;
                 let github = github.build()?;
                 let mut tasks = JoinSet::new();
@@ -244,21 +253,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 }
             } else {
                 for mod_ in &profile.mods {
-                    println!(
-                        "{:45} {}",
-                        mod_.name.bold(),
-                        match &mod_.identifier {
-                            ModIdentifier::CurseForgeProject(id) =>
-                                format!("{:10} {}", "CurseForge".red(), id.to_string().dimmed()),
-                            ModIdentifier::ModrinthProject(id) =>
-                                format!("{:10} {}", "Modrinth".green(), id.dimmed()),
-                            ModIdentifier::GitHubRepository(name) => format!(
-                                "{:10} {}",
-                                "GitHub".purple(),
-                                format!("{}/{}", name.0, name.1).dimmed()
-                            ),
-                        },
-                    );
+                    println!("{}", get_oneline_mod_info(mod_));
                 }
             }
         }
@@ -308,6 +303,12 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             }
             ModpackSubCommands::Delete { modpack_name } => {
                 subcommands::modpack::delete(&mut config, modpack_name)?;
+            }
+            ModpackSubCommands::Info => {
+                println!(
+                    "{}",
+                    subcommands::modpack::info(get_active_modpack(&mut config)?, false)
+                );
             }
             ModpackSubCommands::List => {
                 if config.modpacks.is_empty() {
@@ -368,10 +369,14 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             ProfileSubCommands::Delete { profile_name } => {
                 subcommands::profile::delete(&mut config, profile_name)?;
             }
+            ProfileSubCommands::Info => {
+                println!(
+                    "{}",
+                    subcommands::profile::info::profile(get_active_profile(&mut config)?, false)
+                );
+            }
             ProfileSubCommands::List => {
-                if config.profiles.is_empty() {
-                    bail!("There are no profiles configured, create a profile using `ferium profile create`")
-                }
+                check_any_profile(&config)?;
                 subcommands::profile::list(&config);
             }
             ProfileSubCommands::Switch { profile_name } => {
@@ -404,10 +409,8 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
 
 /// Get the active profile with error handling
 fn get_active_profile(config: &mut Config) -> Result<&mut Profile> {
+    check_any_profile(config)?;
     match config.profiles.len() {
-        0 => {
-            bail!("There are no profiles configured, add a profile using `ferium profile create`")
-        }
         1 => config.active_profile = 0,
         n if n <= config.active_profile => {
             println!(
@@ -450,6 +453,14 @@ fn check_empty_profile(profile: &Profile) -> Result<()> {
     Ok(())
 }
 
+/// Check if there are any profiles configured
+fn check_any_profile(config: &Config) -> Result<()> {
+    if config.profiles.is_empty() {
+        bail!("There are no profiles configured, add a profile using `ferium profile create`")
+    }
+    Ok(())
+}
+
 /// Check for an internet connection
 async fn check_internet() -> Result<()> {
     let client = reqwest::Client::default();
@@ -466,4 +477,32 @@ async fn check_internet() -> Result<()> {
     client.get("https://api.github.com/").send().await?;
 
     Ok(())
+}
+
+fn get_oneline_mod_info(mod_: &Mod) -> String {
+    format!(
+        "{} {}",
+        match &mod_.identifier {
+            ModIdentifier::CurseForgeProject(id) =>
+                format!("{:10} {:8}", "CurseForge".red(), id.to_string().dimmed()),
+            ModIdentifier::ModrinthProject(id) =>
+                format!("{:10} {:8}", "Modrinth".green(), id.dimmed()),
+            ModIdentifier::GitHubRepository(name) => format!(
+                "{:10} {:24}",
+                "GitHub".purple(),
+                format!("{}/{}", name.0, name.1).dimmed()
+            ),
+        },
+        mod_.name.bold(),
+    )
+}
+
+fn hint_on_error(err: &anyhow::Error) {
+    if let Some(libium::add::Error::Incompatible) = err.downcast_ref::<libium::add::Error>() {
+        eprintln!(
+            "{}",
+            "Hint: Use --dont-check-... flags to override checks and force installation. \
+            Use `ferium add --help` to learn more.".dimmed()
+        );
+    }
 }

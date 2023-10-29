@@ -1,5 +1,6 @@
 use crate::THEME;
 use anyhow::{anyhow, Result};
+use colored::Colorize;
 use dialoguer::Select;
 use libium::config::structs::Config;
 
@@ -22,7 +23,12 @@ pub fn switch(config: &mut Config, profile_name: Option<String>) -> Result<()> {
         let profile_names = config
             .profiles
             .iter()
-            .map(|profile| &profile.name)
+            .map(|profile| {
+                format!(
+                    "{:6} {:8} {}",
+                    format!("{:?}", profile.mod_loader), profile.game_version, profile.name.bold()
+                )
+            })
             .collect::<Vec<_>>();
 
         let selection = Select::with_theme(&*THEME)

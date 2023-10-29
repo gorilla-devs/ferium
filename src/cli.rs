@@ -60,16 +60,16 @@ pub enum SubCommands {
         /// The shell to generate auto completions for
         shell: Shell,
     },
+    #[clap(alias = "mods")]
     /// List all the mods in the profile, and with some their metadata if verbose
     List {
         #[clap(long, short)]
         /// Show additional information about the mod
         verbose: bool,
         #[clap(long, short)]
-        /// Output information in markdown format and alphabetical order
-        ///
+        /// Like verbose, but outputs information in markdown format and ordered alphabetically
+        /// 
         /// Useful for creating modpack mod lists.
-        /// Complements the verbose flag.
         markdown: bool,
     },
     #[clap(arg_required_else_help = true)]
@@ -144,6 +144,8 @@ pub enum ProfileSubCommands {
         /// The name of the profile to delete
         profile_name: Option<String>,
     },
+    /// Show active profile's information
+    Info,
     /// List all the profiles with their data
     List,
     /// Switch between different profiles.
@@ -191,6 +193,8 @@ pub enum ModpackSubCommands {
         /// The name of the modpack to delete
         modpack_name: Option<String>,
     },
+    /// Show active profile's information
+    Info,
     /// List all the modpacks
     List,
     /// Switch between different modpacks.
