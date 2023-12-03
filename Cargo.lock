@@ -753,7 +753,6 @@ dependencies = [
  "ferinth",
  "fs_extra",
  "furse",
- "futures",
  "indicatif",
  "itertools",
  "libium",

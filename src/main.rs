@@ -160,7 +160,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 profile,
                 Some(!dont_check_game_version),
                 Some(!dont_check_mod_loader),
-                // dependencies,
+                dependencies,
             )
             .await
             {

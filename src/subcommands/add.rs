@@ -6,7 +6,7 @@ use anyhow::{bail, Result};
 use async_recursion::async_recursion;
 use colored::Colorize;
 use dialoguer::Confirm;
-use ferinth::structures::version::DependencyType;
+use ferinth::structures::version::{Dependency, DependencyType};
 use ferinth::Ferinth;
 use furse::structures::file_structs::FileDependency;
 use furse::{structures::file_structs::FileRelationType, Furse};
@@ -61,8 +61,8 @@ pub async fn modrinth(
     profile: &mut Profile,
     should_check_game_version: Option<bool>,
     should_check_mod_loader: Option<bool>,
+    dependencies: Option<DependencyLevel>,
 ) -> Result<()> {
-    let dependencies = None;
     eprint!("Adding mod... ");
     let project = modrinth.get_project(project_id).await?;
     let latest_version = add::modrinth(
@@ -73,6 +73,7 @@ pub async fn modrinth(
         should_check_mod_loader,
     )
     .await?;
+
     println!("{} {}", *TICK, project.title.bold());
     profile.mods.push(Mod {
         name: project.title.trim().into(),
@@ -217,12 +218,168 @@ pub async fn modrinth(
 }
 
 #[async_recursion]
-async fn resolve_deps(
-    curseforge: &Furse,
-    dependencies: Vec<FileDependency>,
+async fn recursive_dependency_resolver_modrinth(
+    modrinth: &Ferinth,
     profile: &mut Profile,
+    should_check_game_version: Option<bool>,
+    should_check_mod_loader: Option<bool>,
+    original_mod: &ferinth::structures::version::Version,
+    dep_level: Option<DependencyLevel>,
+    dependencies: Vec<Dependency>,
+) -> Result<()> {
+    for dependency in &dependencies {
+        let mut id = if let Some(project_id) = &dependency.project_id {
+            project_id.clone()
+        } else if let Some(version_id) = &dependency.version_id {
+            modrinth.get_version(version_id).await?.project_id
+        } else {
+            break;
+        };
+
+        if profile.mod_loader == ModLoader::Quilt {
+            if id == "P7dR8mSH" {
+                id = "qvIfYCYJ".into();
+            }
+            if id == "Ha28R6CL" {
+                id = "lwVhp9o5".into();
+            }
+        }
+
+        if dependency.dependency_type == DependencyType::Required {
+            eprint!(
+                "Adding required dependency {} for mod {}... ",
+                id.to_string().dimmed(),
+                original_mod.name.dimmed()
+            );
+            let mod_ = modrinth.get_project(&id).await?;
+            let latest_file = add::modrinth(modrinth, &mod_, profile, None, None).await;
+            match latest_file {
+                Ok(file) => {
+                    println!("{} {}", *TICK, mod_.title.bold());
+                    profile.mods.push(Mod {
+                        name: mod_.title.trim().into(),
+                        identifier: ModIdentifier::ModrinthProject(mod_.id),
+                        check_game_version: if should_check_game_version == Some(true) {
+                            None
+                        } else {
+                            should_check_game_version
+                        },
+                        check_mod_loader: if should_check_mod_loader == Some(true) {
+                            None
+                        } else {
+                            should_check_mod_loader
+                        },
+                    });
+                    if !file.dependencies.is_empty() {
+                        recursive_dependency_resolver_modrinth(
+                            modrinth,
+                            profile,
+                            should_check_mod_loader,
+                            should_check_game_version,
+                            original_mod,
+                            dep_level.clone(),
+                            file.dependencies,
+                        )
+                        .await?;
+                    }
+                }
+                Err(err) => {
+                    if matches!(err, add::Error::AlreadyAdded) {
+                        println!("{} Already added", *TICK);
+                    } else {
+                        bail!(err);
+                    }
+                }
+            }
+        } else if dependency.dependency_type == DependencyType::Optional
+                && (dep_level == Some(DependencyLevel::All) || dep_level.is_none())
+            {
+            if dep_level == Some(DependencyLevel::All) {
+                eprint!(
+                    "Adding optional dependency {} for mod {}... ",
+                    id.to_string().dimmed(),
+                    original_mod.name.bold()
+                );
+            } else {
+                eprint!(
+                    "Checking optional dependency {} for mod {}... ",
+                    id.to_string().dimmed(),
+                    original_mod.name.bold()
+                );
+            }
+            let project = modrinth.get_project(&id).await?;
+            match add::modrinth(modrinth, &project, profile, None, None).await {
+                Ok(file) => {
+                    if dep_level.is_none() {
+                        println!("{}", *TICK);
+                    }
+                    // If it's optional, confirm with the user if they want to add it
+                    if dep_level == Some(DependencyLevel::All)
+                        || Confirm::with_theme(&*THEME)
+                            .with_prompt(format!(
+                                "Add optional dependency {} for mod {} ({})?",
+                                project.title.bold(),
+                                original_mod.name.bold(),
+                                format!("https://modrinth.com/mod/{}", project.slug)
+                                        .blue()
+                                        .underline()
+                            ))
+                            .interact()?
+                    {
+                        profile.mods.push(Mod {
+                            name: project.title.trim().into(),
+                            identifier: ModIdentifier::ModrinthProject(project.id),
+                            check_game_version: if should_check_game_version == Some(true) {
+                                None
+                            } else {
+                                should_check_game_version
+                            },
+                            check_mod_loader: if should_check_mod_loader == Some(true) {
+                                None
+                            } else {
+                                should_check_mod_loader
+                            },
+                        });
+                        if !file.dependencies.is_empty() {
+                            recursive_dependency_resolver_modrinth(
+                                modrinth,
+                                profile,
+                                should_check_mod_loader,
+                                should_check_game_version,
+                                original_mod,
+                                dep_level.clone(),
+                                file.dependencies,
+                            )
+                            .await?;
+                        }
+                        if dep_level == Some(DependencyLevel::All) {
+                            println!("{} {}", *TICK, project.title.bold());
+                        }
+                    }
+                }
+                Err(err) => {
+                    if matches!(err, add::Error::AlreadyAdded) {
+                        println!("{} Already added", *TICK);
+                    } else {
+                        println!("{}", format!("{CROSSSIGN} {err}").yellow());
+                    }
+                }
+            };
+        }
+    }
+
+    Ok(())
+}
+
+#[async_recursion]
+async fn recursive_dependency_resolver_curseforge(
+    curseforge: &Furse,
+    profile: &mut Profile,
+    should_check_mod_loader: Option<bool>,
+    should_check_game_version: Option<bool>,
     original_mod: &furse::structures::mod_structs::Mod,
     dep_level: Option<DependencyLevel>,
+    dependencies: Vec<FileDependency>,
 ) -> Result<()> {
     for dependency in &dependencies {
         let mut id = dependency.mod_id;
@@ -236,7 +393,7 @@ async fn resolve_deps(
         }
         if dependency.relation_type == FileRelationType::RequiredDependency {
             eprint!(
-                "Adding required dependency {} of mod {}... ",
+                "Adding required dependency {} for mod {}... ",
                 id.to_string().dimmed(),
                 original_mod.name
             );
@@ -248,16 +405,26 @@ async fn resolve_deps(
                     profile.mods.push(Mod {
                         name: mod_.name.trim().into(),
                         identifier: ModIdentifier::CurseForgeProject(mod_.id),
-                        check_game_version: None,
-                        check_mod_loader: None,
+                        check_game_version: if should_check_game_version == Some(true) {
+                            None
+                        } else {
+                            should_check_game_version
+                        },
+                        check_mod_loader: if should_check_mod_loader == Some(true) {
+                            None
+                        } else {
+                            should_check_mod_loader
+                        },
                     });
                     if !file.dependencies.is_empty() {
-                        resolve_deps(
+                        recursive_dependency_resolver_curseforge(
                             curseforge,
-                            file.dependencies,
                             profile,
-                            &mod_,
+                            should_check_mod_loader,
+                            should_check_game_version,
+                            original_mod,
                             dep_level.clone(),
+                            file.dependencies,
                         )
                         .await?;
                     }
@@ -274,11 +441,16 @@ async fn resolve_deps(
             && (dep_level == Some(DependencyLevel::All) || dep_level.is_none())
         {
             if dep_level == Some(DependencyLevel::All) {
-                eprint!("Adding optional dependency {}... ", id.to_string().dimmed());
+                eprint!(
+                    "Adding optional dependency {} for mod {}... ",
+                    id.to_string().dimmed(),
+                    original_mod.name.bold()
+                );
             } else {
                 eprint!(
-                    "Checking optional dependency {}... ",
-                    id.to_string().dimmed()
+                    "Checking optional dependency {} for mod {}... ",
+                    id.to_string().dimmed(),
+                    original_mod.name.bold()
                 );
             }
             let project = curseforge.get_mod(id).await?;
@@ -291,8 +463,9 @@ async fn resolve_deps(
                     if dep_level == Some(DependencyLevel::All)
                         || Confirm::with_theme(&*THEME)
                             .with_prompt(format!(
-                                "Add optional dependency {} ({})?",
+                                "Add optional dependency {} for mod {} ({})?",
                                 project.name.bold(),
+                                original_mod.name.bold(),
                                 project.links.website_url.to_string().blue().underline()
                             ))
                             .interact()?
@@ -300,16 +473,26 @@ async fn resolve_deps(
                         profile.mods.push(Mod {
                             name: project.name.trim().into(),
                             identifier: ModIdentifier::CurseForgeProject(project.id),
-                            check_game_version: None,
-                            check_mod_loader: None,
+                            check_game_version: if should_check_game_version == Some(true) {
+                                None
+                            } else {
+                                should_check_game_version
+                            },
+                            check_mod_loader: if should_check_mod_loader == Some(true) {
+                                None
+                            } else {
+                                should_check_mod_loader
+                            },
                         });
                         if !file.dependencies.is_empty() {
-                            resolve_deps(
+                            recursive_dependency_resolver_curseforge(
                                 curseforge,
-                                file.dependencies,
                                 profile,
-                                &project,
+                                should_check_mod_loader,
+                                should_check_game_version,
+                                original_mod,
                                 dep_level.clone(),
+                                file.dependencies,
                             )
                             .await?;
                         }
@@ -331,6 +514,7 @@ async fn resolve_deps(
 
     Ok(())
 }
+
 pub async fn curseforge(
     curseforge: &Furse,
     project_id: i32,
@@ -367,12 +551,14 @@ pub async fn curseforge(
     });
 
     if dependencies != Some(DependencyLevel::None) {
-        resolve_deps(
+        recursive_dependency_resolver_curseforge(
             curseforge,
-            latest_file.dependencies,
             profile,
+            should_check_mod_loader,
+            should_check_game_version,
             &project,
             dependencies,
+            latest_file.dependencies,
         )
         .await?;
     }
