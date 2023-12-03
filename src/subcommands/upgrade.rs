@@ -173,7 +173,7 @@ pub async fn get_platform_downloadables(
                     }
                     progress_bar.println(format!(
                         "{}",
-                        format!("{CROSS} {:43} {err}", mod_.name).red()
+                        format!("{} {:43} {}", CROSS, mod_.name, err).red()
                     ));
                     Ok((true, false))
                 }
