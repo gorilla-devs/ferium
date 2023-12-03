@@ -129,6 +129,12 @@ fn add_curseforge() -> Result {
     // Add Terralith to the config
     run_command(vec!["add", "591388"], Some("empty_profile"))
 }
+#[test]
+fn add_curseforge_recursive() -> Result {
+    // Add Terralith to the config
+    run_command(vec!["add", "307152"], Some("empty_profile"))
+}
+
 
 #[test]
 fn add_github() -> Result {

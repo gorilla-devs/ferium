@@ -1,12 +1,14 @@
 // CurseForge IDs shouldn't be seperated
 #![allow(clippy::unreadable_literal)]
+#![allow(clippy::unused_async)]
 
-use crate::{cli::DependencyLevel, CROSS, THEME, TICK};
 use anyhow::{bail, Result};
+use async_recursion::async_recursion;
 use colored::Colorize;
 use dialoguer::Confirm;
 use ferinth::structures::version::DependencyType;
 use ferinth::Ferinth;
+use furse::structures::file_structs::FileDependency;
 use furse::{structures::file_structs::FileRelationType, Furse};
 use itertools::Itertools;
 use libium::{
@@ -14,6 +16,8 @@ use libium::{
     config::structs::{Mod, ModIdentifier, ModLoader, Profile},
 };
 use octocrab::repos::RepoHandler;
+
+use crate::{cli::DependencyLevel, CROSSSIGN, THEME, TICK};
 
 #[allow(clippy::expect_used)]
 pub async fn github(
@@ -57,8 +61,8 @@ pub async fn modrinth(
     profile: &mut Profile,
     should_check_game_version: Option<bool>,
     should_check_mod_loader: Option<bool>,
-    dependencies: Option<DependencyLevel>,
 ) -> Result<()> {
+    let dependencies = None;
     eprint!("Adding mod... ");
     let project = modrinth.get_project(project_id).await?;
     let latest_version = add::modrinth(
@@ -186,7 +190,7 @@ pub async fn modrinth(
                         if matches!(err, add::Error::AlreadyAdded) {
                             println!("{} Already added", *TICK);
                         } else {
-                            println!("{}", format!("{CROSS} {err}").yellow());
+                            println!("{}", format!("{CROSSSIGN} {err}").yellow());
                         }
                     }
                 };
@@ -212,6 +216,121 @@ pub async fn modrinth(
     Ok(())
 }
 
+#[async_recursion]
+async fn resolve_deps(
+    curseforge: &Furse,
+    dependencies: Vec<FileDependency>,
+    profile: &mut Profile,
+    original_mod: &furse::structures::mod_structs::Mod,
+    dep_level: Option<DependencyLevel>,
+) -> Result<()> {
+    for dependency in &dependencies {
+        let mut id = dependency.mod_id;
+        if profile.mod_loader == ModLoader::Quilt {
+            if id == 306612 {
+                id = 634179;
+            }
+            if id == 308769 {
+                id = 720410;
+            }
+        }
+        if dependency.relation_type == FileRelationType::RequiredDependency {
+            eprint!(
+                "Adding required dependency {} of mod {}... ",
+                id.to_string().dimmed(),
+                original_mod.name
+            );
+            let mod_ = curseforge.get_mod(id).await?;
+            let latest_file = add::curseforge(curseforge, &mod_, profile, None, None).await;
+            match latest_file {
+                Ok(file) => {
+                    println!("{} {}", *TICK, mod_.name.bold());
+                    profile.mods.push(Mod {
+                        name: mod_.name.trim().into(),
+                        identifier: ModIdentifier::CurseForgeProject(mod_.id),
+                        check_game_version: None,
+                        check_mod_loader: None,
+                    });
+                    if !file.dependencies.is_empty() {
+                        resolve_deps(
+                            curseforge,
+                            file.dependencies,
+                            profile,
+                            &mod_,
+                            dep_level.clone(),
+                        )
+                        .await?;
+                    }
+                }
+                Err(err) => {
+                    if matches!(err, add::Error::AlreadyAdded) {
+                        println!("{} Already added", *TICK);
+                    } else {
+                        bail!(err);
+                    }
+                }
+            }
+        } else if dependency.relation_type == FileRelationType::OptionalDependency
+            && (dep_level == Some(DependencyLevel::All) || dep_level.is_none())
+        {
+            if dep_level == Some(DependencyLevel::All) {
+                eprint!("Adding optional dependency {}... ", id.to_string().dimmed());
+            } else {
+                eprint!(
+                    "Checking optional dependency {}... ",
+                    id.to_string().dimmed()
+                );
+            }
+            let project = curseforge.get_mod(id).await?;
+            match add::curseforge(curseforge, &project, profile, None, None).await {
+                Ok(file) => {
+                    if dep_level.is_none() {
+                        println!("{}", *TICK);
+                    }
+                    // If it's optional, confirm with the user if they want to add it
+                    if dep_level == Some(DependencyLevel::All)
+                        || Confirm::with_theme(&*THEME)
+                            .with_prompt(format!(
+                                "Add optional dependency {} ({})?",
+                                project.name.bold(),
+                                project.links.website_url.to_string().blue().underline()
+                            ))
+                            .interact()?
+                    {
+                        profile.mods.push(Mod {
+                            name: project.name.trim().into(),
+                            identifier: ModIdentifier::CurseForgeProject(project.id),
+                            check_game_version: None,
+                            check_mod_loader: None,
+                        });
+                        if !file.dependencies.is_empty() {
+                            resolve_deps(
+                                curseforge,
+                                file.dependencies,
+                                profile,
+                                &project,
+                                dep_level.clone(),
+                            )
+                            .await?;
+                        }
+                        if dep_level == Some(DependencyLevel::All) {
+                            println!("{} {}", *TICK, project.name.bold());
+                        }
+                    }
+                }
+                Err(err) => {
+                    if matches!(err, add::Error::AlreadyAdded) {
+                        println!("{} Already added", *TICK);
+                    } else {
+                        println!("{}", format!("{CROSSSIGN} {err}").yellow());
+                    }
+                }
+            };
+        }
+    }
+
+    Ok(())
+}
 pub async fn curseforge(
     curseforge: &Furse,
     project_id: i32,
@@ -230,6 +349,7 @@ pub async fn curseforge(
         should_check_mod_loader,
     )
     .await?;
+
     println!("{} {}", *TICK, project.name.bold());
     profile.mods.push(Mod {
         name: project.name.trim().into(),
@@ -245,108 +365,16 @@ pub async fn curseforge(
             should_check_mod_loader
         },
     });
-    if dependencies != Some(DependencyLevel::None) {
-        for dependency in &latest_file.dependencies {
-            let mut id = dependency.mod_id;
-            if profile.mod_loader == ModLoader::Quilt {
-                // Fabric API
-                if id == 306612 {
-                    // Quilted Fabric API
-                    id = 634179;
-                }
-                // Fabric Language Kotlin
-                if id == 308769 {
-                    // Quilt Kotlin Libraries
-                    id = 720410;
-                }
-            }
 
-            if dependency.relation_type == FileRelationType::RequiredDependency {
-                eprint!("Adding required dependency {}... ", id.to_string().dimmed());
-                let project = curseforge.get_mod(id).await?;
-                match add::curseforge(curseforge, &project, profile, None, None).await {
-                    Ok(_) => {
-                        println!("{} {}", *TICK, project.name.bold());
-                        // If it's required, add it without asking
-                        profile.mods.push(Mod {
-                            name: project.name.trim().into(),
-                            identifier: ModIdentifier::CurseForgeProject(project.id),
-                            check_game_version: if should_check_game_version == Some(true) {
-                                None
-                            } else {
-                                should_check_game_version
-                            },
-                            check_mod_loader: if should_check_mod_loader == Some(true) {
-                                None
-                            } else {
-                                should_check_mod_loader
-                            },
-                        });
-                    }
-                    Err(err) => {
-                        if matches!(err, add::Error::AlreadyAdded) {
-                            println!("{} Already added", *TICK);
-                        } else {
-                            bail!(err);
-                        }
-                    }
-                };
-            } else if dependency.relation_type == FileRelationType::OptionalDependency
-                && (dependencies == Some(DependencyLevel::All) || dependencies.is_none())
-            {
-                if dependencies == Some(DependencyLevel::All) {
-                    eprint!("Adding optional dependency {}... ", id.to_string().dimmed());
-                } else {
-                    eprint!(
-                        "Checking optional dependency {}... ",
-                        id.to_string().dimmed()
-                    );
-                }
-                let project = curseforge.get_mod(id).await?;
-                match add::curseforge(curseforge, &project, profile, None, None).await {
-                    Ok(_) => {
-                        if dependencies.is_none() {
-                            println!("{}", *TICK);
-                        }
-                        // If it's optional, confirm with the user if they want to add it
-                        if dependencies == Some(DependencyLevel::All)
-                            || Confirm::with_theme(&*THEME)
-                                .with_prompt(format!(
-                                    "Add optional dependency {} ({})?",
-                                    project.name.bold(),
-                                    project.links.website_url.to_string().blue().underline()
-                                ))
-                                .interact()?
-                        {
-                            profile.mods.push(Mod {
-                                name: project.name.trim().into(),
-                                identifier: ModIdentifier::CurseForgeProject(project.id),
-                                check_game_version: if should_check_game_version == Some(true) {
-                                    None
-                                } else {
-                                    should_check_game_version
-                                },
-                                check_mod_loader: if should_check_mod_loader == Some(true) {
-                                    None
-                                } else {
-                                    should_check_mod_loader
-                                },
-                            });
-                            if dependencies == Some(DependencyLevel::All) {
-                                println!("{} {}", *TICK, project.name.bold());
-                            }
-                        }
-                    }
-                    Err(err) => {
-                        if matches!(err, add::Error::AlreadyAdded) {
-                            println!("{} Already added", *TICK);
-                        } else {
-                            println!("{}", format!("{CROSS} {err}").yellow());
-                        }
-                    }
-                };
-            }
-        }
+    if dependencies != Some(DependencyLevel::None) {
+        resolve_deps(
+            curseforge,
+            latest_file.dependencies,
+            profile,
+            &project,
+            dependencies,
+        )
+        .await?;
     }
 
     Ok(())

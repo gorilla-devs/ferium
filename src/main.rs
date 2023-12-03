@@ -43,7 +43,7 @@ use std::{
 };
 use tokio::{runtime, task::JoinSet};
 
-const CROSS: &str = "×";
+const CROSSSIGN: &str = "×";
 pub static TICK: Lazy<ColoredString> = Lazy::new(|| "✓".green());
 pub static YELLOW_TICK: Lazy<ColoredString> = Lazy::new(|| "✓".yellow());
 pub static THEME: Lazy<ColorfulTheme> = Lazy::new(Default::default);
@@ -131,7 +131,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             identifier,
             dont_check_game_version,
             dont_check_mod_loader,
-            dependencies,
+            dependencies
         } => {
             let profile = get_active_profile(&mut config)?;
             check_internet().await?;
@@ -142,7 +142,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     profile,
                     Some(!dont_check_game_version),
                     Some(!dont_check_mod_loader),
-                    dependencies,
+                    dependencies
                 )
                 .await?;
             } else if identifier.split('/').count() == 2 {
@@ -160,7 +160,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 profile,
                 Some(!dont_check_game_version),
                 Some(!dont_check_mod_loader),
-                dependencies,
+                // dependencies,
             )
             .await
             {

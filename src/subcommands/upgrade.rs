@@ -3,7 +3,7 @@
 
 use crate::{
     download::{clean, download},
-    CROSS, STYLE_NO, TICK, YELLOW_TICK,
+    CROSSSIGN, STYLE_NO, TICK, YELLOW_TICK,
 };
 use anyhow::{anyhow, bail, Result};
 use colored::Colorize;
@@ -173,7 +173,7 @@ pub async fn get_platform_downloadables(
                     }
                     progress_bar.println(format!(
                         "{}",
-                        format!("{CROSS} {:43} {err}", mod_.name).red()
+                        format!("{CROSSSIGN} {:43} {err}", mod_.name).red()
                     ));
                     Ok((true, false))
                 }
