@@ -43,7 +43,6 @@ libium = "1.23"
 anyhow = "1.0"
 furse = "1.5"
 size = "0.4"
-futures = "0.3.28"
 async-recursion = "1.0.5"
 
 [dev-dependencies]
