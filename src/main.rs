@@ -43,7 +43,7 @@ use std::{
 };
 use tokio::{runtime, task::JoinSet};
 
-const CROSSSIGN: &str = "×";
+const CROSS: &str = "×";
 pub static TICK: Lazy<ColoredString> = Lazy::new(|| "✓".green());
 pub static YELLOW_TICK: Lazy<ColoredString> = Lazy::new(|| "✓".yellow());
 pub static THEME: Lazy<ColorfulTheme> = Lazy::new(Default::default);
