@@ -31,6 +31,7 @@ use dialoguer::theme::ColorfulTheme;
 use ferinth::Ferinth;
 use furse::Furse;
 use indicatif::ProgressStyle;
+use itertools::Itertools;
 use libium::config::{
     self,
     structs::{Config, ModIdentifier, Modpack, Profile},
@@ -131,46 +132,64 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             identifier,
             dont_check_game_version,
             dont_check_mod_loader,
-            dependencies,
         } => {
             let profile = get_active_profile(&mut config)?;
             check_internet().await?;
+            eprint!("Adding mod... ");
             if let Ok(project_id) = identifier.parse::<i32>() {
-                subcommands::add::curseforge(
+                let name = libium::add::curseforge(
                     &curseforge,
                     project_id,
                     profile,
                     Some(!dont_check_game_version),
                     Some(!dont_check_mod_loader),
-                    dependencies,
                 )
                 .await?;
+                println!("{} {}", *TICK, name.bold());
             } else if identifier.split('/').count() == 2 {
                 let split = identifier.split('/').collect::<Vec<_>>();
-                subcommands::add::github(
-                    github.build()?.repos(split[0], split[1]),
+                let name = libium::add::github(
+                    &github.build()?.repos(split[0], split[1]),
                     profile,
                     Some(!dont_check_game_version),
                     Some(!dont_check_mod_loader),
                 )
                 .await?;
-            } else if let Err(err) = subcommands::add::modrinth(
-                &modrinth,
-                &identifier,
-                profile,
-                Some(!dont_check_game_version),
-                Some(!dont_check_mod_loader),
-                dependencies,
-            )
-            .await
-            {
-                return Err(
-                    if err.to_string() == ferinth::Error::InvalidIDorSlug.to_string() {
-                        anyhow!("Invalid indentifier")
-                    } else {
-                        err
-                    },
-                );
+                println!("{} {}", *TICK, name.bold());
+            } else {
+                match libium::add::modrinth(
+                    &modrinth,
+                    &identifier,
+                    profile,
+                    Some(!dont_check_game_version),
+                    Some(!dont_check_mod_loader),
+                )
+                .await
+                {
+                    Ok((name, donation_urls)) => {
+                        println!("{} {}", *TICK, name.bold());
+
+                        if !donation_urls.is_empty() {
+                            println!(
+                                "Consider supporting the mod creator on {}",
+                                donation_urls
+                                    .iter()
+                                    .map(|this| format!(
+                                        "{} ({})",
+                                        this.platform.bold(),
+                                        this.url.to_string().blue().underline()
+                                    ))
+                                    .format(" or ")
+                            );
+                        }
+                    }
+                    Err(err) => {
+                        if err.to_string() == ferinth::Error::InvalidIDorSlug.to_string() {
+                            bail!("Invalid identifier")
+                        }
+                        bail!(err)
+                    }
+                }
             }
         }
         SubCommands::List { verbose, markdown } => {
@@ -178,7 +197,6 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             check_empty_profile(profile)?;
             if verbose {
                 check_internet().await?;
-                let github = github.build()?;
                 let mut tasks = JoinSet::new();
                 let mut mr_ids = Vec::<&str>::new();
                 for mod_ in &profile.mods {
@@ -192,7 +210,8 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                                     .await?;
                             }
                             ModIdentifier::GitHubRepository(full_name) => {
-                                subcommands::list::github_md(&github, full_name.clone()).await?;
+                                subcommands::list::github_md(&github.build()?, full_name.clone())
+                                    .await?;
                             }
                         };
                     } else {
@@ -206,7 +225,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                             ModIdentifier::ModrinthProject(project_id) => mr_ids.push(project_id),
                             ModIdentifier::GitHubRepository(full_name) => {
                                 tasks.spawn(subcommands::list::github(
-                                    github.clone(),
+                                    github.build()?.clone(),
                                     full_name.clone(),
                                 ));
                             }
@@ -289,7 +308,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 {
                     return Err(
                         if err.to_string() == ferinth::Error::InvalidIDorSlug.to_string() {
-                            anyhow!("Invalid indentifier")
+                            anyhow!("Invalid identifier")
                         } else {
                             err
                         },

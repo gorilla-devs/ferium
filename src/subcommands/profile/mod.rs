@@ -24,12 +24,11 @@ use std::{fs::read_dir, path::PathBuf};
 use tokio::fs::create_dir_all;
 
 pub fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
-    let mut picker = Select::with_theme(&*THEME);
-    picker
+    let mut picker = Select::with_theme(&*THEME)
         .with_prompt("Which mod loader do you use?")
         .items(&["Quilt", "Fabric", "Forge"]);
     if let Some(default) = default {
-        picker.default(match default {
+        picker = picker.default(match default {
             ModLoader::Quilt => 0,
             ModLoader::Fabric => 1,
             ModLoader::Forge => 2,

@@ -12,7 +12,6 @@ install-dev:
 # Delete all build and test artefacts
 clean:
     cargo clean
-    rm -rf 
     rm -rf tests/mods
     rm -rf tests/md_modpack
     rm -rf tests/cf_modpack

@@ -54,7 +54,7 @@ impl TryFrom<PlatformDownloadable> for Downloadable {
 
 /// Get the latest compatible downloadable for the mods in `profile`
 ///
-/// If an error occures with a resolving task, instead of failing immediately,
+/// If an error occurs with a resolving task, instead of failing immediately,
 /// resolution will continue and the error return flag is set to true.
 pub async fn get_platform_downloadables(
     modrinth: Ferinth,
@@ -223,13 +223,8 @@ pub async fn upgrade(
         for file in read_dir(profile.output_dir.join("user"))? {
             let file = file?;
             let path = file.path();
-            if path.is_file() {
-                // TODO: Use `path.extension().is_some_and(|ext| ext == "jar")` instead, see [#93050](https://github.com/rust-lang/rust/issues/93050)
-                if let Some(ext) = path.extension() {
-                    if ext == "jar" {
-                        to_install.push((file.file_name(), path));
-                    }
-                }
+            if path.is_file() && path.extension().is_some_and(|ext| ext == "jar") {
+                to_install.push((file.file_name(), path));
             }
         }
     }
@@ -239,7 +234,7 @@ pub async fn upgrade(
         .iter_mut()
         // Download directly to the output directory
         .map(|thing| thing.output = thing.filename().into())
-        .for_each(drop); // Doesn't drop any data, just runs the interator
+        .for_each(drop); // Doesn't drop any data, just runs the iterator
     if to_download.is_empty() && to_install.is_empty() {
         println!("\n{}", "All up to date!".bold());
     } else {

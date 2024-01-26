@@ -1,4 +1,3 @@
-pub mod add;
 pub mod list;
 pub mod modpack;
 pub mod profile;
