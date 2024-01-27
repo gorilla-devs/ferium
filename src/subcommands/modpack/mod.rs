@@ -1,12 +1,12 @@
 pub mod add;
 mod configure;
 mod delete;
-mod list;
+mod info;
 mod switch;
 mod upgrade;
 pub use configure::configure;
 pub use delete::delete;
-pub use list::list;
+pub use info::info;
 pub use switch::switch;
 pub use upgrade::upgrade;
 

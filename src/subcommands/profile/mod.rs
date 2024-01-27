@@ -1,12 +1,12 @@
 mod configure;
 mod create;
 mod delete;
-mod list;
+mod info;
 mod switch;
 pub use configure::configure;
 pub use create::create;
 pub use delete::delete;
-pub use list::list;
+pub use info::info;
 pub use switch::switch;
 
 use crate::THEME;

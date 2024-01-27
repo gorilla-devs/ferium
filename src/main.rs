@@ -281,7 +281,9 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 }
             }
         }
-        SubCommands::Modpack { subcommand } => match subcommand {
+        SubCommands::Modpack { subcommand } => {
+            let subcommand = subcommand.unwrap_or(ModpackSubCommands::Info);
+            match subcommand {
             ModpackSubCommands::Add {
                 identifier,
                 output_dir,
@@ -328,11 +330,13 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             ModpackSubCommands::Delete { modpack_name } => {
                 subcommands::modpack::delete(&mut config, modpack_name)?;
             }
-            ModpackSubCommands::List => {
-                if config.modpacks.is_empty() {
-                    bail!("There are no modpacks configured, add a modpack using `ferium modpack add`")
+                ModpackSubCommands::Info => {
+                    subcommands::modpack::info(get_active_modpack(&mut config)?, true);
                 }
-                subcommands::modpack::list(&config);
+                ModpackSubCommands::List => {
+                    for (i, modpack) in config.modpacks.iter().enumerate() {
+                        subcommands::modpack::info(modpack, i == config.active_modpack);
+                    }
             }
             ModpackSubCommands::Switch { modpack_name } => {
                 subcommands::modpack::switch(&mut config, modpack_name)?;
@@ -345,9 +349,12 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     get_active_modpack(&mut config)?,
                 )
                 .await?;
-            }
+                }
+            };
         },
-        SubCommands::Profile { subcommand } => match subcommand {
+        SubCommands::Profile { subcommand } => {
+            let subcommand = subcommand.unwrap_or(ProfileSubCommands::Info);
+            match subcommand {
             ProfileSubCommands::Configure {
                 game_version,
                 mod_loader,
@@ -387,15 +394,20 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             ProfileSubCommands::Delete { profile_name } => {
                 subcommands::profile::delete(&mut config, profile_name)?;
             }
-            ProfileSubCommands::List => {
-                if config.profiles.is_empty() {
-                    bail!("There are no profiles configured, create a profile using `ferium profile create`")
+                ProfileSubCommands::Info => {
+                    subcommands::profile::info(get_active_profile(&mut config)?, true);
                 }
-                subcommands::profile::list(&config);
-            }
+
+            ProfileSubCommands::List => {
+                    for (i, profile) in config.profiles.iter().enumerate() {
+                        subcommands::profile::info(profile, i == config.active_profile);
+                    }
+                }
+
             ProfileSubCommands::Switch { profile_name } => {
                 subcommands::profile::switch(&mut config, profile_name)?;
             }
+            };
         },
         SubCommands::Remove { mod_names } => {
             let profile = get_active_profile(&mut config)?;

@@ -69,16 +69,14 @@ pub enum SubCommands {
         markdown: bool,
     },
     /// Add, configure, delete, switch, list, or upgrade modpacks
-    #[clap(arg_required_else_help = true)]
     Modpack {
         #[clap(subcommand)]
-        subcommand: ModpackSubCommands,
+        subcommand: Option<ModpackSubCommands>,
     },
     /// Create, configure, delete, switch, or list profiles
-    #[clap(arg_required_else_help = true)]
     Profile {
         #[clap(subcommand)]
-        subcommand: ProfileSubCommands,
+        subcommand: Option<ProfileSubCommands>,
     },
     /// Remove mods and repositories from the profile.
     /// Optionally, provide a list of names or IDs of the mods to remove.
@@ -140,6 +138,8 @@ pub enum ProfileSubCommands {
         /// The name of the profile to delete
         profile_name: Option<String>,
     },
+    /// Show information about the current profile
+    Info,
     /// List all the profiles with their data
     List,
     /// Switch between different profiles.
@@ -187,6 +187,8 @@ pub enum ModpackSubCommands {
         /// The name of the modpack to delete
         modpack_name: Option<String>,
     },
+    /// Show information about the current modpack
+    Info,
     /// List all the modpacks
     List,
     /// Switch between different modpacks.
