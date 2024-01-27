@@ -7,50 +7,20 @@ use crate::{
 };
 use anyhow::{anyhow, bail, Result};
 use colored::Colorize;
-use ferinth::{
-    structures::version::{Version, VersionFile},
-    Ferinth,
-};
-use furse::{structures::file_structs::File, Furse};
+use ferinth::Ferinth;
+use furse::Furse;
 use indicatif::ProgressBar;
 use libium::{
     config::structs::{ModIdentifier, ModLoader, Profile},
-    upgrade::{mod_downloadable, DistributionDeniedError, Downloadable},
+    upgrade::{mod_downloadable, Downloadable},
 };
-use octocrab::{models::repos::Asset, Octocrab};
+use octocrab::Octocrab;
 use std::{
     fs::read_dir,
     sync::{Arc, Mutex},
     time::Duration,
 };
 use tokio::{sync::Semaphore, task::JoinSet};
-
-pub enum PlatformDownloadable {
-    Modrinth(VersionFile, Version),
-    CurseForge(File),
-    GitHub(Asset),
-}
-
-impl PlatformDownloadable {
-    pub fn filename(&self) -> &str {
-        match self {
-            Self::Modrinth(version_file, _) => &version_file.filename,
-            Self::CurseForge(file) => &file.file_name,
-            Self::GitHub(asset) => &asset.name,
-        }
-    }
-}
-
-impl TryFrom<PlatformDownloadable> for Downloadable {
-    type Error = DistributionDeniedError;
-    fn try_from(platform_downloadable: PlatformDownloadable) -> Result<Self, Self::Error> {
-        match platform_downloadable {
-            PlatformDownloadable::Modrinth(version_file, _) => Ok(version_file.into()),
-            PlatformDownloadable::CurseForge(file) => file.try_into(),
-            PlatformDownloadable::GitHub(asset) => Ok(asset.into()),
-        }
-    }
-}
 
 /// Get the latest compatible downloadable for the mods in `profile`
 ///
@@ -61,7 +31,7 @@ pub async fn get_platform_downloadables(
     curseforge: Furse,
     github: Octocrab,
     profile: &Profile,
-) -> Result<(Vec<PlatformDownloadable>, bool)> {
+) -> Result<(Vec<Downloadable>, bool)> {
     let to_download = Arc::new(Mutex::new(Vec::new()));
     let progress_bar = Arc::new(Mutex::new(
         ProgressBar::new(profile.mods.len() as u64).with_style(STYLE_NO.clone()),
@@ -101,15 +71,19 @@ pub async fn get_platform_downloadables(
             let _permit = permit;
             let result = match &mod_.identifier {
                 ModIdentifier::CurseForgeProject(project_id) => {
-                    mod_downloadable::get_latest_compatible_file(
+                    let result = mod_downloadable::get_latest_compatible_file(
                         curseforge.get_mod_files(*project_id).await?,
                         game_version_to_check,
                         mod_loader_to_check,
-                    )
-                    .map_or_else(
-                        || Err(mod_downloadable::Error::NoCompatibleFile),
-                        |ok| Ok((PlatformDownloadable::CurseForge(ok.0), ok.1)),
-                    )
+                    );
+                    if let Some((file, qf_flag)) = result {
+                        match TryInto::<Downloadable>::try_into(file) {
+                            Ok(d) => Ok((d, qf_flag)),
+                            Err(err) => Err(mod_downloadable::Error::DistributionDenied(err)),
+                        }
+                    } else {
+                        Err(mod_downloadable::Error::NoCompatibleFile)
+                    }
                 }
                 ModIdentifier::ModrinthProject(project_id) => {
                     mod_downloadable::get_latest_compatible_version(
@@ -119,7 +93,7 @@ pub async fn get_platform_downloadables(
                     )
                     .map_or_else(
                         || Err(mod_downloadable::Error::NoCompatibleFile),
-                        |ok| Ok((PlatformDownloadable::Modrinth(ok.0, ok.1), ok.2)),
+                        |(ver_file, _, qf_flag)| Ok((ver_file.into(), qf_flag)),
                     )
                 }
                 ModIdentifier::GitHubRepository(full_name) => {
@@ -136,17 +110,17 @@ pub async fn get_platform_downloadables(
                     )
                     .map_or_else(
                         || Err(mod_downloadable::Error::NoCompatibleFile),
-                        |ok| Ok((PlatformDownloadable::GitHub(ok.0), ok.1)),
+                        |(asset, qf_flag)| Ok((asset.into(), qf_flag)),
                     )
                 }
             };
             let progress_bar = progress_bar.lock().expect("Mutex poisoned");
             progress_bar.inc(1);
             match result {
-                Ok((downloadable, backwards_compat)) => {
+                Ok((downloadable, qf_flag)) => {
                     progress_bar.println(format!(
                         "{} {:43} {}",
-                        if backwards_compat {
+                        if qf_flag {
                             YELLOW_TICK.clone()
                         } else {
                             TICK.clone()
@@ -159,7 +133,7 @@ pub async fn get_platform_downloadables(
                             .lock()
                             .expect("Mutex poisoned")
                             .push(downloadable);
-                        Ok((false, backwards_compat))
+                        Ok((false, qf_flag))
                     }
                 }
                 Err(err) => {
@@ -167,7 +141,7 @@ pub async fn get_platform_downloadables(
                         ferinth::Error::RateLimitExceeded(_),
                     ) = err
                     {
-                        // Immediately fail if there is a rate limit
+                        // Immediately fail if the rate limit has been exceeded
                         progress_bar.finish_and_clear();
                         bail!(err);
                     }
@@ -182,17 +156,17 @@ pub async fn get_platform_downloadables(
     }
 
     let mut error = false;
-    let mut backwards_compat = false;
+    let mut qf_flag = false;
     while let Some(res) = tasks.join_next().await {
         let res = res??;
         error |= res.0;
-        backwards_compat |= res.1;
+        qf_flag |= res.1;
     }
     Arc::try_unwrap(progress_bar)
         .map_err(|_| anyhow!("Failed to run threads to completion"))?
         .into_inner()?
         .finish_and_clear();
-    if backwards_compat {
+    if qf_flag {
         println!(
             "{}",
             "Fabric mod using Quilt backwards compatibility".yellow()
@@ -212,12 +186,8 @@ pub async fn upgrade(
     github: Octocrab,
     profile: &Profile,
 ) -> Result<()> {
-    let (to_download, error) =
+    let (mut to_download, error) =
         get_platform_downloadables(modrinth, curseforge, github, profile).await?;
-    let mut to_download = to_download
-        .into_iter()
-        .map(TryInto::try_into)
-        .collect::<Result<Vec<_>, _>>()?;
     let mut to_install = Vec::new();
     if profile.output_dir.join("user").exists() && profile.mod_loader != ModLoader::Quilt {
         for file in read_dir(profile.output_dir.join("user"))? {
