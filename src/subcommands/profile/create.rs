@@ -61,7 +61,7 @@ pub async fn create(
 
                 #[allow(clippy::single_match_else)]
                 match check_profile_name(config, &name) {
-                    Ok(_) => break name,
+                    Ok(()) => break name,
                     Err(_) => {
                         println!(
                             "{}",

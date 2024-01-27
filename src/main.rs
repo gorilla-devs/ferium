@@ -38,6 +38,7 @@ use libium::config::{
 };
 use octocrab::OctocrabBuilder;
 use once_cell::sync::Lazy;
+use reqwest::header::USER_AGENT;
 use std::{
     env::{var, var_os},
     process::ExitCode,
@@ -130,8 +131,9 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         SubCommands::Complete { .. } => unreachable!(),
         SubCommands::Add {
             identifier,
-            dont_check_game_version,
-            dont_check_mod_loader,
+            // force,
+            ignore_game_version,
+            ignore_mod_loader,
         } => {
             let profile = get_active_profile(&mut config)?;
             check_internet().await?;
@@ -141,8 +143,8 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     &curseforge,
                     project_id,
                     profile,
-                    Some(!dont_check_game_version),
-                    Some(!dont_check_mod_loader),
+                    Some(!ignore_game_version),
+                    Some(!ignore_mod_loader),
                 )
                 .await?;
                 println!("{} {}", *TICK, name.bold());
@@ -151,8 +153,8 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 let name = libium::add::github(
                     &github.build()?.repos(split[0], split[1]),
                     profile,
-                    Some(!dont_check_game_version),
-                    Some(!dont_check_mod_loader),
+                    Some(!ignore_game_version),
+                    Some(!ignore_mod_loader),
                 )
                 .await?;
                 println!("{} {}", *TICK, name.bold());
@@ -161,8 +163,8 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     &modrinth,
                     &identifier,
                     profile,
-                    Some(!dont_check_game_version),
-                    Some(!dont_check_mod_loader),
+                    Some(!ignore_game_version),
+                    Some(!ignore_mod_loader),
                 )
                 .await
                 {
@@ -210,8 +212,11 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                                     .await?;
                             }
                             ModIdentifier::GitHubRepository(full_name) => {
-                                subcommands::list::github_md(&github.build()?, full_name.clone())
-                                    .await?;
+                                subcommands::list::github_md(
+                                    &OctocrabBuilder::new().build()?,
+                                    full_name.clone(),
+                                )
+                                .await?;
                             }
                         };
                     } else {
@@ -225,7 +230,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                             ModIdentifier::ModrinthProject(project_id) => mr_ids.push(project_id),
                             ModIdentifier::GitHubRepository(full_name) => {
                                 tasks.spawn(subcommands::list::github(
-                                    github.build()?.clone(),
+                                    OctocrabBuilder::new().build()?.clone(),
                                     full_name.clone(),
                                 ));
                             }
@@ -284,52 +289,52 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
         SubCommands::Modpack { subcommand } => {
             let subcommand = subcommand.unwrap_or(ModpackSubCommands::Info);
             match subcommand {
-            ModpackSubCommands::Add {
-                identifier,
-                output_dir,
-                install_overrides,
-            } => {
-                check_internet().await?;
-                if let Ok(project_id) = identifier.parse::<i32>() {
-                    subcommands::modpack::add::curseforge(
-                        &curseforge,
+                ModpackSubCommands::Add {
+                    identifier,
+                    output_dir,
+                    install_overrides,
+                } => {
+                    check_internet().await?;
+                    if let Ok(project_id) = identifier.parse::<i32>() {
+                        subcommands::modpack::add::curseforge(
+                            &curseforge,
+                            &mut config,
+                            project_id,
+                            output_dir,
+                            install_overrides,
+                        )
+                        .await?;
+                    } else if let Err(err) = subcommands::modpack::add::modrinth(
+                        &modrinth,
                         &mut config,
-                        project_id,
+                        &identifier,
                         output_dir,
                         install_overrides,
                     )
-                    .await?;
-                } else if let Err(err) = subcommands::modpack::add::modrinth(
-                    &modrinth,
-                    &mut config,
-                    &identifier,
-                    output_dir,
-                    install_overrides,
-                )
-                .await
-                {
-                    return Err(
-                        if err.to_string() == ferinth::Error::InvalidIDorSlug.to_string() {
-                            anyhow!("Invalid identifier")
-                        } else {
-                            err
-                        },
-                    );
+                    .await
+                    {
+                        return Err(
+                            if err.to_string() == ferinth::Error::InvalidIDorSlug.to_string() {
+                                anyhow!("Invalid identifier")
+                            } else {
+                                err
+                            },
+                        );
+                    }
                 }
-            }
-            ModpackSubCommands::Configure {
-                output_dir,
-                install_overrides,
-            } => {
-                subcommands::modpack::configure(
-                    get_active_modpack(&mut config)?,
+                ModpackSubCommands::Configure {
                     output_dir,
                     install_overrides,
-                )?;
-            }
-            ModpackSubCommands::Delete { modpack_name } => {
-                subcommands::modpack::delete(&mut config, modpack_name)?;
-            }
+                } => {
+                    subcommands::modpack::configure(
+                        get_active_modpack(&mut config)?,
+                        output_dir,
+                        install_overrides,
+                    )?;
+                }
+                ModpackSubCommands::Delete { modpack_name } => {
+                    subcommands::modpack::delete(&mut config, modpack_name)?;
+                }
                 ModpackSubCommands::Info => {
                     subcommands::modpack::info(get_active_modpack(&mut config)?, true);
                 }
@@ -337,78 +342,78 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     for (i, modpack) in config.modpacks.iter().enumerate() {
                         subcommands::modpack::info(modpack, i == config.active_modpack);
                     }
-            }
-            ModpackSubCommands::Switch { modpack_name } => {
-                subcommands::modpack::switch(&mut config, modpack_name)?;
-            }
-            ModpackSubCommands::Upgrade => {
-                check_internet().await?;
-                subcommands::modpack::upgrade(
-                    &modrinth,
-                    &curseforge,
-                    get_active_modpack(&mut config)?,
-                )
-                .await?;
+                }
+                ModpackSubCommands::Switch { modpack_name } => {
+                    subcommands::modpack::switch(&mut config, modpack_name)?;
+                }
+                ModpackSubCommands::Upgrade => {
+                    check_internet().await?;
+                    subcommands::modpack::upgrade(
+                        &modrinth,
+                        &curseforge,
+                        get_active_modpack(&mut config)?,
+                    )
+                    .await?;
                 }
             };
-        },
+        }
         SubCommands::Profile { subcommand } => {
             let subcommand = subcommand.unwrap_or(ProfileSubCommands::Info);
             match subcommand {
-            ProfileSubCommands::Configure {
-                game_version,
-                mod_loader,
-                name,
-                output_dir,
-            } => {
-                check_internet().await?;
-                subcommands::profile::configure(
-                    get_active_profile(&mut config)?,
+                ProfileSubCommands::Configure {
                     game_version,
                     mod_loader,
                     name,
                     output_dir,
-                )
-                .await?;
-            }
-            ProfileSubCommands::Create {
-                import,
-                game_version,
-                mod_loader,
-                name,
-                output_dir,
-            } => {
-                if game_version.is_none() {
+                } => {
                     check_internet().await?;
+                    subcommands::profile::configure(
+                        get_active_profile(&mut config)?,
+                        game_version,
+                        mod_loader,
+                        name,
+                        output_dir,
+                    )
+                    .await?;
                 }
-                subcommands::profile::create(
-                    &mut config,
+                ProfileSubCommands::Create {
                     import,
                     game_version,
                     mod_loader,
                     name,
                     output_dir,
-                )
-                .await?;
-            }
-            ProfileSubCommands::Delete { profile_name } => {
-                subcommands::profile::delete(&mut config, profile_name)?;
-            }
+                } => {
+                    if game_version.is_none() {
+                        check_internet().await?;
+                    }
+                    subcommands::profile::create(
+                        &mut config,
+                        import,
+                        game_version,
+                        mod_loader,
+                        name,
+                        output_dir,
+                    )
+                    .await?;
+                }
+                ProfileSubCommands::Delete { profile_name } => {
+                    subcommands::profile::delete(&mut config, profile_name)?;
+                }
                 ProfileSubCommands::Info => {
                     subcommands::profile::info(get_active_profile(&mut config)?, true);
                 }
 
-            ProfileSubCommands::List => {
+                ProfileSubCommands::List => {
                     for (i, profile) in config.profiles.iter().enumerate() {
                         subcommands::profile::info(profile, i == config.active_profile);
                     }
                 }
 
-            ProfileSubCommands::Switch { profile_name } => {
-                subcommands::profile::switch(&mut config, profile_name)?;
-            }
+                ProfileSubCommands::Switch { profile_name } => {
+                    subcommands::profile::switch(&mut config, profile_name)?;
+                }
             };
-        },
+        }
         SubCommands::Remove { mod_names } => {
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
@@ -494,7 +499,16 @@ async fn check_internet() -> Result<()> {
         .send()
         .await?
         .error_for_status()?;
-    client.get("https://api.github.com/").send().await?;
+    client
+        .get("https://api.github.com/")
+        // GitHub API seems to work better with a proper user agent
+        .header(
+            USER_AGENT,
+            concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION")),
+        )
+        .send()
+        .await?
+        .error_for_status()?;
 
     Ok(())
 }

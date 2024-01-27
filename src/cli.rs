@@ -18,16 +18,16 @@ pub struct Ferium {
     pub threads: Option<usize>,
     /// Set a GitHub personal access token for increasing the GitHub API rate limit.
     /// You can also use the environment variable `GITHUB_TOKEN`.
-    #[clap(long)]
+    #[clap(long, visible_alias = "gh")]
     pub github_token: Option<String>,
     /// Set a custom CurseForge API key.
     /// You can also use the environment variable `CURSEFORGE_API_KEY`.
-    #[clap(long)]
+    #[clap(long, visible_alias = "cf")]
     pub curseforge_api_key: Option<String>,
     /// Set the file to read the config from.
     /// This does not change the `cache` and `tmp` directories.
-    /// You can also use the environment variable `CONFIG_FILE`.
-    #[clap(long, short)]
+    /// You can also use the environment variable `FERIUM_CONFIG_FILE`.
+    #[clap(long, short, visible_aliases = ["config", "conf"])]
     #[clap(value_hint(ValueHint::FilePath))]
     pub config_file: Option<PathBuf>,
 }
@@ -43,12 +43,15 @@ pub enum SubCommands {
         /// The CurseForge project ID is specified at the top of the right sidebar under 'About Project'.
         /// The GitHub identifier is the repository's full name, e.g. `gorilla-devs/ferium`.
         identifier: String,
+        // /// Temporarily ignore game version and mod loader checks and add the mod anyway
+        // #[clap(long, short, visible_alias = "override")]
+        // force: bool,
         /// The game version will not be checked for this mod
-        #[clap(long)]
-        dont_check_game_version: bool,
+        #[clap(long, alias = "dont-check-game-version")]
+        ignore_game_version: bool,
         /// The mod loader will not be checked for this mod
-        #[clap(long)]
-        dont_check_mod_loader: bool,
+        #[clap(long, alias = "dont-check-mod-loader")]
+        ignore_mod_loader: bool,
     },
     /// Print shell auto completions for the specified shell
     Complete {
@@ -57,6 +60,7 @@ pub enum SubCommands {
         shell: Shell,
     },
     /// List all the mods in the profile, and with some their metadata if verbose
+    #[clap(visible_alias = "mods")]
     List {
         /// Show additional information about the mod
         #[clap(long, short)]
@@ -65,7 +69,7 @@ pub enum SubCommands {
         ///
         /// Useful for creating modpack mod lists.
         /// Complements the verbose flag.
-        #[clap(long, short)]
+        #[clap(long, short, visible_alias = "md")]
         markdown: bool,
     },
     /// Add, configure, delete, switch, list, or upgrade modpacks
@@ -73,18 +77,24 @@ pub enum SubCommands {
         #[clap(subcommand)]
         subcommand: Option<ModpackSubCommands>,
     },
+    // /// List all the modpacks with their data
+    // Modpacks,
     /// Create, configure, delete, switch, or list profiles
     Profile {
         #[clap(subcommand)]
         subcommand: Option<ProfileSubCommands>,
     },
+    // /// List all the profiles with their data
+    // Profiles,
     /// Remove mods and repositories from the profile.
     /// Optionally, provide a list of names or IDs of the mods to remove.
+    #[clap(visible_alias = "rm")]
     Remove {
         /// List of project IDs or case-insensitive names of mods to remove
         mod_names: Vec<String>,
     },
     /// Download and install the latest compatible version of your mods
+    #[clap(visible_aliases = ["download", "install"])]
     Upgrade,
 }
 
@@ -92,6 +102,7 @@ pub enum SubCommands {
 pub enum ProfileSubCommands {
     /// Configure the current profile's name, Minecraft version, mod loader, and output directory.
     /// Optionally, provide the settings to change as arguments.
+    #[clap(visible_aliases = ["config", "conf"])]
     Configure {
         /// The Minecraft version to check compatibility for
         #[clap(long, short = 'v')]
@@ -111,10 +122,11 @@ pub enum ProfileSubCommands {
     /// Create a new profile.
     /// Optionally, provide the settings as arguments.
     /// Use the import flag to import mods from another profile.
+    #[clap(visible_alias = "new")]
     Create {
         /// Copy over the mods from an existing profile.
         /// Optionally, provide the name of the profile to import mods from.
-        #[clap(long, short)]
+        #[clap(long, short, visible_aliases = ["copy", "duplicate"])]
         #[allow(clippy::option_option)]
         import: Option<Option<String>>,
         /// The Minecraft version to check compatibility for
@@ -134,8 +146,10 @@ pub enum ProfileSubCommands {
     },
     /// Delete a profile.
     /// Optionally, provide the name of the profile to delete.
+    #[clap(visible_aliases = ["remove", "rm"])]
     Delete {
         /// The name of the profile to delete
+        #[clap(long, short = 'n')]
         profile_name: Option<String>,
     },
     /// Show information about the current profile
@@ -146,6 +160,7 @@ pub enum ProfileSubCommands {
     /// Optionally, provide the name of the profile to switch to.
     Switch {
         /// The name of the profile to switch to
+        #[clap(long, short = 'n')]
         profile_name: Option<String>,
     },
 }
@@ -171,6 +186,7 @@ pub enum ModpackSubCommands {
     },
     /// Configure the current modpack's output directory and installation of overrides.
     /// Optionally, provide the settings to change as arguments.
+    #[clap(visible_aliases = ["config", "conf"])]
     Configure {
         /// The Minecraft instance directory to install the modpack to
         #[clap(long, short)]
@@ -183,20 +199,23 @@ pub enum ModpackSubCommands {
     },
     /// Delete a modpack.
     /// Optionally, provide the name of the modpack to delete.
+    #[clap(visible_aliases = ["remove", "rm"])]
     Delete {
         /// The name of the modpack to delete
         modpack_name: Option<String>,
     },
     /// Show information about the current modpack
     Info,
-    /// List all the modpacks
+    /// List all the modpacks with their data
     List,
     /// Switch between different modpacks.
     /// Optionally, provide the name of the modpack to switch to.
     Switch {
         /// The name of the modpack to switch to
+        #[clap(long, short = 'n')]
         modpack_name: Option<String>,
     },
     /// Download and install the latest version of the modpack
+    #[clap(visible_aliases = ["download", "install"])]
     Upgrade,
 }
