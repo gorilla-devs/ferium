@@ -84,7 +84,7 @@ fn main() -> ExitCode {
     }
 }
 
-async fn actual_main(cli_app: Ferium) -> Result<()> {
+async fn actual_main(mut cli_app: Ferium) -> Result<()> {
     // The complete command should not require a config.
     // See [#139](https://github.com/gorilla-devs/ferium/issues/139) for why this might be a problem.
     if let SubCommands::Complete { shell } = cli_app.subcommand {
@@ -95,6 +95,18 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
             &mut std::io::stdout(),
         );
         return Ok(());
+    }
+    // Alias `ferium profiles` to `ferium profile list`
+    if let SubCommands::Profiles = cli_app.subcommand {
+        cli_app.subcommand = SubCommands::Profile {
+            subcommand: Some(ProfileSubCommands::List),
+        };
+    }
+    // Alias `ferium modpacks` to `ferium modpack list`
+    if let SubCommands::Modpacks = cli_app.subcommand {
+        cli_app.subcommand = SubCommands::Modpack {
+            subcommand: Some(ModpackSubCommands::List),
+        };
     }
 
     let mut github = OctocrabBuilder::new();
@@ -128,10 +140,12 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
 
     // Run function(s) based on the sub(sub)command to be executed
     match cli_app.subcommand {
-        SubCommands::Complete { .. } => unreachable!(),
+        SubCommands::Complete { .. } | SubCommands::Profiles | SubCommands::Modpacks => {
+            unreachable!();
+        }
         SubCommands::Add {
             identifier,
-            // force,
+            force,
             ignore_game_version,
             ignore_mod_loader,
         } => {
@@ -143,6 +157,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     &curseforge,
                     project_id,
                     profile,
+                    !force,
                     Some(!ignore_game_version),
                     Some(!ignore_mod_loader),
                 )
@@ -153,6 +168,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                 let name = libium::add::github(
                     &github.build()?.repos(split[0], split[1]),
                     profile,
+                    !force,
                     Some(!ignore_game_version),
                     Some(!ignore_mod_loader),
                 )
@@ -163,6 +179,7 @@ async fn actual_main(cli_app: Ferium) -> Result<()> {
                     &modrinth,
                     &identifier,
                     profile,
+                    !force,
                     Some(!ignore_game_version),
                     Some(!ignore_mod_loader),
                 )

@@ -43,9 +43,9 @@ pub enum SubCommands {
         /// The CurseForge project ID is specified at the top of the right sidebar under 'About Project'.
         /// The GitHub identifier is the repository's full name, e.g. `gorilla-devs/ferium`.
         identifier: String,
-        // /// Temporarily ignore game version and mod loader checks and add the mod anyway
-        // #[clap(long, short, visible_alias = "override")]
-        // force: bool,
+        /// Temporarily ignore game version and mod loader checks and add the mod anyway
+        #[clap(long, short, visible_alias = "override")]
+        force: bool,
         /// The game version will not be checked for this mod
         #[clap(long, alias = "dont-check-game-version")]
         ignore_game_version: bool,
@@ -77,15 +77,15 @@ pub enum SubCommands {
         #[clap(subcommand)]
         subcommand: Option<ModpackSubCommands>,
     },
-    // /// List all the modpacks with their data
-    // Modpacks,
+    /// List all the modpacks with their data
+    Modpacks,
     /// Create, configure, delete, switch, or list profiles
     Profile {
         #[clap(subcommand)]
         subcommand: Option<ProfileSubCommands>,
     },
-    // /// List all the profiles with their data
-    // Profiles,
+    /// List all the profiles with their data
+    Profiles,
     /// Remove mods and repositories from the profile.
     /// Optionally, provide a list of names or IDs of the mods to remove.
     #[clap(visible_alias = "rm")]
