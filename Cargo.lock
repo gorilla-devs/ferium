@@ -1243,7 +1243,9 @@ checksum = "13e3bf6590cbc649f4d1a3eefc9d5d6eb746f5200ffb04e5e142700b8faa56e7"
 
 [[package]]
 name = "libium"
-version = "1.23.2"
+version = "1.24.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b5c34f3909ffd1377d0b25d34a66ec49c0b0250dd07135b2d67bd7dc971d55d"
 dependencies = [
  "async-recursion",
  "async_zip",

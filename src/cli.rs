@@ -86,7 +86,7 @@ pub enum SubCommands {
     },
     /// List all the profiles with their data
     Profiles,
-    /// Remove mods and repositories from the profile.
+    /// Remove mods and/or repositories from the profile.
     /// Optionally, provide a list of names or IDs of the mods to remove.
     #[clap(visible_alias = "rm")]
     Remove {
@@ -149,7 +149,6 @@ pub enum ProfileSubCommands {
     #[clap(visible_aliases = ["remove", "rm"])]
     Delete {
         /// The name of the profile to delete
-        #[clap(long, short = 'n')]
         profile_name: Option<String>,
     },
     /// Show information about the current profile
@@ -160,7 +159,6 @@ pub enum ProfileSubCommands {
     /// Optionally, provide the name of the profile to switch to.
     Switch {
         /// The name of the profile to switch to
-        #[clap(long, short = 'n')]
         profile_name: Option<String>,
     },
 }
@@ -212,7 +210,6 @@ pub enum ModpackSubCommands {
     /// Optionally, provide the name of the modpack to switch to.
     Switch {
         /// The name of the modpack to switch to
-        #[clap(long, short = 'n')]
         modpack_name: Option<String>,
     },
     /// Download and install the latest version of the modpack
