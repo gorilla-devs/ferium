@@ -10,15 +10,24 @@ use libium::config::structs::{ModIdentifier, Profile};
 /// Else, search the given strings with the projects' name and IDs and remove them
 pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
     let mut indices_to_remove = if to_remove.is_empty() {
+        let mod_info = profile.mods.iter().map(|mod_| {
+            format!(
+                "{:11}  {}",
+                match &mod_.identifier {
+                    ModIdentifier::CurseForgeProject(id) => format!("CF {:8}", id.to_string()),
+                    ModIdentifier::ModrinthProject(id) => format!("MR {id:8}"),
+                    ModIdentifier::GitHubRepository(_) => "GH".to_string(),
+                },
+                match &mod_.identifier {
+                    ModIdentifier::ModrinthProject(_) | ModIdentifier::CurseForgeProject(_) =>
+                        mod_.name.clone(),
+                    ModIdentifier::GitHubRepository(id) => format!("{}/{}", id.0, id.1),
+                },
+            )
+        });
         match MultiSelect::with_theme(&*THEME)
             .with_prompt("Select mods to remove")
-            .items(
-                &profile
-                    .mods
-                    .iter()
-                    .map(|mod_| &mod_.name)
-                    .collect::<Vec<_>>(),
-            )
+            .items(&mod_info.collect::<Vec<_>>())
             .report(false)
             .interact_opt()?
         {
