@@ -150,6 +150,9 @@ pub enum ProfileSubCommands {
     Delete {
         /// The name of the profile to delete
         profile_name: Option<String>,
+        /// The name of the profile to switch to afterwards
+        #[clap(long, short)]
+        switch_to: Option<String>,
     },
     /// Show information about the current profile
     Info,
@@ -201,6 +204,9 @@ pub enum ModpackSubCommands {
     Delete {
         /// The name of the modpack to delete
         modpack_name: Option<String>,
+        /// The name of the profile to switch to afterwards
+        #[clap(long, short)]
+        switch_to: Option<String>,
     },
     /// Show information about the current modpack
     Info,

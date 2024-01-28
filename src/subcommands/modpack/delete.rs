@@ -1,10 +1,15 @@
 use super::switch;
 use crate::THEME;
 use anyhow::{bail, Result};
+use colored::Colorize;
 use dialoguer::Select;
-use libium::config::structs::Config;
+use libium::config::structs::{Config, ModpackIdentifier};
 
-pub fn delete(config: &mut Config, modpack_name: Option<String>) -> Result<()> {
+pub fn delete(
+    config: &mut Config,
+    modpack_name: Option<String>,
+    switch_to: Option<String>,
+) -> Result<()> {
     // If the modpack name has been provided as an option
     let selection = if let Some(modpack_name) = modpack_name {
         match config
@@ -19,7 +24,18 @@ pub fn delete(config: &mut Config, modpack_name: Option<String>) -> Result<()> {
         let modpack_names = config
             .modpacks
             .iter()
-            .map(|modpack| &modpack.name)
+            .map(|modpack| {
+                format!(
+                    "{} {}",
+                    match &modpack.identifier {
+                        ModpackIdentifier::CurseForgeModpack(id) =>
+                            format!("{} {:8}", "CF".red(), id.to_string().dimmed()),
+                        ModpackIdentifier::ModrinthModpack(id) =>
+                            format!("{} {:8}", "MR".green(), id.dimmed()),
+                    },
+                    modpack.name.bold(),
+                )
+            })
             .collect::<Vec<_>>();
 
         let selection = Select::with_theme(&*THEME)
@@ -40,7 +56,7 @@ pub fn delete(config: &mut Config, modpack_name: Option<String>) -> Result<()> {
         // And there is more than one modpack
         if config.modpacks.len() > 1 {
             // Let the user pick which modpack to switch to
-            switch(config, None)?;
+            switch(config, switch_to)?;
         } else {
             config.active_modpack = 0;
         }

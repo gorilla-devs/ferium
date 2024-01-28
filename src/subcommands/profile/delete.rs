@@ -1,10 +1,15 @@
 use super::switch;
 use crate::THEME;
 use anyhow::{bail, Result};
+use colored::Colorize;
 use dialoguer::Select;
 use libium::config::structs::Config;
 
-pub fn delete(config: &mut Config, profile_name: Option<String>) -> Result<()> {
+pub fn delete(
+    config: &mut Config,
+    profile_name: Option<String>,
+    switch_to: Option<String>,
+) -> Result<()> {
     // If the profile name has been provided as an option
     let selection = if let Some(profile_name) = profile_name {
         match config
@@ -19,7 +24,15 @@ pub fn delete(config: &mut Config, profile_name: Option<String>) -> Result<()> {
         let profile_names = config
             .profiles
             .iter()
-            .map(|profile| &profile.name)
+            .map(|profile| {
+                format!(
+                    "{:6} {:7} {} {}",
+                    format!("{:?}", profile.mod_loader).purple(),
+                    profile.game_version.green(),
+                    profile.name.bold(),
+                    format!("({} mods)", profile.mods.len()).yellow(),
+                )
+            })
             .collect::<Vec<_>>();
 
         let selection = Select::with_theme(&*THEME)
@@ -40,7 +53,7 @@ pub fn delete(config: &mut Config, profile_name: Option<String>) -> Result<()> {
         // And there is more than one profile
         if config.profiles.len() > 1 {
             // Let the user pick which profile to switch to
-            switch(config, None)?;
+            switch(config, switch_to)?;
         } else {
             config.active_profile = 0;
         }

@@ -361,8 +361,11 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                         install_overrides,
                     )?;
                 }
-                ModpackSubCommands::Delete { modpack_name } => {
-                    subcommands::modpack::delete(&mut config, modpack_name)?;
+                ModpackSubCommands::Delete {
+                    modpack_name,
+                    switch_to,
+                } => {
+                    subcommands::modpack::delete(&mut config, modpack_name, switch_to)?;
                 }
                 ModpackSubCommands::Info => {
                     subcommands::modpack::info(get_active_modpack(&mut config)?, true);
@@ -436,8 +439,11 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     )
                     .await?;
                 }
-                ProfileSubCommands::Delete { profile_name } => {
-                    subcommands::profile::delete(&mut config, profile_name)?;
+                ProfileSubCommands::Delete {
+                    profile_name,
+                    switch_to,
+                } => {
+                    subcommands::profile::delete(&mut config, profile_name, switch_to)?;
                 }
                 ProfileSubCommands::Info => {
                     subcommands::profile::info(get_active_profile(&mut config)?, true);
