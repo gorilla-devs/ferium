@@ -312,7 +312,11 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             }
         }
         SubCommands::Modpack { subcommand } => {
-            let subcommand = subcommand.unwrap_or(ModpackSubCommands::Info);
+            let mut default_flag = false;
+            let subcommand = subcommand.unwrap_or_else(|| {
+                default_flag = true;
+                ModpackSubCommands::Info
+            });
             match subcommand {
                 ModpackSubCommands::Add {
                     identifier,
@@ -381,9 +385,20 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     .await?;
                 }
             };
+            if default_flag {
+                println!(
+                    "{} ferium modpack help {}",
+                    "Use".yellow(),
+                    "for more information about this subcommand".yellow()
+                );
+            }
         }
         SubCommands::Profile { subcommand } => {
-            let subcommand = subcommand.unwrap_or(ProfileSubCommands::Info);
+            let mut default_flag = false;
+            let subcommand = subcommand.unwrap_or_else(|| {
+                default_flag = true;
+                ProfileSubCommands::Info
+            });
             match subcommand {
                 ProfileSubCommands::Configure {
                     game_version,
@@ -438,6 +453,13 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     subcommands::profile::switch(&mut config, profile_name)?;
                 }
             };
+            if default_flag {
+                println!(
+                    "{} ferium profile help {}",
+                    "Use".yellow(),
+                    "for more information about this subcommand".yellow()
+                );
+            }
         }
         SubCommands::Remove { mod_names } => {
             let profile = get_active_profile(&mut config)?;
