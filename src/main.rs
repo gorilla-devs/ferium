@@ -284,20 +284,28 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                         .name = name;
                 }
             } else {
+                println!(
+                    "Listing Profile {} {} on {:6} {:7}\n",
+                    profile.name.bold(),
+                    format!("({} mods)", profile.mods.len()).yellow(),
+                    format!("{:?}", profile.mod_loader).purple(),
+                    profile.game_version.green(),
+                );
                 for mod_ in &profile.mods {
                     println!(
-                        "{:45} {}",
-                        mod_.name.bold(),
+                        "{:20}  {}",
                         match &mod_.identifier {
                             ModIdentifier::CurseForgeProject(id) =>
-                                format!("{:10} {}", "CurseForge".red(), id.to_string().dimmed()),
+                                format!("{} {:8}", "CF".red(), id.to_string().dimmed()),
                             ModIdentifier::ModrinthProject(id) =>
-                                format!("{:10} {}", "Modrinth".green(), id.dimmed()),
-                            ModIdentifier::GitHubRepository(name) => format!(
-                                "{:10} {}",
-                                "GitHub".purple(),
-                                format!("{}/{}", name.0, name.1).dimmed()
-                            ),
+                                format!("{} {:8}", "MR".green(), id.dimmed()),
+                            ModIdentifier::GitHubRepository(_) => "GH".purple().to_string(),
+                        },
+                        match &mod_.identifier {
+                            ModIdentifier::ModrinthProject(_)
+                            | ModIdentifier::CurseForgeProject(_) => mod_.name.bold().to_string(),
+                            ModIdentifier::GitHubRepository(id) =>
+                                format!("{}/{}", id.0.dimmed(), id.1.bold()),
                         },
                     );
                 }
