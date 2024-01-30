@@ -285,7 +285,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                 }
             } else {
                 println!(
-                    "{} {} on {:6} {:7}\n",
+                    "{} {} on {} {}\n",
                     profile.name.bold(),
                     format!("({} mods)", profile.mods.len()).yellow(),
                     format!("{:?}", profile.mod_loader).purple(),

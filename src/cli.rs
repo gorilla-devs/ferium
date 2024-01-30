@@ -7,7 +7,6 @@ use std::path::PathBuf;
 
 #[derive(Parser)]
 #[clap(author, version, about)]
-#[clap(propagate_version = true)]
 #[clap(arg_required_else_help = true)]
 pub struct Ferium {
     #[clap(subcommand)]
@@ -47,10 +46,10 @@ pub enum SubCommands {
         #[clap(long, short, visible_alias = "override")]
         force: bool,
         /// The game version will not be checked for this mod
-        #[clap(long, alias = "dont-check-game-version")]
+        #[clap(long, short = 'V', alias = "dont-check-game-version")]
         ignore_game_version: bool,
         /// The mod loader will not be checked for this mod
-        #[clap(long, alias = "dont-check-mod-loader")]
+        #[clap(long, short = 'M', alias = "dont-check-mod-loader")]
         ignore_mod_loader: bool,
     },
     /// Print shell auto completions for the specified shell

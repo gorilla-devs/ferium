@@ -64,7 +64,7 @@ The `nogui` versions do not need this as they won't have a GUI folder picker, ma
 > From-source builds will install the Rust toolchain and GCC
 
 | Installation method                             | GUI file dialogue                                                       | No GUI                                                      |
-|-------------------------------------------------|-------------------------------------------------------------------------|-------------------------------------------------------------|
+| ----------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------- |
 | Install pre-built binaries from GitHub Releases | **[ferium-gui-bin](https://aur.archlinux.org/packages/ferium-gui-bin)** | [ferium-bin](https://aur.archlinux.org/packages/ferium-bin) |
 | Build from source at the latest tag             | [ferium-gui](https://aur.archlinux.org/packages/ferium-gui)             | [ferium](https://aur.archlinux.org/packages/ferium)         |
 | Build from source using the latest commit       | [ferium-gui-git](https://aur.archlinux.org/packages/ferium-gui-git)     | [ferium-git](https://aur.archlinux.org/packages/ferium-git) |

@@ -1,7 +1,29 @@
 # Changelog for Ferium
 
+## `v4.5.0`
+### 30.01.2024
+
+- Added aliases for many commands and arguments
+- The `--version`/`-v` flags only work for the top-level command now (they do not propagate to subcommands)
+- Renamed `--dont-check-game-version` and `--dont-check-mod-loader` to `--ignore-game-version` and `--ignore-mod-loader` respectively
+  - Also added a short hand `-V` and `-M`
+  - The previous flags still work as a hidden alias, so scripts do not have to be edited
+- Added `ferium profile info` and `ferium modpack info` subcommands to print information about the current profile/modpack
+  - These are aliased to `ferium profile` and `ferium modpack`
+- Added `ferium profiles` and `ferium modpacks`, which are aliases to their respective list commands
+- Added option to temporarily ignore game version and mod loader checks and force-add the mod anyways ([#142](https://github.com/gorilla-devs/ferium/issues/142))
+- Added an argument for providing a profile/modpack to switch to after deleting a profile/modpack ([#390](https://github.com/gorilla-devs/ferium/issues/390))
+- Fixed errors not getting caught when adding mods (e.g. `HTTP error 404` instead of `mod does not exist`)
+  - Moved a majority of the mod adding code to libium
+- Added a header with profile information in `ferium list`
+- Made `ferium list` display the source and mod ID first and mod name last to circumvent minor formatting issues
+- Added user agent to GitHub API check to make it more reliable
+- Added more information and coloured formatting to profile and modpack pickers (when deleting or switching)
+- Made the remove picker show the same information as `ferium list` but without colours
+- Fixed distribution denied errors not getting caught during mod resolution and causing the entire command to fail instead ([#308](https://github.com/gorilla-devs/ferium/issues/308))
+
 ## `v4.4.1`
-### 07.08.23
+### 07.08.2023
 
 - Update dependencies
   - Fix [#363](https://github.com/gorilla-devs/ferium/issues/363) by updating ferinth
