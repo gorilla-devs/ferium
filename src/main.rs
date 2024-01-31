@@ -148,6 +148,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             force,
             ignore_game_version,
             ignore_mod_loader,
+            hide_donation_message,
         } => {
             let profile = get_active_profile(&mut config)?;
             check_internet().await?;
@@ -188,7 +189,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     Ok((name, donation_urls)) => {
                         println!("{} {}", *TICK, name.bold());
 
-                        if !donation_urls.is_empty() {
+                        if !donation_urls.is_empty() && !hide_donation_message {
                             println!(
                                 "Consider supporting the mod creator on {}",
                                 donation_urls

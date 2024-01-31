@@ -51,6 +51,10 @@ pub enum SubCommands {
         /// The mod loader will not be checked for this mod
         #[clap(long, short = 'M', alias = "dont-check-mod-loader")]
         ignore_mod_loader: bool,
+
+        /// Ignore the donation message
+        #[clap(long, short = 'H', alias = "hide-donation-message")]
+        hide_donation_message: bool,
     },
     /// Print shell auto completions for the specified shell
     Complete {
