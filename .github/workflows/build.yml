@@ -112,7 +112,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           cargo build --target=x86_64-pc-windows-gnu --release
-          run: zip -r out/ferium-windows-gnu.zip -j target/x86_64-pc-windows-gnu/release/ferium.exe
+          zip -r out/ferium-windows-gnu.zip -j target/x86_64-pc-windows-gnu/release/ferium.exe
 
       - name: Upload build artefacts
         uses: actions/upload-artifact@v4
