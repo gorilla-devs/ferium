@@ -100,6 +100,7 @@ pacstall -I ferium-bin
 Available on [LoaTcHi's overlay](https://github.com/Loatchi/loatchi-overlay)
 ```bash
 eselect repository enable loatchi
+emaint sync -r loatchi
 emerge -av ferium
 ```
 
