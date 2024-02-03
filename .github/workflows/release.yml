@@ -11,32 +11,31 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - name: Upload to Crates
-        uses: actions-rs/cargo@v1
-        with:
-          command: publish
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Upload to crates.io
+        run: cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Download artifacts
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           workflow_conclusion: success
           workflow: build.yml
           name: binaries
           path: ./out
+
       - name: Create sha256sum for Scoop
         run: sha256sum ./out/ferium-windows-msvc.zip | cut -d ' ' -f 1 > ./out/ferium-windows-msvc.zip.sha256
       # Remove the dots for the markdown header
       - name: MD Header
         run: echo "MD_HEADER=$(echo ${{ github.ref_name }} | sed 's/\.//g')" >> $GITHUB_ENV
+
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
@@ -71,7 +70,8 @@ jobs:
           commit_username: "Ilesh Thiada"
           commit_email: ileshkt@gmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+
       - name: Update Homebrew formula
-        uses: mislav/bump-homebrew-formula-action@v2
+        uses: mislav/bump-homebrew-formula-action@v3
         env:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
