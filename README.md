@@ -92,8 +92,22 @@ pacstall -I ferium-bin
 
 #### [Nixpkgs](https://nixos.wiki/wiki/Nixpkgs) for _NixOS_ or _Linux_
 [![Nixpkgs unstable](https://repology.org/badge/version-for-repo/nix_unstable/ferium.svg)](https://search.nixos.org/packages?show=ferium&channel=unstable)  
-> [!NOTE] See the package page for installation instructions
+> [!NOTE]
+> See the package page for installation instructions
 > https://search.nixos.org/packages?show=ferium&channel=unstable
+
+#### [Portage](https://wiki.gentoo.org/wiki/Portage) for Gentoo
+Available on [LoaTcHi's overlay](https://github.com/Loatchi/loatchi-overlay)
+```bash
+eselect repository enable loatchi
+emerge -av ferium
+```
+
+#### [XBPS](https://xbps-api-docs.voidlinux.org) for Void Linux
+[![Void Linux x86_64](https://repology.org/badge/version-for-repo/void_x86_64/ferium.svg)](https://voidlinux.org/packages/?q=ferium)
+```bash
+xbps install ferium
+```
 
 #### [crates.io](https://crates.io) using the _Rust toolchain_
 [![crates.io](https://repology.org/badge/version-for-repo/crates_io/rust:ferium.svg)](https://crates.io/crates/ferium)
@@ -124,7 +138,8 @@ Ferium stores profile and modpack information in its config file. By default, th
 You can change this in 2 ways, setting the `FERIUM_CONFIG_FILE` environment variable, or setting the `--config-file` global flag.
 The flag always takes precedence.
 
-> [!CAUTION] Be careful when manually editing the config file
+> [!CAUTION]
+> Be careful when manually editing the config file
 
 You can also set a custom CurseForge API key or GitHub personal access token using the `CURSEFORGE_API_KEY` and `GITHUB_TOKEN` environment variables, or the `--curseforge_api_key` and `--github-token` global flags respectively.
 Again, the flags take precedence.
@@ -257,9 +272,11 @@ When adding a modpack, you will configure the following:
   - This defaults to `.minecraft`, which is the default Minecraft resources directory. You don't need to worry about this if you play with Mojang's launcher and use the default resources directory.
 - Whether to install modpack overrides
 
-> [!TIP] You can also provide these settings as flags to avoid interactivity for things like scripts
+> [!TIP]
+> You can also provide these settings as flags to avoid interactivity for things like scripts
 
-> [!NOTE] Ferium will automatically switch to the newly added modpack
+> [!NOTE]
+> Ferium will automatically switch to the newly added modpack
 
 #### Configuring
 
@@ -286,9 +303,11 @@ You can create a profile by running `ferium profile create` and specifying the f
 If you want to copy the mods from another profile, use the `--import` flag.
 You can also directly provide the profile name to the flag if you don't want a profile picker to be shown.
 
-> [!NOTE] Ferium will automatically switch to the newly created profile
+> [!NOTE]
+> Ferium will automatically switch to the newly created profile
 
-> [!TIP] You can also provide these settings as flags to avoid interactivity for things like scripts
+> [!TIP]
+> You can also provide these settings as flags to avoid interactivity for things like scripts
 
 
 #### Configure
