@@ -37,8 +37,8 @@ use libium::config::{
     structs::{Config, ModIdentifier, Modpack, Profile},
 };
 use octocrab::OctocrabBuilder;
-use once_cell::sync::Lazy;
-use reqwest::header::USER_AGENT;
+use once_cell::sync::{Lazy, OnceCell};
+use reqwest::header::{AUTHORIZATION, USER_AGENT};
 use std::{
     env::{var, var_os},
     process::ExitCode,
@@ -49,6 +49,7 @@ const CROSS: &str = "×";
 pub static TICK: Lazy<ColoredString> = Lazy::new(|| "✓".green());
 pub static YELLOW_TICK: Lazy<ColoredString> = Lazy::new(|| "✓".yellow());
 pub static THEME: Lazy<ColorfulTheme> = Lazy::new(Default::default);
+pub static GITHUB_TOKEN: OnceCell<String> = OnceCell::new();
 #[allow(clippy::expect_used)]
 pub static STYLE_NO: Lazy<ProgressStyle> = Lazy::new(|| {
     ProgressStyle::default_bar()
@@ -73,6 +74,11 @@ fn main() -> ExitCode {
     builder.thread_name("ferium-worker");
     if let Some(threads) = cli.threads {
         builder.worker_threads(threads);
+    }
+    #[cfg(windows)]
+    {
+        #[allow(clippy::unwrap_used)]
+        colored::control::set_virtual_terminal(true).unwrap();
     }
     #[allow(clippy::expect_used)] // No error handling yet
     let runtime = builder.build().expect("Could not initialise Tokio runtime");
@@ -109,11 +115,15 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
         };
     }
 
-    let mut github = OctocrabBuilder::new();
     if let Some(token) = cli_app.github_token {
-        github = github.personal_token(token);
+        GITHUB_TOKEN.get_or_init(|| token.to_string());
     } else if let Ok(token) = var("GITHUB_TOKEN") {
-        github = github.personal_token(token);
+        GITHUB_TOKEN.get_or_init(|| token.to_string());
+    }
+
+    let mut github = OctocrabBuilder::new();
+    if let Some(token) = GITHUB_TOKEN.get() {
+        github = github.personal_token(token.clone());
     }
 
     let modrinth = Ferinth::new(
@@ -542,26 +552,27 @@ fn check_empty_profile(profile: &Profile) -> Result<()> {
 /// Check for an internet connection
 async fn check_internet() -> Result<()> {
     let client = reqwest::Client::default();
+
     client
         .get(ferinth::BASE_URL.as_ref())
         .send()
         .await?
         .error_for_status()?;
+
     client
         .get("https://api.curseforge.com/")
         .send()
         .await?
         .error_for_status()?;
-    client
-        .get("https://api.github.com/")
-        // GitHub API seems to work better with a proper user agent
-        .header(
-            USER_AGENT,
-            concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION")),
-        )
-        .send()
-        .await?
-        .error_for_status()?;
+
+    let mut github = client.get("https://api.github.com/").header(
+        USER_AGENT,
+        concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION")),
+    );
+    if let Some(token) = GITHUB_TOKEN.get() {
+        github = github.header(AUTHORIZATION, format!("Bearer {token}"));
+    }
+    github.send().await?.error_for_status()?;
 
     Ok(())
 }
