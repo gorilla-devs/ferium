@@ -26,18 +26,20 @@ use tokio::fs::create_dir_all;
 pub fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
     let mut picker = Select::with_theme(&*THEME)
         .with_prompt("Which mod loader do you use?")
-        .items(&["Quilt", "Fabric", "Forge"]);
+        .items(&["Quilt", "Fabric", "Forge", "NeoForge"]);
     if let Some(default) = default {
         picker = picker.default(match default {
             ModLoader::Quilt => 0,
             ModLoader::Fabric => 1,
             ModLoader::Forge => 2,
+            ModLoader::NeoForge => 3,
         });
     }
     match picker.interact()? {
         0 => Ok(ModLoader::Quilt),
         1 => Ok(ModLoader::Fabric),
         2 => Ok(ModLoader::Forge),
+        3 => Ok(ModLoader::NeoForge),
         _ => unreachable!(),
     }
 }
