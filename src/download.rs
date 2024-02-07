@@ -141,7 +141,7 @@ pub async fn download(
                 .lock()
                 .expect("Mutex poisoned")
                 .println(format!(
-                    "{} Downloaded {:7} {}",
+                    "{} Downloaded  {:>7}  {}",
                     &*TICK,
                     Size::from_bytes(length)
                         .format()

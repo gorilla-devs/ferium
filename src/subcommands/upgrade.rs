@@ -48,6 +48,13 @@ pub async fn get_platform_downloadables(
         .lock()
         .expect("Mutex poisoned")
         .enable_steady_tick(Duration::from_millis(100));
+    let pad_len = profile
+        .mods
+        .iter()
+        .map(|m| m.name.len())
+        .max()
+        .unwrap_or(20)
+        .clamp(20, 50);
     for mod_ in &profile.mods {
         let permit = semaphore.clone().acquire_owned().await?;
         let to_download = to_download.clone();
@@ -119,7 +126,7 @@ pub async fn get_platform_downloadables(
             match result {
                 Ok((downloadable, qf_flag)) => {
                     progress_bar.println(format!(
-                        "{} {:43} {}",
+                        "{} {:pad_len$}  {}",
                         if qf_flag {
                             YELLOW_TICK.clone()
                         } else {
@@ -147,7 +154,7 @@ pub async fn get_platform_downloadables(
                     }
                     progress_bar.println(format!(
                         "{}",
-                        format!("{CROSS} {:43} {err}", mod_.name).red()
+                        format!("{CROSS} {:pad_len$}  {err}", mod_.name).red()
                     ));
                     Ok((true, false))
                 }
