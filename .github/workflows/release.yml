@@ -27,7 +27,7 @@ jobs:
         with:
           workflow_conclusion: success
           workflow: build.yml
-          name: binaries
+          name: binaries-*
           path: ./out
 
       - name: Create sha256sum for Scoop
