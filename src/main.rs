@@ -23,7 +23,7 @@ mod cli;
 mod download;
 mod subcommands;
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, bail, Result};
 use clap::{CommandFactory, Parser};
 use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
@@ -43,7 +43,7 @@ use std::{
     env::{var, var_os},
     process::ExitCode,
 };
-use tokio::{runtime, task::JoinSet};
+use tokio::runtime;
 
 const CROSS: &str = "×";
 pub static TICK: Lazy<ColoredString> = Lazy::new(|| "✓".green());
@@ -226,73 +226,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             check_empty_profile(profile)?;
             if verbose {
                 check_internet().await?;
-                let mut tasks = JoinSet::new();
-                let mut mr_ids = Vec::<&str>::new();
-                for mod_ in &profile.mods {
-                    if markdown {
-                        match &mod_.identifier {
-                            ModIdentifier::CurseForgeProject(project_id) => {
-                                subcommands::list::curseforge_md(&curseforge, *project_id).await?;
-                            }
-                            ModIdentifier::ModrinthProject(project_id) => {
-                                subcommands::list::modrinth_md(&modrinth, project_id.clone())
-                                    .await?;
-                            }
-                            ModIdentifier::GitHubRepository(full_name) => {
-                                subcommands::list::github_md(
-                                    &OctocrabBuilder::new().build()?,
-                                    full_name.clone(),
-                                )
-                                .await?;
-                            }
-                        };
-                    } else {
-                        match &mod_.identifier {
-                            ModIdentifier::CurseForgeProject(project_id) => {
-                                tasks.spawn(subcommands::list::curseforge(
-                                    curseforge.clone(),
-                                    *project_id,
-                                ));
-                            }
-                            ModIdentifier::ModrinthProject(project_id) => mr_ids.push(project_id),
-                            ModIdentifier::GitHubRepository(full_name) => {
-                                tasks.spawn(subcommands::list::github(
-                                    OctocrabBuilder::new().build()?.clone(),
-                                    full_name.clone(),
-                                ));
-                            }
-                        };
-                    }
-                }
-
-                eprint!("Querying Modrinth mod metadata... ");
-                let mr_projects = modrinth.get_multiple_projects(&mr_ids).await?;
-                let mr_teams_members = modrinth
-                    .list_multiple_teams_members(
-                        &mr_projects
-                            .iter()
-                            .map(|p| &p.team as &str)
-                            .collect::<Vec<_>>(),
-                    )
-                    .await?;
-                println!("{}", &*TICK);
-                for (project, team_members) in
-                    mr_projects.into_iter().zip(mr_teams_members.into_iter())
-                {
-                    tasks.spawn(
-                        async move { Ok(subcommands::list::modrinth(project, team_members)) },
-                    );
-                }
-
-                while let Some(res) = tasks.join_next().await {
-                    let (id, name) = res??;
-                    profile
-                        .mods
-                        .iter_mut()
-                        .find(|mod_| mod_.identifier == id)
-                        .context("Could not find expected mod")?
-                        .name = name;
-                }
+                subcommands::list::verbose(modrinth, curseforge, profile, markdown).await?;
             } else {
                 println!(
                     "{} {} on {} {}\n",
