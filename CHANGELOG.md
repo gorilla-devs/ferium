@@ -1,5 +1,17 @@
 # Changelog for Ferium
 
+## `v4.5.1`
+### 07.02.2024
+
+- Add support for the [NeoForge](https://neoforged.net) mod loader ([#392](https://github.com/gorilla-devs/ferium/issues/392))
+- Fix coloured output not working in Windows `conhost` ([#148](https://github.com/gorilla-devs/ferium/issues/148))
+- Replace the slow, wasteful, and unreliable internet check with an appended warning when the program errors out due to a possible internet connection failure
+- Make markdown verbose listing use batch requests too
+- Make CurseForge mods use a batch request for verbose listing too
+- Properly update the cached names for Modrinth mods again
+- Make non-markdown verbose-listing display in alphabetical order ([#315](https://github.com/gorilla-devs/ferium/issues/315))
+- Fix a bug where the mod loader in a GitHub Release asset filename wasn't detected properly if it was at the end, i.e. something like `*-<mod-loader>.jar` ([#343](https://github.com/gorilla-devs/ferium/issues/343))
+
 ## `v4.5.0`
 ### 30.01.2024
 

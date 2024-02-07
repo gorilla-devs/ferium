@@ -75,7 +75,8 @@ fn main() -> ExitCode {
     }
     #[cfg(windows)]
     {
-        #[allow(clippy::unwrap_used)]
+        #[allow(clippy::unwrap_used)] // There is actually no error
+        // Enable colours on conhost
         colored::control::set_virtual_terminal(true).unwrap();
     }
     #[allow(clippy::expect_used)] // No error handling yet
