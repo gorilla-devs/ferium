@@ -93,10 +93,10 @@ pacstall -I ferium-bin
 #### [Nixpkgs](https://nixos.wiki/wiki/Nixpkgs) for _NixOS_ or _Linux_
 [![Nixpkgs unstable](https://repology.org/badge/version-for-repo/nix_unstable/ferium.svg)](https://search.nixos.org/packages?show=ferium&channel=unstable)  
 > [!NOTE]
-> See the package page for installation instructions
+> See the package page for installation instructions:  
 > https://search.nixos.org/packages?show=ferium&channel=unstable
 
-#### [Portage](https://wiki.gentoo.org/wiki/Portage) for Gentoo
+#### [Portage](https://wiki.gentoo.org/wiki/Portage) for _Gentoo_
 Available on [LoaTcHi's overlay](https://github.com/Loatchi/loatchi-overlay)
 ```bash
 eselect repository enable loatchi
@@ -104,7 +104,7 @@ emaint sync -r loatchi
 emerge -av ferium
 ```
 
-#### [XBPS](https://xbps-api-docs.voidlinux.org) for Void Linux
+#### [XBPS](https://xbps-api-docs.voidlinux.org) for _Void Linux_
 [![Void Linux x86_64](https://repology.org/badge/version-for-repo/void_x86_64/ferium.svg)](https://voidlinux.org/packages/?q=ferium)
 ```bash
 xbps install ferium
