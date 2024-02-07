@@ -1,5 +1,4 @@
 #![allow(clippy::unwrap_used)]
-#![allow(clippy::needless_pass_by_value)]
 
 use crate::TICK;
 use anyhow::{Context, Result};

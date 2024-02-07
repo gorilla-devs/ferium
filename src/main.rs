@@ -37,8 +37,7 @@ use libium::config::{
     structs::{Config, ModIdentifier, Modpack, Profile},
 };
 use octocrab::OctocrabBuilder;
-use once_cell::sync::{Lazy, OnceCell};
-use reqwest::header::{AUTHORIZATION, USER_AGENT};
+use once_cell::sync::Lazy;
 use std::{
     env::{var, var_os},
     process::ExitCode,
@@ -49,7 +48,6 @@ const CROSS: &str = "×";
 pub static TICK: Lazy<ColoredString> = Lazy::new(|| "✓".green());
 pub static YELLOW_TICK: Lazy<ColoredString> = Lazy::new(|| "✓".yellow());
 pub static THEME: Lazy<ColorfulTheme> = Lazy::new(Default::default);
-pub static GITHUB_TOKEN: OnceCell<String> = OnceCell::new();
 #[allow(clippy::expect_used)]
 pub static STYLE_NO: Lazy<ProgressStyle> = Lazy::new(|| {
     ProgressStyle::default_bar()
@@ -84,6 +82,18 @@ fn main() -> ExitCode {
     let runtime = builder.build().expect("Could not initialise Tokio runtime");
     if let Err(err) = runtime.block_on(actual_main(cli)) {
         eprintln!("{}", err.to_string().red().bold());
+        if err
+            .to_string()
+            .to_lowercase()
+            .contains("error trying to connect")
+        {
+            eprintln!(
+                "{}",
+                "Verify that you are connnected to the internet"
+                    .yellow()
+                    .bold()
+            );
+        }
         ExitCode::FAILURE
     } else {
         ExitCode::SUCCESS
@@ -115,15 +125,11 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
         };
     }
 
-    if let Some(token) = cli_app.github_token {
-        GITHUB_TOKEN.get_or_init(|| token.to_string());
-    } else if let Ok(token) = var("GITHUB_TOKEN") {
-        GITHUB_TOKEN.get_or_init(|| token.to_string());
-    }
-
     let mut github = OctocrabBuilder::new();
-    if let Some(token) = GITHUB_TOKEN.get() {
-        github = github.personal_token(token.clone());
+    if let Some(token) = cli_app.github_token {
+        github = github.personal_token(token);
+    } else if let Ok(token) = var("GITHUB_TOKEN") {
+        github = github.personal_token(token);
     }
 
     let modrinth = Ferinth::new(
@@ -160,7 +166,6 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             ignore_mod_loader,
         } => {
             let profile = get_active_profile(&mut config)?;
-            check_internet().await?;
             eprint!("Adding mod... ");
             if let Ok(project_id) = identifier.parse::<i32>() {
                 let name = libium::add::curseforge(
@@ -225,7 +230,6 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
             if verbose {
-                check_internet().await?;
                 subcommands::list::verbose(modrinth, curseforge, profile, markdown).await?;
             } else {
                 println!(
@@ -267,7 +271,6 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     output_dir,
                     install_overrides,
                 } => {
-                    check_internet().await?;
                     if let Ok(project_id) = identifier.parse::<i32>() {
                         subcommands::modpack::add::curseforge(
                             &curseforge,
@@ -323,7 +326,6 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     subcommands::modpack::switch(&mut config, modpack_name)?;
                 }
                 ModpackSubCommands::Upgrade => {
-                    check_internet().await?;
                     subcommands::modpack::upgrade(
                         &modrinth,
                         &curseforge,
@@ -353,7 +355,6 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     name,
                     output_dir,
                 } => {
-                    check_internet().await?;
                     subcommands::profile::configure(
                         get_active_profile(&mut config)?,
                         game_version,
@@ -370,9 +371,6 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     name,
                     output_dir,
                 } => {
-                    if game_version.is_none() {
-                        check_internet().await?;
-                    }
                     subcommands::profile::create(
                         &mut config,
                         import,
@@ -417,7 +415,6 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             subcommands::remove(profile, mod_names)?;
         }
         SubCommands::Upgrade => {
-            check_internet().await?;
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
             subcommands::upgrade(modrinth, curseforge, github.build()?, profile).await?;
@@ -480,33 +477,5 @@ fn check_empty_profile(profile: &Profile) -> Result<()> {
     if profile.mods.is_empty() {
         bail!("Your currently selected profile is empty! Run `ferium help` to see how to add mods");
     }
-    Ok(())
-}
-
-/// Check for an internet connection
-async fn check_internet() -> Result<()> {
-    let client = reqwest::Client::default();
-
-    client
-        .get(ferinth::BASE_URL.as_ref())
-        .send()
-        .await?
-        .error_for_status()?;
-
-    client
-        .get("https://api.curseforge.com/")
-        .send()
-        .await?
-        .error_for_status()?;
-
-    let mut github = client.get("https://api.github.com/").header(
-        USER_AGENT,
-        concat!(env!("CARGO_PKG_NAME"), " ", env!("CARGO_PKG_VERSION")),
-    );
-    if let Some(token) = GITHUB_TOKEN.get() {
-        github = github.header(AUTHORIZATION, format!("Bearer {token}"));
-    }
-    github.send().await?.error_for_status()?;
-
     Ok(())
 }
