@@ -18,11 +18,11 @@ Simply specify the mods you use, and in just one command you can download the la
 - <details>
     <summary>Beautiful and informative UI</summary>
 
-    #### Listing mods
-    ![Listing Mods](media/list.png)
+    #### Profile info and listing mods
+    ![Profile Information and Listing Mods](media/profile_info_and_list.png)
 
     #### Listing mods verbosely
-    ![Listing Mods Verbosely](media/list%20verbose.png)
+    ![Listing Mods Verbosely](media/list_verbose.png)
 
     #### Upgrading mods/modpacks
     ![Upgrading Mods/Modpacks](media/upgrade.png)
