@@ -35,11 +35,11 @@ Simply specify the mods you use, and in just one command you can download the la
 
     It downloads my modpack [Kupfur](https://github.com/theRookieCoder/Kupfur) with 79 mods in 15 seconds:
 
-    https://user-images.githubusercontent.com/60034030/212559027-2df10657-82a3-407c-875d-9981628bbfc2.mp4
+    https://github.com/gorilla-devs/ferium/assets/60034030/cfe2f0aa-3c10-41ca-b223-367925309ea9
 
     It downloads [MMTP](https://www.curseforge.com/minecraft/modpacks/mats-mega-tech-pack), a very large modpack with around 400 mods, in just under a minute:
 
-    https://user-images.githubusercontent.com/60034030/201951498-62d1e6d9-8edb-4399-b02c-f2562ae566e3.mp4
+    https://github.com/gorilla-devs/ferium/assets/60034030/857e8d27-372d-4cdd-90af-b0d77cb7e90c
   </details>
 
 - Upgrade all your mods to the latest compatible version in one command, `ferium upgrade`
