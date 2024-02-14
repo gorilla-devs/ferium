@@ -51,8 +51,11 @@ Simply specify the mods you use, and in just one command you can download the la
 
 Ferium executables from GitHub Releases do not require any external dependencies at runtime.  
 If you compile from source on Linux, using GCC to build will result in binaries that require GCC to be available at runtime.  
-On Linux, the regular version requires some sort of desktop environment that offers an XDG Desktop Portal to show the folder picker.
-The `nogui` versions do not need this as they won't have a GUI folder picker, making these variants suitable for headless/server use.
+On Linux, the regular versions require some sort of desktop environment to be available that offers an XDG Desktop Portal to show the folder picker.
+The `nogui` versions do not need this as they won't have a GUI folder picker, making these variants suitable for server use.
+
+> [!IMPORTANT]
+> Linux users! Use the `nogui` versions (or compile with `--no-default-features`) if you do not have desktop environment (like GNOME, KDE, XFCE, etc.)
 
 ### Packages
 
@@ -328,8 +331,8 @@ If not, [create a new issue](https://github.com/gorilla-devs/ferium/issues/new/c
 
 ## Developing
 
-Firstly you need the Rust toolchain, which includes `cargo`, `rustup`, etc. You can install these from [using rustup](https://www.rust-lang.org/tools/install).
-You can manually run cargo commands, but I recommend using [`just`](https://just.systems/man/en), which is a command runner that is basically a much better version of `make`.
+Firstly, you will need the Rust toolchain, which includes `cargo`, `rustup`, etc. You can install these [using rustup](https://www.rust-lang.org/tools/install).
+You can manually run cargo commands if you wish, but I recommend using the `justfile` configuration in the repository. [`just`](https://just.systems/man/en) is a command runner that is basically a much better version of `make`.
 
 To build the project and install it to your Cargo binary directory, clone the project and run `just install`.
 If you want to install it for testing purposes, [add the nightly toolchain](https://doc.rust-lang.org/book/appendix-07-nightly-rust.html#rustup-and-the-role-of-rust-nightly) and run `just` (aliased to `just install-dev`), which has some optimisations to make compilation faster.
