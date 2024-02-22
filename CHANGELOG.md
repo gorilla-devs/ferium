@@ -1,7 +1,7 @@
 # Changelog for Ferium
 
 ## `v4.5.2`
-### 22.02.2024
+### 23.02.2024
 
 - Pad the file sizes when downloading to the right so that the unit line up
 - Only print the message `Downloading Modpack` when actually doing so
