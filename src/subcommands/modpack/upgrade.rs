@@ -118,12 +118,12 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
             }
         }
         ModpackIdentifier::ModrinthModpack(project_id) => {
-            println!("{}", "Downloading Modpack".bold());
             let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
             let modpack_file = download_modrinth_modpack(
                 &modrinth.clone(),
                 project_id,
                 |total| {
+                    println!("{}", "Downloading Modpack".bold());
                     progress_bar.enable_steady_tick(Duration::from_millis(100));
                     progress_bar.set_length(total as u64);
                 },
