@@ -6,7 +6,7 @@ on:
       - "*"
 
 jobs:
-  publish:
+  crates-publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -18,7 +18,7 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-  release:
+  gh-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,6 +56,18 @@ jobs:
 
             You can install ferium by downloading and unzipping the appropriate asset, and moving the executable to ~/bin or any other folder in your path.
 
+  aur-update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          workflow_conclusion: success
+          workflow: build.yml
+          name: binaries-*
+          path: ./out
+
       - name: Update no-gui AUR package
         uses: ATiltedTree/create-aur-release@v1
         with:
@@ -70,6 +82,18 @@ jobs:
           commit_username: "Ilesh Thiada"
           commit_email: ileshkt@gmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+
+  homebrew-update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download artifacts
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          workflow_conclusion: success
+          workflow: build.yml
+          name: binaries-*
+          path: ./out
 
       - name: Update Homebrew formula
         uses: mislav/bump-homebrew-formula-action@v3
