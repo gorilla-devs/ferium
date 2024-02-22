@@ -11,9 +11,7 @@ use itertools::Itertools;
 use libium::{
     config::structs::{Modpack, ModpackIdentifier},
     modpack::{
-        curseforge::{read_manifest_file, structs::Manifest},
-        extract_zip,
-        modrinth::{read_metadata_file, structs::Metadata},
+        curseforge::structs::Manifest, extract_zip, modrinth::structs::Metadata, read_file_from_zip,
     },
     upgrade::{
         modpack_downloadable::{download_curseforge_modpack, download_modrinth_modpack},
@@ -21,7 +19,7 @@ use libium::{
     },
     HOME,
 };
-use std::time::Duration;
+use std::{path::PathBuf, time::Duration};
 use tokio::spawn;
 
 #[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
@@ -31,12 +29,12 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
     let install_msg;
     match &modpack.identifier {
         ModpackIdentifier::CurseForgeModpack(project_id) => {
-            println!("{}", "Downloading Modpack".bold());
             let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
             let modpack_file = download_curseforge_modpack(
                 &curseforge.clone(),
                 *project_id,
                 |total| {
+                    progress_bar.println("Downloading Modpack".bold().to_string());
                     progress_bar.enable_steady_tick(Duration::from_millis(100));
                     progress_bar.set_length(total as u64);
                 },
@@ -46,7 +44,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
             )
             .await?;
             let manifest: Manifest = serde_json::from_str(
-                &read_manifest_file(modpack_file.try_clone().await?)
+                &read_file_from_zip(modpack_file.try_clone().await?, "manifest.json")
                     .await?
                     .context("Does not contain manifest")?,
             )?;
@@ -61,8 +59,15 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
             let mut tasks = Vec::new();
             let mut msg_shown = false;
             for file in files {
-                match file.try_into() {
-                    Ok(downloadable) => {
+                match TryInto::<Downloadable>::try_into(file) {
+                    Ok(mut downloadable) => {
+                        downloadable.output =
+                            PathBuf::from(if downloadable.filename().ends_with(".zip") {
+                                "resourcepacks"
+                            } else {
+                                "mods"
+                            })
+                            .join(&downloadable.filename());
                         to_download.push(downloadable);
                     }
                     Err(DistributionDeniedError(mod_id, file_id)) => {
@@ -128,7 +133,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
             )
             .await?;
             let metadata: Metadata = serde_json::from_str(
-                &read_metadata_file(modpack_file.try_clone().await?)
+                &read_file_from_zip(modpack_file.try_clone().await?, "modrinth.index.json")
                     .await?
                     .context("Does not contain metadata file")?,
             )?;

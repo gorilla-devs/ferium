@@ -11,8 +11,11 @@ use ferinth::Ferinth;
 use furse::Furse;
 use indicatif::ProgressBar;
 use libium::{
-    config::structs::{ModIdentifier, ModLoader, Profile},
-    upgrade::{mod_downloadable, Downloadable},
+    config::structs::{ModLoader, Profile},
+    upgrade::{
+        mod_downloadable::{self, get_latest_compatible_downloadable},
+        Downloadable,
+    },
 };
 use octocrab::Octocrab;
 use std::{
@@ -65,62 +68,16 @@ pub async fn get_platform_downloadables(
         let github = github.clone();
         let mod_ = mod_.clone();
         tasks.spawn(async move {
-            let game_version_to_check = if mod_.check_game_version == Some(false) {
-                None
-            } else {
-                Some(profile.game_version.as_ref())
-            };
-            let mod_loader_to_check = if mod_.check_mod_loader == Some(false) {
-                None
-            } else {
-                Some(&profile.mod_loader)
-            };
             let _permit = permit;
-            let result = match &mod_.identifier {
-                ModIdentifier::CurseForgeProject(project_id) => {
-                    let result = mod_downloadable::get_latest_compatible_file(
-                        curseforge.get_mod_files(*project_id).await?,
-                        game_version_to_check,
-                        mod_loader_to_check,
-                    );
-                    if let Some((file, qf_flag)) = result {
-                        match TryInto::<Downloadable>::try_into(file) {
-                            Ok(d) => Ok((d, qf_flag)),
-                            Err(err) => Err(mod_downloadable::Error::DistributionDenied(err)),
-                        }
-                    } else {
-                        Err(mod_downloadable::Error::NoCompatibleFile)
-                    }
-                }
-                ModIdentifier::ModrinthProject(project_id) => {
-                    mod_downloadable::get_latest_compatible_version(
-                        &modrinth.list_versions(project_id).await?,
-                        game_version_to_check,
-                        mod_loader_to_check,
-                    )
-                    .map_or_else(
-                        || Err(mod_downloadable::Error::NoCompatibleFile),
-                        |(ver_file, _, qf_flag)| Ok((ver_file.into(), qf_flag)),
-                    )
-                }
-                ModIdentifier::GitHubRepository(full_name) => {
-                    mod_downloadable::get_latest_compatible_asset(
-                        &github
-                            .repos(&full_name.0, &full_name.1)
-                            .releases()
-                            .list()
-                            .send()
-                            .await?
-                            .items,
-                        game_version_to_check,
-                        mod_loader_to_check,
-                    )
-                    .map_or_else(
-                        || Err(mod_downloadable::Error::NoCompatibleFile),
-                        |(asset, qf_flag)| Ok((asset.into(), qf_flag)),
-                    )
-                }
-            };
+            let result = get_latest_compatible_downloadable(
+                &modrinth,
+                &curseforge,
+                &github,
+                &mod_,
+                &profile.game_version,
+                profile.mod_loader,
+            )
+            .await;
             let progress_bar = progress_bar.lock().expect("Mutex poisoned");
             progress_bar.inc(1);
             match result {

@@ -13,6 +13,7 @@
 )]
 #![warn(clippy::dbg_macro, clippy::expect_used)]
 #![allow(
+    clippy::case_sensitive_file_extension_comparisons,
     clippy::cast_possible_truncation,
     clippy::multiple_crate_versions,
     clippy::large_enum_variant,
@@ -32,9 +33,13 @@ use ferinth::Ferinth;
 use furse::Furse;
 use indicatif::ProgressStyle;
 use itertools::Itertools;
-use libium::config::{
-    self,
-    structs::{Config, ModIdentifier, Modpack, Profile},
+use libium::{
+    config::{
+        self,
+        structs::{Config, ModIdentifier, Modpack, Profile},
+        DEFAULT_CONFIG_PATH,
+    },
+    read_wrapper,
 };
 use octocrab::OctocrabBuilder;
 use once_cell::sync::Lazy;
@@ -147,13 +152,13 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
     }));
 
     let mut config_file = config::get_file(
-        cli_app
+        &cli_app
             .config_file
             .or_else(|| var_os("FERIUM_CONFIG_FILE").map(Into::into))
-            .unwrap_or_else(config::file_path),
+            .unwrap_or(DEFAULT_CONFIG_PATH.clone()),
     )
     .await?;
-    let mut config = config::deserialise(&config::read_file(&mut config_file).await?)?;
+    let mut config = config::deserialise(&read_wrapper(&mut config_file).await?)?;
 
     // Run function(s) based on the sub(sub)command to be executed
     match cli_app.subcommand {
@@ -168,14 +173,14 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
         } => {
             let profile = get_active_profile(&mut config)?;
             eprint!("Adding mod... ");
-            if let Ok(project_id) = identifier.parse::<i32>() {
+            if let Ok(project_id) = identifier.parse() {
                 let name = libium::add::curseforge(
                     &curseforge,
                     project_id,
                     profile,
                     !force,
-                    Some(!ignore_game_version),
-                    Some(!ignore_mod_loader),
+                    !ignore_game_version,
+                    !ignore_mod_loader,
                 )
                 .await?;
                 println!("{} {}", *TICK, name.bold());
@@ -185,8 +190,8 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     &github.build()?.repos(split[0], split[1]),
                     profile,
                     !force,
-                    Some(!ignore_game_version),
-                    Some(!ignore_mod_loader),
+                    !ignore_game_version,
+                    !ignore_mod_loader,
                 )
                 .await?;
                 println!("{} {}", *TICK, name.bold());
@@ -196,8 +201,8 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     &identifier,
                     profile,
                     !force,
-                    Some(!ignore_game_version),
-                    Some(!ignore_mod_loader),
+                    !ignore_game_version,
+                    !ignore_mod_loader,
                 )
                 .await
                 {
