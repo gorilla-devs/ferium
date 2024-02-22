@@ -1,5 +1,15 @@
 # Changelog for Ferium
 
+## `v4.5.2`
+### 22.02.2024
+
+- Pad the file sizes when downloading to the right so that the unit line up
+- Only print the message `Downloading Modpack` when actually doing so
+- Properly pad the version-resolution messages based on the largest mod name instead of an arbitrary length
+- Many improvements to libium, including;
+  - Omission of the active index and profiles/modpacks fields in the config if they're zero or empty
+  - Faster Modrinth mod adding
+
 ## `v4.5.1`
 ### 07.02.2024
 

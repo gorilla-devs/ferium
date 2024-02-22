@@ -55,7 +55,7 @@ On Linux, the regular versions require some sort of desktop environment to be av
 The `nogui` versions do not need this as they won't have a GUI folder picker, making these variants suitable for server use.
 
 > [!IMPORTANT]
-> Linux users! Use the `nogui` versions (or compile with `--no-default-features`) if you do not have desktop environment (like GNOME, KDE, XFCE, etc.)
+> Linux users! Use the `nogui` versions (or compile with `--no-default-features`) if you do not have a desktop environment (like GNOME, KDE, XFCE, etc.)
 
 ### Packages
 
@@ -80,9 +80,16 @@ Have knowledge/experience maintaining packages? Consider [helping with adding an
 brew install ferium
 ```
 
+#### [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget) for _Windows_
+[![winget](https://img.shields.io/badge/winget_package-gray)](https://winstall.app/apps/GorillaDevs.Ferium)
+
+```powershell
+winget install GorillaDevs.Ferium
+```
+
 #### [Scoop](https://scoop.sh) for _Windows_
 [![Scoop](https://repology.org/badge/version-for-repo/scoop/ferium.svg)](https://scoop.sh/#/apps?q=ferium&id=d17eaa5fe92af6d5eddb853f06bf27d162cadbba)
-```bash
+```powershell
 scoop bucket add games
 scoop install ferium
 ```
