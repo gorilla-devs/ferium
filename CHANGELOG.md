@@ -3,11 +3,11 @@
 ## `v4.5.2`
 ### 23.02.2024
 
-- Pad the file sizes when downloading to the right so that the unit line up
+- Pad the file sizes when downloading to the right so that the units line up
 - Only print the message `Downloading Modpack` when actually doing so
 - Properly pad the version-resolution messages based on the largest mod name instead of an arbitrary length
 - Many improvements to libium, including;
-  - Omission of the active index and profiles/modpacks fields in the config if they're zero or empty
+  - Omission of the active index and profiles/modpacks fields in the config file if they're zero or empty
   - Fix a bug where the directory to which a file was being downloaded would not be created ([#402](https://github.com/gorilla-devs/ferium/issues/402))
   - Faster Modrinth mod adding
 
