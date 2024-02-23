@@ -28,7 +28,6 @@ jobs:
         with:
           workflow_conclusion: success
           workflow: build.yml
-          name: binaries\-.+\-latest
           path: ./out
 
       - name: Create sha256sum for Scoop
@@ -66,7 +65,6 @@ jobs:
         with:
           workflow_conclusion: success
           workflow: build.yml
-          name: binaries\-.+\-latest
           path: ./out
 
       - name: Update no-gui AUR package
@@ -93,7 +91,6 @@ jobs:
         with:
           workflow_conclusion: success
           workflow: build.yml
-          name: binaries\-.+\-latest
           path: ./out
 
       - name: Update Homebrew formula
