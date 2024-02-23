@@ -32,18 +32,22 @@ jobs:
 
       - name: Create sha256sum for Scoop
         run: sha256sum ./out/ferium-windows-msvc.zip | cut -d ' ' -f 1 > ./out/ferium-windows-msvc.zip.sha256
+
       # Remove the dots for the markdown header
       - name: MD Header
         run: echo "MD_HEADER=$(git describe --tags | sed 's/\.//g')" >> $GITHUB_ENV
+
+      - name: Get the latest tag
+        run: echo "TAG=$(git describe --tags)" >> $GITHUB_ENV
 
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
           files: ./out/*
-          name: Ferium $(git describe --tags)
-          tag_name: $(git describe --tags)
+          name: Ferium ${{ env.TAG }}
+          tag_name: ${{ env.TAG }}
           body: |
-            Compiled binaries for Ferium version `$(git describe --tags)` ([changelog](${{ github.server_url }}/${{ github.repository }}/blob/main/CHANGELOG.md#${{ env.MD_HEADER }}))
+            Compiled binaries for Ferium version `${{ env.TAG }}` ([changelog](${{ github.server_url }}/${{ github.repository }}/blob/main/CHANGELOG.md#${{ env.MD_HEADER }}))
 
             The provided binaries are for:
             - Linux ARM without a GUI file dialogue
@@ -68,11 +72,14 @@ jobs:
           workflow: build.yml
           path: ./out
 
+      - name: Get the latest tag
+        run: echo "TAG=$(git describe --tags)" >> $GITHUB_ENV
+
       - name: Update no-gui AUR package
         uses: ATiltedTree/create-aur-release@v1
         with:
           package_name: ferium-bin
-          package_version: $(git describe --tags)
+          package_version: ${{ env.TAG }}
           commit_username: "Ilesh Thiada"
           commit_email: ileshkt@gmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
@@ -80,7 +87,7 @@ jobs:
         uses: ATiltedTree/create-aur-release@v1
         with:
           package_name: ferium-gui-bin
-          package_version: $(git describe --tags)
+          package_version: ${{ env.TAG }}
           commit_username: "Ilesh Thiada"
           commit_email: ileshkt@gmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
@@ -96,9 +103,12 @@ jobs:
           workflow: build.yml
           path: ./out
 
+      - name: Get the latest tag
+        run: echo "TAG=$(git describe --tags)" >> $GITHUB_ENV
+
       - name: Update Homebrew formula
         uses: mislav/bump-homebrew-formula-action@v3
         with:
-          tag-name: $(git describe --tags)
+          tag-name: ${{ env.TAG }}
         env:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
