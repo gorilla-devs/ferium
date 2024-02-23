@@ -40,9 +40,10 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: ./out/*
-          name: Ferium ${{ github.ref_name }}
+          name: Ferium $(git describe --tags)
+          tag_name: $(git describe --tags)
           body: |
-            Compiled binaries for Ferium version `${{ github.ref_name }}` ([changelog](${{ github.server_url }}/${{ github.repository }}/blob/main/CHANGELOG.md#${{ env.MD_HEADER }}))
+            Compiled binaries for Ferium version `$(git describe --tags)` ([changelog](${{ github.server_url }}/${{ github.repository }}/blob/main/CHANGELOG.md#${{ env.MD_HEADER }}))
 
             The provided binaries are for:
             - Linux ARM without a GUI file dialogue
@@ -71,6 +72,7 @@ jobs:
         uses: ATiltedTree/create-aur-release@v1
         with:
           package_name: ferium-bin
+          package_version: $(git describe --tags)
           commit_username: "Ilesh Thiada"
           commit_email: ileshkt@gmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
@@ -78,6 +80,7 @@ jobs:
         uses: ATiltedTree/create-aur-release@v1
         with:
           package_name: ferium-gui-bin
+          package_version: $(git describe --tags)
           commit_username: "Ilesh Thiada"
           commit_email: ileshkt@gmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
@@ -95,5 +98,7 @@ jobs:
 
       - name: Update Homebrew formula
         uses: mislav/bump-homebrew-formula-action@v3
+        with:
+          tag-name: $(git describe --tags)
         env:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
