@@ -2,8 +2,8 @@ name: Publish and Release
 
 on:
   push:
-    tags:
-      - "*"
+    paths: ".github/workflows/release.yml"
+    tags: "*"
 
 jobs:
   crates-publish:
@@ -34,7 +34,7 @@ jobs:
         run: sha256sum ./out/ferium-windows-msvc.zip | cut -d ' ' -f 1 > ./out/ferium-windows-msvc.zip.sha256
       # Remove the dots for the markdown header
       - name: MD Header
-        run: echo "MD_HEADER=$(echo ${{ github.ref_name }} | sed 's/\.//g')" >> $GITHUB_ENV
+        run: echo "MD_HEADER=$(git describe --tags | sed 's/\.//g')" >> $GITHUB_ENV
 
       - name: Create release
         uses: softprops/action-gh-release@v1
