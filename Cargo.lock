@@ -364,9 +364,9 @@ checksum = "a2bd12c1caf447e69cd4528f47f94d203fd2582878ecb9e9465484c4148a8223"
 
 [[package]]
 name = "cc"
-version = "1.0.86"
+version = "1.0.87"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f9fa1897e4325be0d68d48df6aa1a71ac2ed4d27723887e7754192705350730"
+checksum = "3286b845d0fccbdd15af433f61c5970e711987036cb468f437ff6badd70f4e24"
 
 [[package]]
 name = "cfg-if"
@@ -1283,8 +1283,7 @@ checksum = "9c198f91728a82281a64e1f4f9eeb25d82cb32a5de251c6bd1b5154d63a8e7bd"
 [[package]]
 name = "libium"
 version = "1.26.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "834f679f6cf12d8107a27c9caca0b4f7f965f5d0fd0893a5a207bb4e7fe4ca30"
+source = "git+https://github.com/gorilla-devs/libium?rev=e11a80bc57c5cda6fa3605ba3b96a1b2563760f9#e11a80bc57c5cda6fa3605ba3b96a1b2563760f9"
 dependencies = [
  "async-recursion",
  "async_zip",

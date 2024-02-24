@@ -44,6 +44,7 @@ use libium::{
 use octocrab::OctocrabBuilder;
 use once_cell::sync::Lazy;
 use std::{
+    collections::HashMap,
     env::{var, var_os},
     process::ExitCode,
 };
@@ -166,68 +167,62 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             unreachable!();
         }
         SubCommands::Add {
-            identifier,
+            identifiers,
             force,
             ignore_game_version,
             ignore_mod_loader,
         } => {
             let profile = get_active_profile(&mut config)?;
-            eprint!("Adding mod... ");
-            if let Ok(project_id) = identifier.parse() {
-                let name = libium::add::curseforge(
-                    &curseforge,
-                    project_id,
-                    profile,
-                    !force,
-                    !ignore_game_version,
-                    !ignore_mod_loader,
-                )
-                .await?;
-                println!("{} {}", *TICK, name.bold());
-            } else if identifier.split('/').count() == 2 {
-                let split = identifier.split('/').collect::<Vec<_>>();
-                let name = libium::add::github(
-                    &github.build()?.repos(split[0], split[1]),
-                    profile,
-                    !force,
-                    !ignore_game_version,
-                    !ignore_mod_loader,
-                )
-                .await?;
-                println!("{} {}", *TICK, name.bold());
-            } else {
-                match libium::add::modrinth(
-                    &modrinth,
-                    &identifier,
-                    profile,
-                    !force,
-                    !ignore_game_version,
-                    !ignore_mod_loader,
-                )
-                .await
-                {
-                    Ok((name, donation_urls)) => {
-                        println!("{} {}", *TICK, name.bold());
+            match identifiers.len() {
+                0 => bail!("Must provide at least one identifier"),
+                1 => {
+                    eprint!("Adding mod... ");
+                    let name = libium::add::add_single(
+                        &modrinth,
+                        &curseforge,
+                        &github.build()?,
+                        profile,
+                        &identifiers[0],
+                        !force,
+                        !ignore_game_version,
+                        !ignore_mod_loader,
+                    )
+                    .await?;
+                    println!("{} {}", *TICK, name.bold());
+                }
+                _ => {
+                    eprint!("Fetching mod information... ");
+                    let (successes, failures) = libium::add::add_multiple(
+                        &modrinth,
+                        &curseforge,
+                        &github.build()?,
+                        profile,
+                        identifiers,
+                    )
+                    .await;
+                    println!("{}", *TICK);
 
-                        if !donation_urls.is_empty() {
+                    if !successes.is_empty() {
+                        println!(
+                            "Successfully added {}",
+                            successes.iter().map(|s| s.bold()).format(", ")
+                        );
+                    }
+                    if !failures.is_empty() {
+                        let mut grouped_errors = HashMap::new();
+                        for (id, error) in failures {
+                            grouped_errors
+                                .entry(error.to_string())
+                                .or_insert_with(Vec::new)
+                                .push(id);
+                        }
+                        for (err, ids) in grouped_errors {
                             println!(
-                                "Consider supporting the mod creator on {}",
-                                donation_urls
-                                    .iter()
-                                    .map(|this| format!(
-                                        "{} ({})",
-                                        this.platform.bold(),
-                                        this.url.to_string().blue().underline()
-                                    ))
-                                    .format(" or ")
+                                "{}: {}",
+                                err.red().bold(),
+                                ids.iter().map(|s| s.italic()).format(", ")
                             );
                         }
-                    }
-                    Err(err) => {
-                        if err.to_string() == ferinth::Error::InvalidIDorSlug.to_string() {
-                            bail!("Invalid identifier")
-                        }
-                        bail!(err)
                     }
                 }
             }

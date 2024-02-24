@@ -139,6 +139,13 @@ fn add_github() -> Result {
     )
 }
 
+fn add_all() -> Result {
+    run_command(
+        vec!["add", "starlight", "591388", "CaffeineMC/sodium-fabric"],
+        Some("empty_profile"),
+    )
+}
+
 #[test]
 fn modpack_add_modrinth() -> Result {
     // Add Fabulously Optimised
@@ -178,7 +185,7 @@ fn already_added() {
     assert!(run_command(vec!["add", "StArLiGhT"], Some("one_profile_full")).is_err());
     assert!(run_command(vec!["add", "591388"], Some("one_profile_full")).is_err());
     assert!(run_command(
-        vec!["add", "caffeinemc", "Sodium-Fabric"],
+        vec!["add", "caffeinemc/Sodium-Fabric"],
         Some("one_profile_full")
     )
     .is_err());

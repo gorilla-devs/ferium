@@ -42,7 +42,9 @@ once_cell = "1.19"
 fs_extra = "1.3"
 ferinth = "2.10"
 colored = "2.1"
-libium = "1.26"
+# libium = "1.26"
+# libium = { path = "../libium" }
+libium = { rev = "e11a80bc57c5cda6fa3605ba3b96a1b2563760f9", git = "https://github.com/gorilla-devs/libium" }
 anyhow = "1.0"
 furse = "1.5"
 size = "0.4"

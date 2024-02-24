@@ -33,15 +33,15 @@ pub struct Ferium {
 
 #[derive(Subcommand)]
 pub enum SubCommands {
-    /// Add a mod to the profile
+    /// Add mods to the profile
     Add {
-        /// The identifier of the mod/project/repository
+        /// The identifier(s) of the mod/project/repository
         ///
         /// The Modrinth project ID is specified at the bottom of the left sidebar under 'Technical information'.
         /// You can also use the project slug in the URL.
         /// The CurseForge project ID is specified at the top of the right sidebar under 'About Project'.
         /// The GitHub identifier is the repository's full name, e.g. `gorilla-devs/ferium`.
-        identifier: String,
+        identifiers: Vec<String>,
         /// Temporarily ignore game version and mod loader checks and add the mod anyway
         #[clap(long, short, visible_alias = "override")]
         force: bool,
