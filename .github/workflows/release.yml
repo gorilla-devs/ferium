@@ -38,7 +38,7 @@ jobs:
         run: echo "MD_HEADER=$(git describe --tags | sed 's/\.//g')" >> $GITHUB_ENV
 
       - name: Get the latest tag
-        run: git fetch --depth=25 && echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+        run: git fetch --tags && echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
 
       - name: Create release
         uses: softprops/action-gh-release@v1
@@ -73,7 +73,7 @@ jobs:
           path: ./out
 
       - name: Get the latest tag
-        run: git fetch --depth=25 && echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+        run: git fetch --tags && echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
 
       - name: Update no-gui AUR package
         uses: ATiltedTree/create-aur-release@v1
@@ -104,7 +104,7 @@ jobs:
           path: ./out
 
       - name: Get the latest tag
-        run: git fetch --depth=25 && echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+        run: git fetch --tags && echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
 
       - name: Update Homebrew formula
         uses: mislav/bump-homebrew-formula-action@v3
