@@ -3,7 +3,6 @@ name: Publish and Release
 on:
   workflow_dispatch:
   push:
-    paths: ".github/workflows/release.yml"
     tags: "*"
 
 jobs:
@@ -93,19 +92,19 @@ jobs:
           commit_email: ileshkt@gmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
 
-  # homebrew-update:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
+  homebrew-update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-  #     - name: Get the latest tag
-  #       run: echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+      - name: Get the latest tag
+        run: echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
 
-  #     - name: Update Homebrew formula
-  #       uses: mislav/bump-homebrew-formula-action@v3
-  #       with:
-  #         tag-name: ${{ env.TAG }}
-  #       env:
-  #         COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
+      - name: Update Homebrew formula
+        uses: mislav/bump-homebrew-formula-action@v3
+        with:
+          tag-name: ${{ env.TAG }}
+        env:
+          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
