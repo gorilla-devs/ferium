@@ -38,7 +38,7 @@ jobs:
 
       # Remove the dots for the markdown header
       - name: MD Header
-        run: echo "MD_HEADER=$(git describe --tags | sed 's/\.//g')" >> $GITHUB_ENV
+        run: echo "MD_HEADER=$(git describe --tags --abbrev=0 | sed 's/\.//g')" >> $GITHUB_ENV
 
       - name: Get the latest tag
         run: echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
