@@ -91,9 +91,11 @@ pub async fn clean(
 /// Construct a `to_install` vector from the `directory`
 pub fn read_overrides(directory: &Path) -> Result<Vec<(OsString, PathBuf)>> {
     let mut to_install = Vec::new();
-    for file in read_dir(directory)? {
-        let file = file?;
-        to_install.push((file.file_name(), file.path()));
+    if directory.exists() {
+        for file in read_dir(directory)? {
+            let file = file?;
+            to_install.push((file.file_name(), file.path()));
+        }
     }
     Ok(to_install)
 }
@@ -104,7 +106,6 @@ pub async fn download(
     to_download: Vec<Downloadable>,
     to_install: Vec<(OsString, PathBuf)>,
 ) -> Result<()> {
-    create_dir_all(&output_dir).await?;
     let progress_bar = Arc::new(Mutex::new(
         ProgressBar::new(
             to_download
@@ -159,20 +160,20 @@ pub async fn download(
         .map_err(|_| anyhow!("Failed to run threads to completion"))?
         .into_inner()?
         .finish_and_clear();
-    for installable in to_install {
-        if installable.1.is_file() {
-            copy(installable.1, output_dir.join(&installable.0)).await?;
-        } else if installable.1.is_dir() {
+    for (name, path) in to_install {
+        if path.is_file() {
+            copy(path, output_dir.join(&name)).await?;
+        } else if path.is_dir() {
             let mut copy_options = DirCopyOptions::new();
             copy_options.overwrite = true;
-            copy_dir(installable.1, &*output_dir, &copy_options)?;
+            copy_dir(path, &*output_dir, &copy_options)?;
         } else {
-            bail!("Could not determine whether installable is file/folder")
+            bail!("Could not determine whether installable is a file or folder")
         }
         println!(
             "{} Installed          {}",
             &*TICK,
-            installable.0.to_string_lossy().dimmed()
+            name.to_string_lossy().dimmed()
         );
     }
 

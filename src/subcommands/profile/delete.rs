@@ -46,7 +46,7 @@ pub fn delete(
             return Ok(());
         }
     };
-    config.profiles.swap_remove(selection);
+    config.profiles.remove(selection);
 
     // If the currently selected profile is being removed
     if config.active_profile == selection {

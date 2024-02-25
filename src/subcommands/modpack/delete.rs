@@ -49,7 +49,7 @@ pub fn delete(
             return Ok(());
         }
     };
-    config.modpacks.swap_remove(selection);
+    config.modpacks.remove(selection);
 
     // If the currently selected modpack is being removed
     if config.active_modpack == selection {
