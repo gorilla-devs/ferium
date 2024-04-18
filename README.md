@@ -193,7 +193,7 @@ So to add [Sodium](https://github.com/CaffeineMC/sodium-fabric), you should run 
 
 #### User Mods
 
-If you want to use files that are not downloadable by ferium, place them in the `user` folder in the output directory. Files here will be copied to the output directory when upgrading.
+If you want to use files that are not downloadable by ferium, place them in a subfolder called `user` in the output directory. Files here will be copied to the output directory when upgrading.
 
 > [!NOTE]
 > Profiles using Quilt will not copy their user mods, this is because Quilt automatically loads mods from nested directories (such as the user folder) since version `0.18.1-beta.3`.
