@@ -139,6 +139,7 @@ fn add_github() -> Result {
     )
 }
 
+#[test]
 fn add_all() -> Result {
     run_command(
         vec!["add", "starlight", "591388", "CaffeineMC/sodium-fabric"],

@@ -28,7 +28,7 @@ pub async fn curseforge(
     let output_dir = match output_dir {
         Some(some) => some,
         None => pick_folder(
-            &get_minecraft_dir(),
+            get_minecraft_dir(),
             "Pick an output directory",
             "Output Directory",
         )?
@@ -75,7 +75,7 @@ pub async fn modrinth(
     let output_dir = match output_dir {
         Some(some) => some,
         None => pick_folder(
-            &get_minecraft_dir(),
+            get_minecraft_dir(),
             "Pick an output directory",
             "Output Directory",
         )?

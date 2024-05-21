@@ -20,7 +20,7 @@ use libium::{
     HOME,
 };
 use std::{path::PathBuf, time::Duration};
-use tokio::spawn;
+use tokio::{io::BufReader, spawn};
 
 #[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
 pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpack) -> Result<()> {
@@ -44,9 +44,12 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
             )
             .await?;
             let manifest: Manifest = serde_json::from_str(
-                &read_file_from_zip(modpack_file.try_clone().await?, "manifest.json")
-                    .await?
-                    .context("Does not contain manifest")?,
+                &read_file_from_zip(
+                    BufReader::new(modpack_file.try_clone().await?),
+                    "manifest.json",
+                )
+                .await?
+                .context("Does not contain manifest")?,
             )?;
             progress_bar.finish_and_clear();
 
@@ -113,7 +116,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                     .join("ferium")
                     .join(".tmp")
                     .join(manifest.name);
-                extract_zip(modpack_file, &tmp_dir).await?;
+                extract_zip(BufReader::new(modpack_file), &tmp_dir).await?;
                 to_install = read_overrides(&tmp_dir.join(manifest.overrides))?;
             }
         }
@@ -133,9 +136,12 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
             )
             .await?;
             let metadata: Metadata = serde_json::from_str(
-                &read_file_from_zip(modpack_file.try_clone().await?, "modrinth.index.json")
-                    .await?
-                    .context("Does not contain metadata file")?,
+                &read_file_from_zip(
+                    BufReader::new(modpack_file.try_clone().await?),
+                    "modrinth.index.json",
+                )
+                .await?
+                .context("Does not contain metadata file")?,
             )?;
             progress_bar.finish_and_clear();
 
@@ -158,7 +164,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                     .join("ferium")
                     .join(".tmp")
                     .join(metadata.name);
-                extract_zip(modpack_file, &tmp_dir).await?;
+                extract_zip(BufReader::new(modpack_file), &tmp_dir).await?;
                 to_install = read_overrides(&tmp_dir.join("overrides"))?;
             }
         }

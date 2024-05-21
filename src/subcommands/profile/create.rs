@@ -115,7 +115,7 @@ pub async fn create(
                 .default(config.active_profile)
                 .interact()?
         };
-        profile.mods = config.profiles[selection].mods.clone();
+        profile.mods.clone_from(&config.profiles[selection].mods);
     }
 
     println!(

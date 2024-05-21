@@ -114,7 +114,7 @@ pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
             .interact()?
         {
             let backup_dir = pick_folder(
-                &HOME,
+                &*HOME,
                 "Where should the backup be made?",
                 "Output Directory",
             )?

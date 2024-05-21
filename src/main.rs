@@ -41,7 +41,6 @@ use libium::{
     },
     read_wrapper,
 };
-use octocrab::OctocrabBuilder;
 use once_cell::sync::Lazy;
 use std::{
     collections::HashMap,
@@ -132,7 +131,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
         };
     }
 
-    let mut github = OctocrabBuilder::new();
+    let mut github = octocrab::OctocrabBuilder::new();
     if let Some(token) = cli_app.github_token {
         github = github.personal_token(token);
     } else if let Ok(token) = var("GITHUB_TOKEN") {

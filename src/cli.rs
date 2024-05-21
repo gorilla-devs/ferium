@@ -19,7 +19,7 @@ pub struct Ferium {
     /// You can also use the environment variable `GITHUB_TOKEN`.
     #[clap(long, visible_alias = "gh")]
     pub github_token: Option<String>,
-    /// Set a custom CurseForge API key.
+    /// Set a custom Curseforge API key.
     /// You can also use the environment variable `CURSEFORGE_API_KEY`.
     #[clap(long, visible_alias = "cf")]
     pub curseforge_api_key: Option<String>,
@@ -39,7 +39,7 @@ pub enum SubCommands {
         ///
         /// The Modrinth project ID is specified at the bottom of the left sidebar under 'Technical information'.
         /// You can also use the project slug in the URL.
-        /// The CurseForge project ID is specified at the top of the right sidebar under 'About Project'.
+        /// The Curseforge project ID is specified at the top of the right sidebar under 'About Project'.
         /// The GitHub identifier is the repository's full name, e.g. `gorilla-devs/ferium`.
         identifiers: Vec<String>,
         /// Temporarily ignore game version and mod loader checks and add the mod anyway
@@ -173,7 +173,7 @@ pub enum ModpackSubCommands {
         ///
         /// The Modrinth project ID is specified at the bottom of the left sidebar under 'Technical information'.
         /// You can also use the project slug for this.
-        /// The CurseForge project ID is specified at the top of the right sidebar under 'About Project'.
+        /// The Curseforge project ID is specified at the top of the right sidebar under 'About Project'.
         identifier: String,
         /// The Minecraft instance directory to install the modpack to
         #[clap(long, short)]
