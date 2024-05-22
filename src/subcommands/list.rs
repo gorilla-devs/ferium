@@ -10,7 +10,10 @@ use ferinth::{
 use furse::{structures::mod_structs::Mod, Furse};
 use itertools::{izip, Itertools};
 use libium::config::structs::{ModIdentifier, Profile};
-use octocrab::models::{repos::Release, Repository};
+use octocrab::{
+    models::{repos::Release, Repository},
+    OctocrabBuilder,
+};
 use tokio::task::JoinSet;
 
 enum Metadata {
@@ -53,8 +56,13 @@ pub async fn verbose(md: Ferinth, cf: Furse, profile: &mut Profile, markdown: bo
             ModIdentifier::GitHubRepository((owner, repo)) => {
                 tasks.spawn(async {
                     Ok((
-                        octocrab::instance().repos(&owner, &repo).get().await?,
-                        octocrab::instance()
+                        OctocrabBuilder::new()
+                            .build()?
+                            .repos(&owner, &repo)
+                            .get()
+                            .await?,
+                        OctocrabBuilder::new()
+                            .build()?
                             .repos(owner, repo)
                             .releases()
                             .list()
