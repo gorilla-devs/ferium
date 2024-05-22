@@ -743,9 +743,9 @@ checksum = "42703706b716c37f96a77aea830392ad231f44c9e9a67872fa5548707e11b11c"
 
 [[package]]
 name = "furse"
-version = "1.5.14"
+version = "1.5.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46f97591e5a79c36f8b9cc1a2bdb5af84d81f8ba0b7e169d5faafda2f7056fb4"
+checksum = "52028910a0a11f0f62efe899edd6491f0d45729de8399a93160688d9d27cd584"
 dependencies = [
  "chrono",
  "murmur2",

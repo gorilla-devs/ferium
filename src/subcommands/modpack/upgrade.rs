@@ -181,6 +181,7 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
         &mut Vec::new(),
     )
     .await?;
+    // TODO: Check for `to_install` files that are already installed
     if to_download.is_empty() && to_install.is_empty() {
         println!("\n{}", "All up to date!".bold());
     } else {
