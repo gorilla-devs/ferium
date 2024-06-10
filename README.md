@@ -117,7 +117,7 @@ emerge -av ferium
 #### [XBPS](https://xbps-api-docs.voidlinux.org) for _Void Linux_
 [![Void Linux x86_64](https://repology.org/badge/version-for-repo/void_x86_64/ferium.svg)](https://voidlinux.org/packages/?q=ferium)
 ```bash
-xbps install ferium
+xbps-install ferium
 ```
 
 #### [crates.io](https://crates.io) using the _Rust toolchain_
