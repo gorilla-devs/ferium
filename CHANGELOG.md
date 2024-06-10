@@ -1,7 +1,7 @@
 # Changelog for Ferium
 
 ## `v4.6.0`
-### 11.06.2024
+### 10.06.2024
 
 #### You can now add multiple mods at once! ([#175](https://github.com/gorilla-devs/ferium/issues/175))
 
