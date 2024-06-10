@@ -41,14 +41,17 @@ pub enum SubCommands {
         /// You can also use the project slug in the URL.
         /// The Curseforge project ID is specified at the top of the right sidebar under 'About Project'.
         /// The GitHub identifier is the repository's full name, e.g. `gorilla-devs/ferium`.
+        #[clap(required = true)]
         identifiers: Vec<String>,
         /// Temporarily ignore game version and mod loader checks and add the mod anyway
         #[clap(long, short, visible_alias = "override")]
         force: bool,
-        /// The game version will not be checked for this mod
+        /// The game version will not be checked for this mod.
+        /// Only works when adding a single mod.
         #[clap(long, short = 'V', alias = "dont-check-game-version")]
         ignore_game_version: bool,
-        /// The mod loader will not be checked for this mod
+        /// The mod loader will not be checked for this mod.
+        /// Only works when adding a single mod.
         #[clap(long, short = 'M', alias = "dont-check-mod-loader")]
         ignore_mod_loader: bool,
     },

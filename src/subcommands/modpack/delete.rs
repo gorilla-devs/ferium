@@ -1,6 +1,8 @@
+use std::cmp::Ordering;
+
 use super::switch;
 use crate::THEME;
-use anyhow::{bail, Result};
+use anyhow::{anyhow, Result};
 use colored::Colorize;
 use dialoguer::Select;
 use libium::config::structs::{Config, ModpackIdentifier};
@@ -12,14 +14,11 @@ pub fn delete(
 ) -> Result<()> {
     // If the modpack name has been provided as an option
     let selection = if let Some(modpack_name) = modpack_name {
-        match config
+        config
             .modpacks
             .iter()
             .position(|modpack| modpack.name == modpack_name)
-        {
-            Some(selection) => selection,
-            None => bail!("The modpack name provided does not exist"),
-        }
+            .ok_or_else(|| anyhow!("The modpack name provided does not exist"))?
     } else {
         let modpack_names = config
             .modpacks
@@ -51,15 +50,24 @@ pub fn delete(
     };
     config.modpacks.remove(selection);
 
-    // If the currently selected modpack is being removed
-    if config.active_modpack == selection {
-        // And there is more than one modpack
-        if config.modpacks.len() > 1 {
-            // Let the user pick which modpack to switch to
-            switch(config, switch_to)?;
-        } else {
-            config.active_modpack = 0;
+    match config.active_modpack.cmp(&selection) {
+        // If the currently selected modpack is being removed
+        Ordering::Equal => {
+            // And there is more than one modpack
+            if config.modpacks.len() > 1 {
+                // Let the user pick which modpack to switch to
+                switch(config, switch_to)?;
+            } else {
+                config.active_modpack = 0;
+            }
         }
+        // If the active modpack comes after the removed modpack
+        Ordering::Greater => {
+            // Decrement the index by one
+            config.active_modpack -= 1;
+        }
+        Ordering::Less => (),
     }
+
     Ok(())
 }

@@ -10,7 +10,7 @@ pub use info::info;
 pub use switch::switch;
 
 use crate::THEME;
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, ensure, Result};
 use colored::Colorize;
 use dialoguer::{Confirm, Select};
 use ferinth::{structures::tag::GameVersionType, Ferinth};
@@ -81,20 +81,23 @@ pub async fn pick_minecraft_version() -> Result<String> {
 /// Check that there isn't already a profile with the same name
 pub fn check_profile_name(config: &Config, name: &str) -> Result<()> {
     for profile in &config.profiles {
-        if profile.name == name {
-            bail!("A profile with name {name} already exists");
-        }
+        ensure!(
+            profile.name != name,
+            "A profile with name {name} already exists"
+        );
     }
     Ok(())
 }
 
 pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
-    if output_dir.is_relative() {
-        bail!("The provided output directory is not absolute, i.e. it is a relative path");
-    }
+    ensure!(
+        output_dir.is_absolute(),
+        "The provided output directory is not absolute, i.e. it is a relative path"
+    );
     if output_dir.file_name() != Some(std::ffi::OsStr::new("mods")) {
         println!("{}", "Warning! The output directory is not called `mods`. Most mod loaders will load from a directory called `mods`.".bright_yellow());
     }
+
     let mut backup = false;
     if output_dir.exists() {
         for file in read_dir(output_dir)? {

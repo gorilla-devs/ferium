@@ -183,13 +183,13 @@ fn modpack_add_curseforge() -> Result {
 
 #[test]
 fn already_added() {
-    assert!(run_command(vec!["add", "StArLiGhT"], Some("one_profile_full")).is_err());
-    assert!(run_command(vec!["add", "591388"], Some("one_profile_full")).is_err());
+    assert!(run_command(vec!["add", "StArLiGhT"], Some("one_profile_full")).is_ok());
+    assert!(run_command(vec!["add", "591388"], Some("one_profile_full")).is_ok());
     assert!(run_command(
         vec!["add", "caffeinemc/Sodium-Fabric"],
         Some("one_profile_full")
     )
-    .is_err());
+    .is_ok());
 }
 
 #[test]

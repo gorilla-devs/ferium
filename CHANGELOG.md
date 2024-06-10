@@ -1,5 +1,26 @@
 # Changelog for Ferium
 
+## `v4.6.0`
+### 11.06.2024
+
+#### You can now add multiple mods at once! ([#175](https://github.com/gorilla-devs/ferium/issues/175))
+
+- Features
+  - Adding mods has been significantly improved
+  - No matter how many mods you add, there will only be a maximum of 3 network requests (for each platform)
+  - The `--ignore-game-version` and `--ignore-mod-loader` flags will only work when adding a single mod, since these are meant for fine-tuning
+
+- Bug Fixes
+  - Fix `No such file or directory (os error 2)` when downloading some specific modpacks ([#402](https://github.com/gorilla-devs/ferium/issues/402))
+  - Fix issues with the active profile/modpack index changing when deleting profiles/modpacks
+  - Fix `--ignore-mod-loader` not working with curseforge mods ([#417](https://github.com/gorilla-devs/ferium/issues/417))
+
+- Internal Changes
+  - Use `.eq_ignore_ascii_case()` where appropriate
+  - Use `anyhow::ensure!()` where appropriate
+  - Use `.ok_or_else()` where appropriate
+  - Replace `!__.is_relative()` with `.is_absolute()`
+
 ## `v4.5.2`
 ### 23.02.2024
 

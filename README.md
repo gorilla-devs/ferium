@@ -167,6 +167,9 @@ You can either have your own set of mods in what is called a 'profile', or insta
 
 ### Adding Mods
 
+> [!TIP]
+> You can specify multiple identifiers to add multiple mods at once
+
 #### Modrinth
 ```bash
 ferium add project_id
@@ -259,9 +262,9 @@ You can remove any of your mods using `ferium remove`; just select the ones you 
 
 If some mod is supposed to be compatible with your game version and mod loader, but ferium does not download it, [create an issue](https://github.com/gorilla-devs/ferium/issues/new?labels=bug&template=bug-report.md) if you think it's a bug.
 
-If you suspect the author has not specified compatible versions or mod loaders, you can disable the game version or mod loader checks by using the `--ignore-game-version` and/or `--ignore-mod-loader` flags when adding the mod, or manually setting `check_game_version` and/or `check_mod_loader` to false for the specific mod in the config file.
+If you suspect the author has not specified compatible versions or mod loaders, you can disable the game version or mod loader checks by using the `--ignore-game-version` and/or `--ignore-mod-loader` flags when adding a single mod, or manually setting `check_game_version` and/or `check_mod_loader` to false for the specific mod in the config file.
 
-For example, [Just Enough Items](https://www.curseforge.com/minecraft/mc-mods/jei) does not specify the mod loader for older Minecraft versions such as `1.12.2`. In this case, you would add JEI by running `ferium add 238222 --dont-check-mod-loader` so that the mod loader check is disabled.  
+For example, [Just Enough Items](https://www.curseforge.com/minecraft/mc-mods/jei) does not specify the mod loader for older Minecraft versions such as `1.12.2`. In this case, you would add JEI by running `ferium add 238222 --ignore-mod-loader` so that the mod loader check is disabled.  
 You can also manually disable the mod loader (and/or game version) check(s) in the config like so:
 ```json
 {

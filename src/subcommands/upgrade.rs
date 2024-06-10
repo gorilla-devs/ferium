@@ -16,6 +16,7 @@ use libium::{
         mod_downloadable::{self, get_latest_compatible_downloadable},
         Downloadable,
     },
+    APIs,
 };
 use octocrab::Octocrab;
 use std::{
@@ -70,9 +71,7 @@ pub async fn get_platform_downloadables(
         tasks.spawn(async move {
             let _permit = permit;
             let result = get_latest_compatible_downloadable(
-                &modrinth,
-                &curseforge,
-                &github,
+                APIs::new(&modrinth, &curseforge, &github),
                 &mod_,
                 &profile.game_version,
                 profile.mod_loader,
@@ -177,8 +176,10 @@ pub async fn upgrade(
     }
 
     if error {
-        bail!("\nCould not get the latest compatible version of some mods")
+        Err(anyhow!(
+            "\nCould not get the latest compatible version of some mods"
+        ))
+    } else {
+        Ok(())
     }
-
-    Ok(())
 }

@@ -1,4 +1,5 @@
 default: install-dev
+set windows-powershell := true
 
 # Install ferium to cargo's binary folder
 install:

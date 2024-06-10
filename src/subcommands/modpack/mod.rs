@@ -11,7 +11,7 @@ pub use switch::switch;
 pub use upgrade::upgrade;
 
 use crate::THEME;
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, ensure, Context, Result};
 use dialoguer::Confirm;
 use fs_extra::dir::{copy, CopyOptions};
 use libium::{file_picker::pick_folder, HOME};
@@ -19,9 +19,11 @@ use std::{fs::read_dir, path::Path};
 
 #[allow(clippy::expect_used)]
 pub fn check_output_directory(output_dir: &Path) -> Result<()> {
-    if output_dir.is_relative() {
-        bail!("The provided output directory is not absolute, i.e. it is a relative path");
-    }
+    ensure!(
+        output_dir.is_absolute(),
+        "The provided output directory is not absolute, i.e. it is a relative path"
+    );
+
     for check_dir in [output_dir.join("mods"), output_dir.join("resourcepacks")] {
         let mut backup = false;
         if check_dir.exists() {
@@ -36,7 +38,7 @@ pub fn check_output_directory(output_dir: &Path) -> Result<()> {
         if backup {
             println!(
                 "There are files in the {} folder in your output directory, these will be deleted when you upgrade.",
-                check_dir.file_name().expect("Unable to get folder name").to_string_lossy()
+                check_dir.file_name().context("Unable to get folder name")?.to_string_lossy()
             );
             if Confirm::with_theme(&*THEME)
                 .with_prompt("Would like to create a backup?")

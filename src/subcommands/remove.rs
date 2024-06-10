@@ -38,12 +38,12 @@ pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
         let mut items_to_remove = Vec::new();
         for to_remove in to_remove {
             if let Some(index) = profile.mods.iter().position(|mod_| {
-                mod_.name.to_lowercase() == to_remove.to_lowercase()
+                mod_.name.eq_ignore_ascii_case(&to_remove)
                     || match &mod_.identifier {
                         ModIdentifier::CurseForgeProject(id) => id.to_string() == to_remove,
                         ModIdentifier::ModrinthProject(id) => id == &to_remove,
                         ModIdentifier::GitHubRepository((owner, name)) => {
-                            format!("{owner}/{name}").to_lowercase() == to_remove.to_lowercase()
+                            format!("{owner}/{name}").eq_ignore_ascii_case(&to_remove)
                         }
                     }
             }) {

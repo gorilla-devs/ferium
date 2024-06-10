@@ -1,6 +1,6 @@
 use super::{check_output_directory, check_profile_name, pick_minecraft_version};
 use crate::THEME;
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, ensure, Result};
 use colored::Colorize;
 use dialoguer::{Confirm, Input, Select};
 use libium::{
@@ -23,9 +23,11 @@ pub async fn create(
         (Some(game_version), Some(mod_loader), Some(name), output_dir) => {
             check_profile_name(config, &name)?;
             let output_dir = output_dir.unwrap_or_else(|| get_minecraft_dir().join("mods"));
-            if !output_dir.is_absolute() {
-                bail!("The provided output directory is not absolute, i.e. it is a relative path")
-            }
+            ensure!(
+                output_dir.is_absolute(),
+                "The provided output directory is not absolute, i.e. it is a relative path"
+            );
+
             Profile {
                 name,
                 output_dir,
@@ -90,19 +92,18 @@ pub async fn create(
     };
 
     if let Some(from) = import {
-        if config.profiles.is_empty() {
-            bail!("There are no profiles configured to import mods from")
-        }
+        ensure!(
+            !config.profiles.is_empty(),
+            "There are no profiles configured to import mods from"
+        );
+
         // If the profile name has been provided as an option
         let selection = if let Some(profile_name) = from {
-            match config
+            config
                 .profiles
                 .iter()
                 .position(|profile| profile.name == profile_name)
-            {
-                Some(selection) => selection,
-                None => bail!("The profile name provided does not exist"),
-            }
+                .ok_or_else(|| anyhow!("The profile name provided does not exist"))?
         } else {
             let profile_names = config
                 .profiles

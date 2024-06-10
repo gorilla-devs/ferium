@@ -11,12 +11,10 @@
     clippy::expect_used, // use anyhow::Context instead
     clippy::correctness
 )]
-#![warn(clippy::dbg_macro, clippy::expect_used)]
+#![warn(clippy::dbg_macro)]
 #![allow(
     clippy::case_sensitive_file_extension_comparisons,
-    clippy::cast_possible_truncation,
     clippy::multiple_crate_versions,
-    clippy::large_enum_variant,
     clippy::too_many_lines
 )]
 
@@ -24,7 +22,7 @@ mod cli;
 mod download;
 mod subcommands;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, ensure, Result};
 use clap::{CommandFactory, Parser};
 use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
@@ -87,18 +85,24 @@ fn main() -> ExitCode {
     #[allow(clippy::expect_used)] // No error handling yet
     let runtime = builder.build().expect("Could not initialise Tokio runtime");
     if let Err(err) = runtime.block_on(actual_main(cli)) {
-        eprintln!("{}", err.to_string().red().bold());
-        if err
-            .to_string()
-            .to_lowercase()
-            .contains("error trying to connect")
-        {
-            eprintln!(
-                "{}",
-                "Verify that you are connnected to the internet"
-                    .yellow()
-                    .bold()
-            );
+        if !err.to_string().is_empty() {
+            eprintln!("{}", err.to_string().red().bold());
+            if err
+                .to_string()
+                .to_lowercase()
+                .contains("error trying to connect")
+                || err
+                    .to_string()
+                    .to_lowercase()
+                    .contains("error sending request")
+            {
+                eprintln!(
+                    "{}",
+                    "Verify that you are connnected to the internet"
+                        .yellow()
+                        .bold()
+                );
+            }
         }
         ExitCode::FAILURE
     } else {
@@ -159,6 +163,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
     )
     .await?;
     let mut config = config::deserialise(&read_wrapper(&mut config_file).await?)?;
+    let mut add_error = false;
 
     // Run function(s) based on the sub(sub)command to be executed
     match cli_app.subcommand {
@@ -172,58 +177,57 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             ignore_mod_loader,
         } => {
             let profile = get_active_profile(&mut config)?;
-            match identifiers.len() {
-                0 => bail!("Must provide at least one identifier"),
-                1 => {
-                    eprint!("Adding mod... ");
-                    let name = libium::add::add_single(
-                        &modrinth,
-                        &curseforge,
-                        &github.build()?,
-                        profile,
-                        &identifiers[0],
-                        !force,
-                        !ignore_game_version,
-                        !ignore_mod_loader,
-                    )
-                    .await?;
-                    println!("{} {}", *TICK, name.bold());
-                }
-                _ => {
-                    eprint!("Fetching mod information... ");
-                    let (successes, failures) = libium::add::add_multiple(
-                        &modrinth,
-                        &curseforge,
-                        &github.build()?,
-                        profile,
-                        identifiers,
-                    )
-                    .await;
-                    println!("{}", *TICK);
 
-                    if !successes.is_empty() {
-                        println!(
-                            "Successfully added {}",
-                            successes.iter().map(|s| s.bold()).format(", ")
-                        );
-                    }
-                    if !failures.is_empty() {
-                        let mut grouped_errors = HashMap::new();
-                        for (id, error) in failures {
-                            grouped_errors
-                                .entry(error.to_string())
-                                .or_insert_with(Vec::new)
-                                .push(id);
-                        }
-                        for (err, ids) in grouped_errors {
-                            println!(
-                                "{}: {}",
-                                err.red().bold(),
-                                ids.iter().map(|s| s.italic()).format(", ")
-                            );
-                        }
-                    }
-                }
+            if identifiers.len() > 1 && (ignore_game_version || ignore_mod_loader) {
+                bail!("Only use the ignore flags when adding a single mod!")
+            }
+
+            let (successes, failures) = libium::add::add(
+                libium::APIs::new(&modrinth, &curseforge, &github.build()?),
+                profile,
+                identifiers,
+                !force,
+                !ignore_game_version,
+                !ignore_mod_loader,
+            )
+            .await?;
+
+            if !successes.is_empty() {
+                println!(
+                    "{} {}",
+                    "Successfully added".green(),
+                    successes.iter().map(|s| s.bold()).format(", ")
+                );
+            }
+
+            let mut grouped_errors = HashMap::new();
+
+            for (id, error) in failures {
+                grouped_errors
+                    .entry(error.to_string())
+                    .or_insert_with(Vec::new)
+                    .push(id);
+            }
+
+            let pad_len = grouped_errors
+                .keys()
+                .map(String::len)
+                .max()
+                .unwrap_or(0)
+                .clamp(0, 50);
+
+            for (err, ids) in grouped_errors {
+                println!(
+                    "{:pad_len$}: {}",
+                    // Change already added into a warning
+                    if err == libium::add::Error::AlreadyAdded.to_string() {
+                        err.yellow()
+                    } else {
+                        add_error |= true;
+                        err.red()
+                    },
+                    ids.iter().map(|s| s.italic()).format(", ")
+                );
             }
         }
         SubCommands::List { verbose, markdown } => {
@@ -429,7 +433,11 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
     // Update config file with possibly edited config
     config::write_file(&mut config_file, &config).await?;
 
-    Ok(())
+    if add_error {
+        Err(anyhow!(""))
+    } else {
+        Ok(())
+    }
 }
 
 /// Get the active profile with error handling
@@ -474,8 +482,9 @@ fn get_active_modpack(config: &mut Config) -> Result<&mut Modpack> {
 
 /// Check if `profile` is empty, and if so return an error
 fn check_empty_profile(profile: &Profile) -> Result<()> {
-    if profile.mods.is_empty() {
-        bail!("Your currently selected profile is empty! Run `ferium help` to see how to add mods");
-    }
+    ensure!(
+        !profile.mods.is_empty(),
+        "Your currently selected profile is empty! Run `ferium help` to see how to add mods"
+    );
     Ok(())
 }
