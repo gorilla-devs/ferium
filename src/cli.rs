@@ -1,6 +1,6 @@
 #![deny(missing_docs)]
 
-use clap::{Parser, Subcommand, ValueHint};
+use clap::{Parser, Subcommand, ValueEnum, ValueHint};
 use clap_complete::Shell;
 use libium::config::structs::ModLoader;
 use std::path::PathBuf;
@@ -54,6 +54,23 @@ pub enum SubCommands {
         /// Only works when adding a single mod.
         #[clap(long, short = 'M', alias = "dont-check-mod-loader")]
         ignore_mod_loader: bool,
+    },
+    /// Scan the profile's output directory (or the specified directory) for mods and add them to the profile
+    Scan {
+        /// The platform you prefer mods to be added from.
+        /// If a mod isn't available from this platform, the other platform will still be used.
+        #[clap(long, short, default_value_t)]
+        platform: Platform,
+        /// The directory to scan mods from.
+        /// Defaults to the profile's output directory.
+        #[clap(long, short,
+            visible_aliases = ["dir", "folder"],
+            aliases = ["output_directory", "out_dir"]
+        )]
+        directory: Option<PathBuf>,
+        /// Temporarily ignore game version and mod loader checks and add the mods anyway
+        #[clap(long, short, visible_alias = "override")]
+        force: bool,
     },
     /// Print shell auto completions for the specified shell
     Complete {
@@ -223,4 +240,22 @@ pub enum ModpackSubCommands {
     /// Download and install the latest version of the modpack
     #[clap(visible_aliases = ["download", "install"])]
     Upgrade,
+}
+
+#[derive(Clone, Copy, Default, ValueEnum)]
+pub enum Platform {
+    #[default]
+    #[clap(alias = "mr")]
+    Modrinth,
+    #[clap(alias = "cf")]
+    Curseforge,
+}
+
+impl std::fmt::Display for Platform {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Modrinth => write!(f, "modrinth"),
+            Self::Curseforge => write!(f, "curseforge"),
+        }
+    }
 }

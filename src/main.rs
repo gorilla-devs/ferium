@@ -18,6 +18,7 @@
     clippy::too_many_lines
 )]
 
+mod add;
 mod cli;
 mod download;
 mod subcommands;
@@ -41,7 +42,6 @@ use libium::{
 };
 use once_cell::sync::Lazy;
 use std::{
-    collections::HashMap,
     env::{var, var_os},
     process::ExitCode,
 };
@@ -170,6 +170,63 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
         SubCommands::Complete { .. } | SubCommands::Profiles | SubCommands::Modpacks => {
             unreachable!();
         }
+        SubCommands::Scan {
+            platform,
+            directory,
+            force,
+        } => {
+            let profile = get_active_profile(&mut config)?;
+
+            let spinner = indicatif::ProgressBar::new_spinner().with_message("Reading files");
+            spinner.enable_steady_tick(std::time::Duration::from_millis(100));
+
+            let ids = libium::scan(
+                &modrinth,
+                &curseforge,
+                directory.as_ref().unwrap_or(&profile.output_dir),
+                || {
+                    spinner.set_message("Querying servers");
+                },
+            )
+            .await?;
+
+            spinner.set_message("Adding mods");
+
+            let mut send_ids = Vec::new();
+            for id in ids {
+                use libium::config::structs::ModIdentifier;
+                match id {
+                    (filename, None, None) => {
+                        println!("{} {}", "Unknown file:".yellow(), filename.dimmed());
+                    }
+                    (_, Some(mr_id), None) => send_ids.push(ModIdentifier::ModrinthProject(mr_id)),
+                    (_, None, Some(cf_id)) => {
+                        send_ids.push(ModIdentifier::CurseForgeProject(cf_id));
+                    }
+                    (_, Some(mr_id), Some(cf_id)) => match platform {
+                        cli::Platform::Modrinth => {
+                            send_ids.push(ModIdentifier::ModrinthProject(mr_id));
+                        }
+                        cli::Platform::Curseforge => {
+                            send_ids.push(ModIdentifier::CurseForgeProject(cf_id));
+                        }
+                    },
+                }
+            }
+
+            let (successes, failures) = libium::add(
+                libium::APIs::new(&modrinth, &curseforge, &github.build()?),
+                profile,
+                send_ids,
+                !force,
+                true,
+                true,
+            )
+            .await?;
+            spinner.finish_and_clear();
+
+            add_error = add::display_successes_failures(&successes, failures);
+        }
         SubCommands::Add {
             identifiers,
             force,
@@ -182,53 +239,20 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                 bail!("Only use the ignore flags when adding a single mod!")
             }
 
-            let (successes, failures) = libium::add::add(
+            let (successes, failures) = libium::add(
                 libium::APIs::new(&modrinth, &curseforge, &github.build()?),
                 profile,
-                identifiers,
+                identifiers
+                    .into_iter()
+                    .map(libium::add::parse_id)
+                    .collect_vec(),
                 !force,
                 !ignore_game_version,
                 !ignore_mod_loader,
             )
             .await?;
 
-            if !successes.is_empty() {
-                println!(
-                    "{} {}",
-                    "Successfully added".green(),
-                    successes.iter().map(|s| s.bold()).format(", ")
-                );
-            }
-
-            let mut grouped_errors = HashMap::new();
-
-            for (id, error) in failures {
-                grouped_errors
-                    .entry(error.to_string())
-                    .or_insert_with(Vec::new)
-                    .push(id);
-            }
-
-            let pad_len = grouped_errors
-                .keys()
-                .map(String::len)
-                .max()
-                .unwrap_or(0)
-                .clamp(0, 50);
-
-            for (err, ids) in grouped_errors {
-                println!(
-                    "{:pad_len$}: {}",
-                    // Change already added into a warning
-                    if err == libium::add::Error::AlreadyAdded.to_string() {
-                        err.yellow()
-                    } else {
-                        add_error |= true;
-                        err.red()
-                    },
-                    ids.iter().map(|s| s.italic()).format(", ")
-                );
-            }
+            add_error = add::display_successes_failures(&successes, failures);
         }
         SubCommands::List { verbose, markdown } => {
             let profile = get_active_profile(&mut config)?;

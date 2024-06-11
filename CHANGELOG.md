@@ -1,5 +1,15 @@
 # Changelog for Ferium
 
+## `v4.7.0`
+### 11.06.2024
+
+- Features
+  - Scan a directory (the profile's output directory by default) to automatically add the mods
+  - Uses a maximum of 4 network requests! Unfortunately file hashing and searching for the file on the server take some time so it's not instant, especially with a large number of mods.
+
+- Internal Changes
+  - Move code for displaying successes and failures to the `add` module
+
 ## `v4.6.0`
 ### 10.06.2024
 

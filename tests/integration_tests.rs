@@ -148,6 +148,14 @@ fn add_all() -> Result {
 }
 
 #[test]
+fn scan_dir() -> Result {
+    run_command(
+        vec!["scan", "--directory", "./tests/test_mods"],
+        Some("empty_profile"),
+    )
+}
+
+#[test]
 fn modpack_add_modrinth() -> Result {
     // Add Fabulously Optimised
     run_command(

@@ -677,7 +677,7 @@ dependencies = [
 
 [[package]]
 name = "ferium"
-version = "4.6.0"
+version = "4.7.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -952,12 +952,12 @@ dependencies = [
 
 [[package]]
 name = "http-body-util"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0475f8b2ac86659c21b64320d5d653f9efe42acd2a4e560073ec61a155a34f1d"
+checksum = "793429d76616a256bcb62c2a2ec2bed781c8307e797e2598c50010f2bee2544f"
 dependencies = [
  "bytes",
- "futures-core",
+ "futures-util",
  "http",
  "http-body",
  "pin-project-lite",
@@ -965,9 +965,9 @@ dependencies = [
 
 [[package]]
 name = "httparse"
-version = "1.9.1"
+version = "1.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8720bf4c5bfb5b6c350840c4cd14b787bf00ed51c148c857fbf7a6ddb7062764"
+checksum = "9f3935c160d00ac752e09787e6e6bfc26494c2183cc922f1bc678a60d4733bc2"
 
 [[package]]
 name = "hyper"
@@ -1324,9 +1324,9 @@ checksum = "97b3888a4aecf77e811145cadf6eef5901f4782c53886191b2f693f24761847c"
 
 [[package]]
 name = "libium"
-version = "1.28.0"
+version = "1.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df9047c803f206f9e1149d4f85fa0bf67c51f842e445003e40245441c42fa5d2"
+checksum = "bc4d48cbd5d602758ab073ea1f887aa401cfc5e4dd0bb2baf3001e619424bb03"
 dependencies = [
  "async-recursion",
  "async_zip",
@@ -1334,6 +1334,7 @@ dependencies = [
  "dialoguer",
  "ferinth",
  "furse",
+ "futures-util",
  "home",
  "octocrab",
  "once_cell",
@@ -1341,6 +1342,7 @@ dependencies = [
  "rfd",
  "serde",
  "serde_json",
+ "sha1",
  "thiserror",
  "tokio",
  "tokio-util",
