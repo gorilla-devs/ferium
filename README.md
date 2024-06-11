@@ -150,7 +150,7 @@ You can change this in 2 ways, setting the `FERIUM_CONFIG_FILE` environment vari
 The flag always takes precedence.
 
 > [!CAUTION]
-> Be careful when manually editing the config file
+> Be mindful of syntax when manually editing the config file
 
 You can also set a custom CurseForge API key or GitHub personal access token using the `CURSEFORGE_API_KEY` and `GITHUB_TOKEN` environment variables, or the `--curseforge_api_key` and `--github-token` global flags respectively.
 Again, the flags take precedence.
@@ -165,7 +165,19 @@ You can either have your own set of mods in what is called a 'profile', or insta
 - [Add a modpack](#adding-modpacks) by running `ferium modpack add <project_id>`.
   - After which, run `ferium modpack upgrade` to download and install the latest version of the modpack.
 
-### Adding Mods
+### Automatically Import Mods
+
+```bash
+ferium scan
+```
+
+This command scans a directory with mods, and attempts to add them to your profile.
+
+The directory defaults to your profile's output directory. Some mods are available on both Modrinth and CurseForge; ferium will prefer Modrinth by default, but you can choose CurseForge instead using the `--platform` flag.
+
+As long as you ensure the mods in the directory match the configured mod loader and Minecraft version, they should all add properly. Some mods might require some [additional tuning](#check-overrides). You can also bypass the compatibility checks using the `--force` flag.
+
+### Manually Adding Mods
 
 > [!TIP]
 > You can specify multiple identifiers to add multiple mods at once
@@ -189,10 +201,11 @@ So to add [Terralith](https://www.curseforge.com/minecraft/mc-mods/terralith), y
 ```bash
 ferium add owner/name
 ```
-`owner` is the username of the owner of the repository and `name` is the name of the repository, both are case-insensitive. (e.g. [Sodium's repository](https://github.com/CaffeineMC/sodium-fabric) has the id `CaffeineMC/sodium-fabric`). You can find these at the top left of the repository's page as a big 'owner / name'.  
+`owner` is the username of the owner of the repository and `name` is the name of the repository, both are case-insensitive. (e.g. [Sodium's repository](https://github.com/CaffeineMC/sodium-fabric) has the id `CaffeineMC/sodium-fabric`). You can find these at the top left of the repository's page.  
 So to add [Sodium](https://github.com/CaffeineMC/sodium-fabric), you should run `ferium add CaffeineMC/sodium-fabric` (again, case-insensitive).
+
 > [!IMPORTANT]
-> The GitHub repository needs to upload JAR files to their Releases for ferium to download, or else it will refuse to be added.
+> The GitHub repository needs to upload JAR files to their _Releases_ for ferium to download, or else it will refuse to be added.
 
 #### User Mods
 

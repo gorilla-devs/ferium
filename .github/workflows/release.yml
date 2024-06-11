@@ -76,18 +76,16 @@ jobs:
         run: echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
 
       - name: Update no-gui AUR package
-        uses: ATiltedTree/create-aur-release@v1
+        uses: aksh1618/update-aur-package@v1
         with:
           package_name: ferium-bin
-          package_version: ${{ env.TAG }}
           commit_username: "Ilesh Thiada"
           commit_email: ileshkt@gmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
       - name: Update gui AUR package
-        uses: ATiltedTree/create-aur-release@v1
+        uses: aksh1618/update-aur-package@v1
         with:
           package_name: ferium-gui-bin
-          package_version: ${{ env.TAG }}
           commit_username: "Ilesh Thiada"
           commit_email: ileshkt@gmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
