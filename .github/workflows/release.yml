@@ -106,3 +106,19 @@ jobs:
           tag-name: ${{ env.TAG }}
         env:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
+
+  winget-update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get the latest tag
+        run: echo "TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+
+      - uses: vedantmgoyal2009/winget-releaser@v2
+        with:
+          identifier: GorillaDevs/Ferium
+          version: ${{ env.TAG }}
+          token: ${{ secrets.COMMITTER_TOKEN }}
