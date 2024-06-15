@@ -3,7 +3,7 @@ name: Publish and Release
 on:
   workflow_dispatch:
   push:
-    tags: '*'
+    tags: "*"
 
 jobs:
   crates-publish:
@@ -79,14 +79,14 @@ jobs:
         uses: aksh1618/update-aur-package@v1
         with:
           package_name: ferium-bin
-          commit_username: 'Ilesh Thiada'
+          commit_username: "Ilesh Thiada"
           commit_email: ileshkt@gmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
       - name: Update gui AUR package
         uses: aksh1618/update-aur-package@v1
         with:
           package_name: ferium-gui-bin
-          commit_username: 'Ilesh Thiada'
+          commit_username: "Ilesh Thiada"
           commit_email: ileshkt@gmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
 
