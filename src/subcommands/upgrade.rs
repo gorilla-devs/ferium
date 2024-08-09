@@ -9,6 +9,7 @@ use anyhow::{anyhow, bail, Result};
 use colored::Colorize;
 use ferinth::Ferinth;
 use furse::Furse;
+use futures::{stream::FuturesUnordered, StreamExt};
 use indicatif::ProgressBar;
 use libium::{
     config::structs::{ModLoader, Profile},
@@ -24,7 +25,7 @@ use std::{
     sync::{Arc, Mutex},
     time::Duration,
 };
-use tokio::{sync::Semaphore, task::JoinSet};
+use tokio::sync::Semaphore;
 
 /// Get the latest compatible downloadable for the mods in `profile`
 ///
@@ -40,11 +41,7 @@ pub async fn get_platform_downloadables(
     let progress_bar = Arc::new(Mutex::new(
         ProgressBar::new(profile.mods.len() as u64).with_style(STYLE_NO.clone()),
     ));
-    let mut tasks = JoinSet::new();
-    let profile = Arc::new(profile.clone());
-    let curseforge = Arc::new(curseforge);
-    let modrinth = Arc::new(modrinth);
-    let github = Arc::new(github);
+    let mut tasks = FuturesUnordered::new();
 
     println!("{}\n", "Determining the Latest Compatible Versions".bold());
     let semaphore = Arc::new(Semaphore::new(75));
@@ -59,19 +56,16 @@ pub async fn get_platform_downloadables(
         .max()
         .unwrap_or(20)
         .clamp(20, 50);
-    for mod_ in &profile.mods {
-        let permit = semaphore.clone().acquire_owned().await?;
-        let to_download = to_download.clone();
-        let progress_bar = progress_bar.clone();
-        let curseforge = curseforge.clone();
-        let modrinth = modrinth.clone();
-        let profile = profile.clone();
-        let github = github.clone();
-        let mod_ = mod_.clone();
-        tasks.spawn(async move {
+    for mod_ in profile.mods.clone() {
+        let permit = Arc::clone(&semaphore).acquire_owned().await?;
+        let to_download = Arc::clone(&to_download);
+        let progress_bar = Arc::clone(&progress_bar);
+        let apis = APIs::new(&modrinth, &curseforge, &github);
+
+        tasks.push(async move {
             let _permit = permit;
             let result = get_latest_compatible_downloadable(
-                APIs::new(&modrinth, &curseforge, &github),
+                apis,
                 &mod_,
                 &profile.game_version,
                 profile.mod_loader,
@@ -120,8 +114,8 @@ pub async fn get_platform_downloadables(
 
     let mut error = false;
     let mut qf_flag = false;
-    while let Some(res) = tasks.join_next().await {
-        let res = res??;
+    while let Some(res) = tasks.next().await {
+        let res = res?;
         error |= res.0;
         qf_flag |= res.1;
     }

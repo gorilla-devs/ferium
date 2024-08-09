@@ -8,6 +8,7 @@ use fs_extra::{
     dir::{copy as copy_dir, CopyOptions as DirCopyOptions},
     file::{move_file, CopyOptions as FileCopyOptions},
 };
+use futures::{stream::FuturesUnordered, StreamExt as _};
 use indicatif::ProgressBar;
 use itertools::Itertools;
 use libium::upgrade::Downloadable;
@@ -15,16 +16,12 @@ use reqwest::Client;
 use size::Size;
 use std::{
     ffi::OsString,
-    fs::read_dir,
+    fs::{copy, create_dir_all, read_dir, remove_file},
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
     time::Duration,
 };
-use tokio::{
-    fs::{copy, create_dir_all, remove_file},
-    sync::Semaphore,
-    task::JoinSet,
-};
+use tokio::sync::Semaphore;
 
 /// Check the given `directory`
 ///
@@ -52,7 +49,7 @@ pub async fn clean(
             .bold()
         );
     }
-    create_dir_all(directory.join(".old")).await?;
+    create_dir_all(directory.join(".old"))?;
     for file in read_dir(directory)? {
         let file = file?;
         // If it's a file
@@ -81,7 +78,7 @@ pub async fn clean(
                 )
                 .is_err()
             {
-                remove_file(file.path()).await?;
+                remove_file(file.path())?;
             }
         }
     }
@@ -119,16 +116,17 @@ pub async fn download(
         .lock()
         .expect("Mutex poisoned")
         .enable_steady_tick(Duration::from_millis(100));
-    let mut tasks = JoinSet::new();
+    let mut tasks = FuturesUnordered::new();
     let semaphore = Arc::new(Semaphore::new(75));
     let client = Arc::new(Client::new());
-    let output_dir = Arc::new(output_dir);
+
     for downloadable in to_download {
-        let permit = semaphore.clone().acquire_owned().await?;
-        let progress_bar = progress_bar.clone();
+        let permit = Arc::clone(&semaphore).acquire_owned().await?;
+        let progress_bar = Arc::clone(&progress_bar);
+        let client = Arc::clone(&client);
         let output_dir = output_dir.clone();
-        let client = client.clone();
-        tasks.spawn(async move {
+
+        tasks.push(async move {
             let _permit = permit;
             let (length, filename) = downloadable
                 .download(&client, &output_dir, |additional| {
@@ -153,8 +151,8 @@ pub async fn download(
             Ok::<(), Error>(())
         });
     }
-    while let Some(res) = tasks.join_next().await {
-        res??;
+    while let Some(res) = tasks.next().await {
+        res?;
     }
     Arc::try_unwrap(progress_bar)
         .map_err(|_| anyhow!("Failed to run threads to completion"))?
@@ -162,11 +160,11 @@ pub async fn download(
         .finish_and_clear();
     for (name, path) in to_install {
         if path.is_file() {
-            copy(path, output_dir.join(&name)).await?;
+            copy(path, output_dir.join(&name))?;
         } else if path.is_dir() {
             let mut copy_options = DirCopyOptions::new();
             copy_options.overwrite = true;
-            copy_dir(path, &*output_dir, &copy_options)?;
+            copy_dir(path, &output_dir, &copy_options)?;
         } else {
             bail!("Could not determine whether installable is a file or folder")
         }

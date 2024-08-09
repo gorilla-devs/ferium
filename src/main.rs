@@ -45,7 +45,6 @@ use std::{
     env::{var, var_os},
     process::ExitCode,
 };
-use tokio::runtime;
 
 const CROSS: &str = "×";
 pub static TICK: Lazy<ColoredString> = Lazy::new(|| "✓".green());
@@ -70,7 +69,7 @@ pub static STYLE_BYTE: Lazy<ProgressStyle> = Lazy::new(|| {
 
 fn main() -> ExitCode {
     let cli = Ferium::parse();
-    let mut builder = runtime::Builder::new_multi_thread();
+    let mut builder = tokio::runtime::Builder::new_multi_thread();
     builder.enable_all();
     builder.thread_name("ferium-worker");
     if let Some(threads) = cli.threads {
@@ -160,9 +159,8 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             .config_file
             .or_else(|| var_os("FERIUM_CONFIG_FILE").map(Into::into))
             .unwrap_or(DEFAULT_CONFIG_PATH.clone()),
-    )
-    .await?;
-    let mut config = config::deserialise(&read_wrapper(&mut config_file).await?)?;
+    )?;
+    let mut config = config::deserialise(&read_wrapper(&mut config_file)?)?;
     let mut add_error = false;
 
     // Run function(s) based on the sub(sub)command to be executed
@@ -455,7 +453,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             .sort_unstable_by_key(|mod_| mod_.name.to_lowercase());
     });
     // Update config file with possibly edited config
-    config::write_file(&mut config_file, &config).await?;
+    config::write_file(&mut config_file, &config)?;
 
     if add_error {
         Err(anyhow!(""))

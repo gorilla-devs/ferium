@@ -1,5 +1,12 @@
 # Changelog for Ferium
 
+## `v4.7.1`
+### 09.08.2024
+
+- Implement change to libium, mainly removal of async functions
+- Also remove unnecessary async from code here
+- Consistently use `FuturesUnordered` for parallelising code
+
 ## `v4.7.0`
 ### 11.06.2024
 

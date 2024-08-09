@@ -20,8 +20,7 @@ use libium::{
     file_picker::pick_folder,
     HOME,
 };
-use std::{fs::read_dir, path::PathBuf};
-use tokio::fs::create_dir_all;
+use std::{fs::{create_dir_all, read_dir}, path::PathBuf};
 
 pub fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
     let mut picker = Select::with_theme(&*THEME)
@@ -122,7 +121,7 @@ pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
                 "Output Directory",
             )?
             .ok_or_else(|| anyhow!("Please pick a backup directory"))?;
-            create_dir_all(&backup_dir).await?;
+            create_dir_all(&backup_dir)?;
             copy(output_dir, backup_dir, &CopyOptions::new())?;
         }
     }

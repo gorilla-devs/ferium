@@ -8,13 +8,13 @@ use ferinth::{
     Ferinth,
 };
 use furse::{structures::mod_structs::Mod, Furse};
+use futures::{stream::FuturesUnordered, StreamExt as _};
 use itertools::{izip, Itertools};
 use libium::config::structs::{ModIdentifier, Profile};
 use octocrab::{
     models::{repos::Release, Repository},
     OctocrabBuilder,
 };
-use tokio::task::JoinSet;
 
 enum Metadata {
     CF(Mod),
@@ -46,7 +46,7 @@ pub async fn verbose(md: Ferinth, cf: Furse, profile: &mut Profile, markdown: bo
         eprint!("Querying metadata... ");
     }
 
-    let mut tasks: JoinSet<Result<_>> = JoinSet::new();
+    let mut tasks = FuturesUnordered::new();
     let mut mr_ids = Vec::new();
     let mut cf_ids = Vec::new();
     for mod_ in &profile.mods {
@@ -54,8 +54,8 @@ pub async fn verbose(md: Ferinth, cf: Furse, profile: &mut Profile, markdown: bo
             ModIdentifier::CurseForgeProject(project_id) => cf_ids.push(project_id),
             ModIdentifier::ModrinthProject(project_id) => mr_ids.push(project_id),
             ModIdentifier::GitHubRepository((owner, repo)) => {
-                tasks.spawn(async {
-                    Ok((
+                tasks.push(async {
+                    Ok::<_, anyhow::Error>((
                         OctocrabBuilder::new()
                             .build()?
                             .repos(&owner, &repo)
@@ -99,8 +99,8 @@ pub async fn verbose(md: Ferinth, cf: Furse, profile: &mut Profile, markdown: bo
     for project in cf_projects {
         metadata.push(Metadata::CF(project));
     }
-    while let Some(res) = tasks.join_next().await {
-        let (repo, releases) = res??;
+    while let Some(res) = tasks.next().await {
+        let (repo, releases) = res?;
         metadata.push(Metadata::GH(repo, releases.items));
     }
     metadata.sort_unstable_by_key(|e| e.name().to_lowercase());
