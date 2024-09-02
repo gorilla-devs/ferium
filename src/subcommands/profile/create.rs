@@ -61,19 +61,16 @@ pub async fn create(
                     .with_prompt("What should this profile be called?")
                     .interact_text()?;
 
-                #[allow(clippy::single_match_else)]
-                match check_profile_name(config, &name) {
-                    Ok(()) => break name,
-                    Err(_) => {
-                        println!(
-                            "{}",
-                            "Please provide a name that is not already being used"
-                                .red()
-                                .bold()
-                        );
-                        continue;
-                    }
+                if check_profile_name(config, &name).is_ok() {
+                    break name;
                 }
+
+                println!(
+                    "{}",
+                    "Please provide a name that is not already being used"
+                        .red()
+                        .bold()
+                );
             };
 
             let selected_version = pick_minecraft_version().await?;

@@ -20,9 +20,13 @@ use libium::{
     },
     HOME,
 };
-use std::{fs::File, io::BufReader, path::PathBuf, time::Duration};
+use std::{
+    fs::File,
+    io::BufReader,
+    path::{Path, PathBuf},
+    time::Duration,
+};
 
-#[allow(clippy::future_not_send)] // 3rd party library doesn't implement `Send`
 pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpack) -> Result<()> {
     let mut to_download: Vec<Downloadable> = Vec::new();
     let mut to_install = Vec::new();
@@ -61,13 +65,17 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
             for file in files {
                 match TryInto::<Downloadable>::try_into(file) {
                     Ok(mut downloadable) => {
-                        downloadable.output =
-                            PathBuf::from(if downloadable.filename().ends_with(".zip") {
+                        downloadable.output = PathBuf::from(
+                            if Path::new(&downloadable.filename())
+                                .extension()
+                                .is_some_and(|ext| ext.eq_ignore_ascii_case(".zip"))
+                            {
                                 "resourcepacks"
                             } else {
                                 "mods"
-                            })
-                            .join(downloadable.filename());
+                            },
+                        )
+                        .join(downloadable.filename());
                         to_download.push(downloadable);
                     }
                     Err(DistributionDeniedError(mod_id, file_id)) => {

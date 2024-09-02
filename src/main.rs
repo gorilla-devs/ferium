@@ -9,14 +9,10 @@
     clippy::create_dir,
     clippy::unwrap_used,
     clippy::expect_used, // use anyhow::Context instead
-    clippy::correctness
+    clippy::correctness,
 )]
 #![warn(clippy::dbg_macro)]
-#![allow(
-    clippy::case_sensitive_file_extension_comparisons,
-    clippy::multiple_crate_versions,
-    clippy::too_many_lines
-)]
+#![allow(clippy::multiple_crate_versions, clippy::too_many_lines)]
 
 mod add;
 mod cli;
@@ -40,25 +36,29 @@ use libium::{
     },
     read_wrapper,
 };
-use once_cell::sync::Lazy;
 use std::{
     env::{var, var_os},
     process::ExitCode,
+    sync::LazyLock,
 };
 
 const CROSS: &str = "×";
-pub static TICK: Lazy<ColoredString> = Lazy::new(|| "✓".green());
-pub static YELLOW_TICK: Lazy<ColoredString> = Lazy::new(|| "✓".yellow());
-pub static THEME: Lazy<ColorfulTheme> = Lazy::new(Default::default);
+static TICK: LazyLock<ColoredString> = LazyLock::new(|| "✓".green());
+static YELLOW_TICK: LazyLock<ColoredString> = LazyLock::new(|| "✓".yellow());
+
+/// Dialoguer theme
+static THEME: LazyLock<ColorfulTheme> = LazyLock::new(Default::default);
+
+/// Indicatif themes
 #[allow(clippy::expect_used)]
-pub static STYLE_NO: Lazy<ProgressStyle> = Lazy::new(|| {
+pub static STYLE_NO: LazyLock<ProgressStyle> = LazyLock::new(|| {
     ProgressStyle::default_bar()
         .template("{spinner} {elapsed} [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
         .expect("Progress bar template parse failure")
         .progress_chars("#>-")
 });
 #[allow(clippy::expect_used)]
-pub static STYLE_BYTE: Lazy<ProgressStyle> = Lazy::new(|| {
+pub static STYLE_BYTE: LazyLock<ProgressStyle> = LazyLock::new(|| {
     ProgressStyle::default_bar()
         .template(
             "{spinner} {bytes_per_sec} [{wide_bar:.cyan/blue}] {bytes:.cyan}/{total_bytes:.blue}",
@@ -68,21 +68,24 @@ pub static STYLE_BYTE: Lazy<ProgressStyle> = Lazy::new(|| {
 });
 
 fn main() -> ExitCode {
+    #[cfg(windows)]
+    // Enable colours on conhost (command prompt or powershell)
+    {
+        #[allow(clippy::unwrap_used)] // There is actually no error
+        colored::control::set_virtual_terminal(true).unwrap();
+    }
+
     let cli = Ferium::parse();
+
     let mut builder = tokio::runtime::Builder::new_multi_thread();
     builder.enable_all();
     builder.thread_name("ferium-worker");
     if let Some(threads) = cli.threads {
         builder.worker_threads(threads);
     }
-    #[cfg(windows)]
-    {
-        #[allow(clippy::unwrap_used)] // There is actually no error
-        // Enable colours on conhost
-        colored::control::set_virtual_terminal(true).unwrap();
-    }
     #[allow(clippy::expect_used)] // No error handling yet
     let runtime = builder.build().expect("Could not initialise Tokio runtime");
+
     if let Err(err) = runtime.block_on(actual_main(cli)) {
         if !err.to_string().is_empty() {
             eprintln!("{}", err.to_string().red().bold());
@@ -140,18 +143,16 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
     } else if let Ok(token) = var("GITHUB_TOKEN") {
         github = github.personal_token(token);
     }
-
     let modrinth = Ferinth::new(
         "ferium",
         option_env!("CARGO_PKG_VERSION"),
         Some("Discord: therookiecoder"),
         None,
     )?;
-
     let curseforge = Furse::new(&cli_app.curseforge_api_key.unwrap_or_else(|| {
-        var("CURSEFORGE_API_KEY").unwrap_or_else(|_| {
-            "$2a$10$sI.yRk4h4R49XYF94IIijOrO4i3W3dAFZ4ssOlNE10GYrDhc2j8K.".into()
-        })
+        var("CURSEFORGE_API_KEY").unwrap_or(String::from(
+            "$2a$10$sI.yRk4h4R49XYF94IIijOrO4i3W3dAFZ4ssOlNE10GYrDhc2j8K.",
+        ))
     }));
 
     let mut config_file = config::get_file(
@@ -161,7 +162,8 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             .unwrap_or(DEFAULT_CONFIG_PATH.clone()),
     )?;
     let mut config = config::deserialise(&read_wrapper(&mut config_file)?)?;
-    let mut add_error = false;
+
+    let mut did_add_fail = false;
 
     // Run function(s) based on the sub(sub)command to be executed
     match cli_app.subcommand {
@@ -223,7 +225,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             .await?;
             spinner.finish_and_clear();
 
-            add_error = add::display_successes_failures(&successes, failures);
+            did_add_fail = add::display_successes_failures(&successes, failures);
         }
         SubCommands::Add {
             identifiers,
@@ -250,11 +252,12 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             )
             .await?;
 
-            add_error = add::display_successes_failures(&successes, failures);
+            did_add_fail = add::display_successes_failures(&successes, failures);
         }
         SubCommands::List { verbose, markdown } => {
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
+
             if verbose {
                 subcommands::list::verbose(modrinth, curseforge, profile, markdown).await?;
             } else {
@@ -455,7 +458,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
     // Update config file with possibly edited config
     config::write_file(&mut config_file, &config)?;
 
-    if add_error {
+    if did_add_fail {
         Err(anyhow!(""))
     } else {
         Ok(())
