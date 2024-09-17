@@ -1,7 +1,7 @@
 [package]
 
 name = "ferium"
-version = "4.7.0"
+version = "4.7.1"
 repository = "https://github.com/gorilla-devs/ferium"
 description = "Fast CLI program for managing Minecraft mods and modpacks from Modrinth, CurseForge, and Github Releases"
 authors = [
