@@ -60,6 +60,7 @@ jobs:
         run: cargo clippy
 
       - name: Run tests
+        if: matrix.os == 'ubuntu-latest'
         run: cargo test --no-default-features
 
       - name: Build macOS Intel

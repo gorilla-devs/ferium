@@ -1,7 +1,7 @@
 # Changelog for Ferium
 
 ## `v4.7.1`
-### 09.08.2024
+### 17.09.2024
 
 - Implement change to libium, mainly removal of async functions
 - Also remove unnecessary async from code here
