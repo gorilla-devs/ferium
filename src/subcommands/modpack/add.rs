@@ -3,8 +3,6 @@ use crate::{THEME, TICK};
 use anyhow::{anyhow, Result};
 use colored::Colorize;
 use dialoguer::Confirm;
-use ferinth::Ferinth;
-use furse::Furse;
 use itertools::Itertools;
 use libium::{
     config::structs::{Config, Modpack, ModpackIdentifier},
@@ -15,14 +13,13 @@ use libium::{
 use std::path::PathBuf;
 
 pub async fn curseforge(
-    curseforge: &Furse,
     config: &mut Config,
     project_id: i32,
     output_dir: Option<PathBuf>,
     install_overrides: Option<bool>,
 ) -> Result<()> {
     eprint!("Checking modpack... ");
-    let project = add::curseforge(curseforge, config, project_id).await?;
+    let project = add::curseforge(config, project_id).await?;
     println!("{} ({})", *TICK, project.name);
     println!("Where should the modpack be installed to?");
     let output_dir = match output_dir {
@@ -62,14 +59,13 @@ pub async fn curseforge(
 }
 
 pub async fn modrinth(
-    modrinth: &Ferinth,
     config: &mut Config,
     project_id: &str,
     output_dir: Option<PathBuf>,
     install_overrides: Option<bool>,
 ) -> Result<()> {
     eprint!("Checking modpack... ");
-    let project = add::modrinth(modrinth, config, project_id).await?;
+    let project = add::modrinth(config, project_id).await?;
     println!("{} ({})", *TICK, project.title);
     println!("Where should the modpack be installed to?");
     let output_dir = match output_dir {

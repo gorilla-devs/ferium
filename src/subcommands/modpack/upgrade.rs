@@ -4,8 +4,6 @@ use crate::{
 };
 use anyhow::{Context, Result};
 use colored::Colorize;
-use ferinth::Ferinth;
-use furse::Furse;
 use futures::{stream::FuturesUnordered, StreamExt as _};
 use indicatif::ProgressBar;
 use itertools::Itertools;
@@ -14,11 +12,8 @@ use libium::{
     modpack::{
         curseforge::structs::Manifest, modrinth::structs::Metadata, read_file_from_zip, zip_extract,
     },
-    upgrade::{
-        modpack_downloadable::{download_curseforge_modpack, download_modrinth_modpack},
-        DistributionDeniedError, Downloadable,
-    },
-    HOME,
+    upgrade::{DistributionDeniedError, DownloadFile},
+    CURSEFORGE_API, HOME,
 };
 use std::{
     fs::File,
@@ -27,43 +22,45 @@ use std::{
     time::Duration,
 };
 
-pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpack) -> Result<()> {
-    let mut to_download: Vec<Downloadable> = Vec::new();
+pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
+    let mut to_download: Vec<DownloadFile> = Vec::new();
     let mut to_install = Vec::new();
     let install_msg;
+
+    let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
+    let modpack_filepath = modpack
+        .identifier
+        .download_file(
+            |total| {
+                progress_bar.println("Downloading Modpack".bold().to_string());
+                progress_bar.enable_steady_tick(Duration::from_millis(100));
+                progress_bar.set_length(total as u64);
+            },
+            |additional| {
+                progress_bar.inc(additional as u64);
+            },
+        )
+        .await?;
+    let modpack_file = File::open(&modpack_filepath)?;
+    progress_bar.finish_and_clear();
+
     match &modpack.identifier {
-        ModpackIdentifier::CurseForgeModpack(project_id) => {
-            let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
-            let modpack_filepath = download_curseforge_modpack(
-                &curseforge.clone(),
-                *project_id,
-                |total| {
-                    progress_bar.println("Downloading Modpack".bold().to_string());
-                    progress_bar.enable_steady_tick(Duration::from_millis(100));
-                    progress_bar.set_length(total as u64);
-                },
-                |additional| {
-                    progress_bar.inc(additional as u64);
-                },
-            )
-            .await?;
-            let modpack_file = File::open(&modpack_filepath)?;
+        ModpackIdentifier::CurseForgeModpack(_) => {
             let manifest: Manifest = serde_json::from_str(
                 &read_file_from_zip(BufReader::new(modpack_file), "manifest.json")?
                     .context("Does not contain manifest")?,
             )?;
-            progress_bar.finish_and_clear();
 
             eprint!("\n{}", "Determining files to download... ".bold());
 
             let file_ids = manifest.files.iter().map(|file| file.file_id).collect();
-            let files = curseforge.get_files(file_ids).await?;
+            let files = CURSEFORGE_API.get_files(file_ids).await?;
             println!("{} Fetched {} mods", &*TICK, files.len());
 
             let mut tasks = FuturesUnordered::new();
             let mut msg_shown = false;
             for file in files {
-                match TryInto::<Downloadable>::try_into(file) {
+                match TryInto::<DownloadFile>::try_into(file) {
                     Ok(mut downloadable) => {
                         downloadable.output = PathBuf::from(
                             if Path::new(&downloadable.filename())
@@ -83,9 +80,8 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                             println!("\n{}", "The following mod(s) have denied 3rd parties such as Ferium from downloading it".red().bold());
                         }
                         msg_shown = true;
-                        let curseforge = curseforge.clone();
                         tasks.push(async move {
-                            let project = curseforge.get_mod(mod_id).await?;
+                            let project = CURSEFORGE_API.get_mod(mod_id).await?;
                             eprintln!(
                                 "- {}
                            \r  {}",
@@ -125,27 +121,11 @@ pub async fn upgrade(modrinth: &Ferinth, curseforge: &Furse, modpack: &'_ Modpac
                 to_install = read_overrides(&tmp_dir.join(manifest.overrides))?;
             }
         }
-        ModpackIdentifier::ModrinthModpack(project_id) => {
-            let progress_bar = ProgressBar::new(0).with_style(STYLE_BYTE.clone());
-            let modpack_filepath = download_modrinth_modpack(
-                &modrinth.clone(),
-                project_id,
-                |total| {
-                    println!("{}", "Downloading Modpack".bold());
-                    progress_bar.enable_steady_tick(Duration::from_millis(100));
-                    progress_bar.set_length(total as u64);
-                },
-                |additional| {
-                    progress_bar.inc(additional as u64);
-                },
-            )
-            .await?;
-            let modpack_file = File::open(&modpack_filepath)?;
+        ModpackIdentifier::ModrinthModpack(_) => {
             let metadata: Metadata = serde_json::from_str(
                 &read_file_from_zip(BufReader::new(modpack_file), "modrinth.index.json")?
                     .context("Does not contain metadata file")?,
             )?;
-            progress_bar.finish_and_clear();
 
             for file in metadata.files {
                 to_download.push(file.into());

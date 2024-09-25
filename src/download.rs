@@ -11,7 +11,7 @@ use fs_extra::{
 use futures::{stream::FuturesUnordered, StreamExt as _};
 use indicatif::ProgressBar;
 use itertools::Itertools;
-use libium::upgrade::Downloadable;
+use libium::upgrade::DownloadFile;
 use reqwest::Client;
 use size::Size;
 use std::{
@@ -30,10 +30,10 @@ use tokio::sync::Semaphore;
 /// - If the file is a `.part` file or if the move failed, the file will be deleted
 pub async fn clean(
     directory: &Path,
-    to_download: &mut Vec<Downloadable>,
+    to_download: &mut Vec<DownloadFile>,
     to_install: &mut Vec<(OsString, PathBuf)>,
 ) -> Result<()> {
-    let dupes = find_dupes_by_key(to_download, Downloadable::filename);
+    let dupes = find_dupes_by_key(to_download, DownloadFile::filename);
     if !dupes.is_empty() {
         println!(
             "{}",
@@ -100,7 +100,7 @@ pub fn read_overrides(directory: &Path) -> Result<Vec<(OsString, PathBuf)>> {
 /// Download and install the files in `to_download` and `to_install` to `output_dir`
 pub async fn download(
     output_dir: PathBuf,
-    to_download: Vec<Downloadable>,
+    to_download: Vec<DownloadFile>,
     to_install: Vec<(OsString, PathBuf)>,
 ) -> Result<()> {
     let progress_bar = Arc::new(Mutex::new(

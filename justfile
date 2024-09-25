@@ -6,8 +6,8 @@ install:
   cargo install --force --path .
 
 # Install ferium to cargo's binary folder, but with faster compilation (offline, debug, nightly, parallel frontend)
-install-dev $RUSTFLAGS="-Z threads=8":
-  cargo +nightly install --offline --debug --force --path .
+install-dev:
+  cargo install --offline --debug --force --path .
 
 # Delete test artefacts
 clean-test:

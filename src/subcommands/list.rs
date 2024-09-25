@@ -3,18 +3,15 @@
 use crate::TICK;
 use anyhow::{Context, Result};
 use colored::Colorize;
-use ferinth::{
-    structures::{project::Project, user::TeamMember},
-    Ferinth,
-};
-use furse::{structures::mod_structs::Mod, Furse};
+use ferinth::structures::{project::Project, user::TeamMember};
+use furse::structures::mod_structs::Mod;
 use futures::{stream::FuturesUnordered, StreamExt as _};
 use itertools::{izip, Itertools};
-use libium::config::structs::{ModIdentifier, Profile};
-use octocrab::{
-    models::{repos::Release, Repository},
-    OctocrabBuilder,
+use libium::{
+    config::structs::{ModIdentifier, Profile},
+    CURSEFORGE_API, GITHUB_API, MODRINTH_API,
 };
+use octocrab::models::{repos::Release, Repository};
 
 enum Metadata {
     CF(Mod),
@@ -41,7 +38,7 @@ impl Metadata {
     }
 }
 
-pub async fn verbose(md: Ferinth, cf: Furse, profile: &mut Profile, markdown: bool) -> Result<()> {
+pub async fn verbose(profile: &mut Profile, markdown: bool) -> Result<()> {
     if !markdown {
         eprint!("Querying metadata... ");
     }
@@ -56,13 +53,8 @@ pub async fn verbose(md: Ferinth, cf: Furse, profile: &mut Profile, markdown: bo
             ModIdentifier::GitHubRepository((owner, repo)) => {
                 tasks.push(async {
                     Ok::<_, anyhow::Error>((
-                        OctocrabBuilder::new()
-                            .build()?
-                            .repos(&owner, &repo)
-                            .get()
-                            .await?,
-                        OctocrabBuilder::new()
-                            .build()?
+                        GITHUB_API.repos(&owner, &repo).get().await?,
+                        GITHUB_API
                             .repos(owner, repo)
                             .releases()
                             .list()
@@ -74,10 +66,10 @@ pub async fn verbose(md: Ferinth, cf: Furse, profile: &mut Profile, markdown: bo
         }
     }
 
-    let mr_projects = md
+    let mr_projects = MODRINTH_API
         .get_multiple_projects(&mr_ids.iter().map(|s| &**s).collect::<Vec<_>>())
         .await?;
-    let mr_teams_members = md
+    let mr_teams_members = MODRINTH_API
         .list_multiple_teams_members(
             &mr_projects
                 .iter()
@@ -89,7 +81,7 @@ pub async fn verbose(md: Ferinth, cf: Furse, profile: &mut Profile, markdown: bo
     let cf_projects = if cf_ids.is_empty() {
         Vec::new()
     } else {
-        cf.get_mods(cf_ids).await?
+        CURSEFORGE_API.get_mods(cf_ids).await?
     };
 
     let mut metadata = Vec::new();

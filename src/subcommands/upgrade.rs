@@ -3,23 +3,20 @@
 
 use crate::{
     download::{clean, download},
-    CROSS, STYLE_NO, TICK, YELLOW_TICK,
+    CROSS, STYLE_NO, TICK,
 };
 use anyhow::{anyhow, bail, Result};
 use colored::Colorize;
-use ferinth::Ferinth;
-use furse::Furse;
 use futures::{stream::FuturesUnordered, StreamExt};
 use indicatif::ProgressBar;
 use libium::{
     config::structs::{ModLoader, Profile},
     upgrade::{
-        mod_downloadable::{self, get_latest_compatible_downloadable},
-        Downloadable,
+        check,
+        mod_downloadable::{self},
+        DownloadFile,
     },
-    APIs,
 };
-use octocrab::Octocrab;
 use std::{
     fs::read_dir,
     sync::{Arc, Mutex},
@@ -31,12 +28,7 @@ use tokio::sync::Semaphore;
 ///
 /// If an error occurs with a resolving task, instead of failing immediately,
 /// resolution will continue and the error return flag is set to true.
-pub async fn get_platform_downloadables(
-    modrinth: Ferinth,
-    curseforge: Furse,
-    github: Octocrab,
-    profile: &Profile,
-) -> Result<(Vec<Downloadable>, bool)> {
+pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<DownloadFile>, bool)> {
     let to_download = Arc::new(Mutex::new(Vec::new()));
     let progress_bar = Arc::new(Mutex::new(
         ProgressBar::new(profile.mods.len() as u64).with_style(STYLE_NO.clone()),
@@ -60,37 +52,40 @@ pub async fn get_platform_downloadables(
         let permit = Arc::clone(&semaphore).acquire_owned().await?;
         let to_download = Arc::clone(&to_download);
         let progress_bar = Arc::clone(&progress_bar);
-        let apis = APIs::new(&modrinth, &curseforge, &github);
 
         tasks.push(async move {
             let _permit = permit;
-            let result = get_latest_compatible_downloadable(
-                apis,
-                &mod_,
-                &profile.game_version,
-                profile.mod_loader,
-            )
-            .await;
+            let result = mod_.identifier.fetch_download_files().await;
             let progress_bar = progress_bar.lock().expect("Mutex poisoned");
             progress_bar.inc(1);
             match result {
-                Ok((downloadable, qf_flag)) => {
-                    progress_bar.println(format!(
-                        "{} {:pad_len$}  {}",
-                        if qf_flag {
-                            YELLOW_TICK.clone()
-                        } else {
-                            TICK.clone()
-                        },
-                        mod_.name,
-                        downloadable.filename().dimmed()
-                    ));
-                    {
+                Ok(download_files) => {
+                    if let Some(download_file) = check::select_latest(
+                        download_files,
+                        profile.get_version(mod_.check_game_version),
+                        profile.get_loader(mod_.check_mod_loader),
+                    ) {
+                        progress_bar.println(format!(
+                            "{} {:pad_len$}  {}",
+                            TICK.clone(),
+                            mod_.name,
+                            download_file.filename().dimmed()
+                        ));
                         to_download
                             .lock()
                             .expect("Mutex poisoned")
-                            .push(downloadable);
-                        Ok((false, qf_flag))
+                            .push(download_file);
+                        Ok(true)
+                    } else {
+                        progress_bar.println(format!(
+                            "{}",
+                            format!(
+                                "{CROSS} {:pad_len$}  No compatible file was found",
+                                mod_.name
+                            )
+                            .red()
+                        ));
+                        Ok(false)
                     }
                 }
                 Err(err) => {
@@ -106,29 +101,21 @@ pub async fn get_platform_downloadables(
                         "{}",
                         format!("{CROSS} {:pad_len$}  {err}", mod_.name).red()
                     ));
-                    Ok((true, false))
+                    Ok(false)
                 }
             }
         });
     }
 
     let mut error = false;
-    let mut qf_flag = false;
     while let Some(res) = tasks.next().await {
         let res = res?;
-        error |= res.0;
-        qf_flag |= res.1;
+        error |= !res;
     }
     Arc::try_unwrap(progress_bar)
         .map_err(|_| anyhow!("Failed to run threads to completion"))?
         .into_inner()?
         .finish_and_clear();
-    if qf_flag {
-        println!(
-            "{}",
-            "Fabric mod using Quilt backwards compatibility".yellow()
-        );
-    }
     Ok((
         Arc::try_unwrap(to_download)
             .map_err(|_| anyhow!("Failed to run threads to completion"))?
@@ -137,14 +124,8 @@ pub async fn get_platform_downloadables(
     ))
 }
 
-pub async fn upgrade(
-    modrinth: Ferinth,
-    curseforge: Furse,
-    github: Octocrab,
-    profile: &Profile,
-) -> Result<()> {
-    let (mut to_download, error) =
-        get_platform_downloadables(modrinth, curseforge, github, profile).await?;
+pub async fn upgrade(profile: &Profile) -> Result<()> {
+    let (mut to_download, error) = get_platform_downloadables(profile).await?;
     let mut to_install = Vec::new();
     if profile.output_dir.join("user").exists() && profile.mod_loader != ModLoader::Quilt {
         for file in read_dir(profile.output_dir.join("user"))? {

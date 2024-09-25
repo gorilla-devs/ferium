@@ -24,8 +24,6 @@ use clap::{CommandFactory, Parser};
 use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
 use dialoguer::theme::ColorfulTheme;
-use ferinth::Ferinth;
-use furse::Furse;
 use indicatif::ProgressStyle;
 use itertools::Itertools;
 use libium::{
@@ -37,14 +35,13 @@ use libium::{
     read_wrapper,
 };
 use std::{
-    env::{var, var_os},
+    env::{set_var, var_os},
     process::ExitCode,
     sync::LazyLock,
 };
 
 const CROSS: &str = "×";
 static TICK: LazyLock<ColoredString> = LazyLock::new(|| "✓".green());
-static YELLOW_TICK: LazyLock<ColoredString> = LazyLock::new(|| "✓".yellow());
 
 /// Dialoguer theme
 static THEME: LazyLock<ColorfulTheme> = LazyLock::new(Default::default);
@@ -137,23 +134,12 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
         };
     }
 
-    let mut github = octocrab::OctocrabBuilder::new();
     if let Some(token) = cli_app.github_token {
-        github = github.personal_token(token);
-    } else if let Ok(token) = var("GITHUB_TOKEN") {
-        github = github.personal_token(token);
+        set_var("GITHUB_TOKEN", token);
     }
-    let modrinth = Ferinth::new(
-        "ferium",
-        option_env!("CARGO_PKG_VERSION"),
-        Some("Discord: therookiecoder"),
-        None,
-    )?;
-    let curseforge = Furse::new(&cli_app.curseforge_api_key.unwrap_or_else(|| {
-        var("CURSEFORGE_API_KEY").unwrap_or(String::from(
-            "$2a$10$sI.yRk4h4R49XYF94IIijOrO4i3W3dAFZ4ssOlNE10GYrDhc2j8K.",
-        ))
-    }));
+    if let Some(key) = cli_app.curseforge_api_key {
+        set_var("CURSEFORGE_API_KEY", key);
+    }
 
     let mut config_file = config::get_file(
         &cli_app
@@ -180,14 +166,9 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             let spinner = indicatif::ProgressBar::new_spinner().with_message("Reading files");
             spinner.enable_steady_tick(std::time::Duration::from_millis(100));
 
-            let ids = libium::scan(
-                &modrinth,
-                &curseforge,
-                directory.as_ref().unwrap_or(&profile.output_dir),
-                || {
-                    spinner.set_message("Querying servers");
-                },
-            )
+            let ids = libium::scan(directory.as_ref().unwrap_or(&profile.output_dir), || {
+                spinner.set_message("Querying servers");
+            })
             .await?;
 
             spinner.set_message("Adding mods");
@@ -214,15 +195,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                 }
             }
 
-            let (successes, failures) = libium::add(
-                libium::APIs::new(&modrinth, &curseforge, &github.build()?),
-                profile,
-                send_ids,
-                !force,
-                true,
-                true,
-            )
-            .await?;
+            let (successes, failures) = libium::add(profile, send_ids, !force, true, true).await?;
             spinner.finish_and_clear();
 
             did_add_fail = add::display_successes_failures(&successes, failures);
@@ -240,7 +213,6 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             }
 
             let (successes, failures) = libium::add(
-                libium::APIs::new(&modrinth, &curseforge, &github.build()?),
                 profile,
                 identifiers
                     .into_iter()
@@ -259,7 +231,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             check_empty_profile(profile)?;
 
             if verbose {
-                subcommands::list::verbose(modrinth, curseforge, profile, markdown).await?;
+                subcommands::list::verbose(profile, markdown).await?;
             } else {
                 println!(
                     "{} {} on {} {}\n",
@@ -302,7 +274,6 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                 } => {
                     if let Ok(project_id) = identifier.parse::<i32>() {
                         subcommands::modpack::add::curseforge(
-                            &curseforge,
                             &mut config,
                             project_id,
                             output_dir,
@@ -310,7 +281,6 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                         )
                         .await?;
                     } else if let Err(err) = subcommands::modpack::add::modrinth(
-                        &modrinth,
                         &mut config,
                         &identifier,
                         output_dir,
@@ -355,12 +325,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     subcommands::modpack::switch(&mut config, modpack_name)?;
                 }
                 ModpackSubCommands::Upgrade => {
-                    subcommands::modpack::upgrade(
-                        &modrinth,
-                        &curseforge,
-                        get_active_modpack(&mut config)?,
-                    )
-                    .await?;
+                    subcommands::modpack::upgrade(get_active_modpack(&mut config)?).await?;
                 }
             };
             if default_flag {
@@ -446,7 +411,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
         SubCommands::Upgrade => {
             let profile = get_active_profile(&mut config)?;
             check_empty_profile(profile)?;
-            subcommands::upgrade(modrinth, curseforge, github.build()?, profile).await?;
+            subcommands::upgrade(profile).await?;
         }
     };
 
