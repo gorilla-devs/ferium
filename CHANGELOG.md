@@ -9,6 +9,7 @@
 ### 17.09.2024
 
 - Implement change to libium, mainly removal of async functions
+  - Fixes [#422](https://github.com/gorilla-devs/ferium/issues/422)
 - Also remove unnecessary async from code here
 - Consistently use `FuturesUnordered` for parallelising code
 
