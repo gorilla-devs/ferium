@@ -50,7 +50,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt update
-          sudo apt install gcc-mingw-w64-x86-64 musl musl-tools gcc-aarch64-linux-gnu
+          sudo apt install gcc-mingw-w64-x86-64 musl musl-tools gcc-aarch64-linux-gnu libwayland-dev
           curl https://apt.llvm.org/llvm.sh | sudo bash -s 17
 
       - name: Install Rust cache
