@@ -1,8 +1,10 @@
-use crate::THEME;
 use anyhow::{anyhow, Result};
-use colored::Colorize;
-use dialoguer::Select;
-use libium::config::structs::{Config, ModpackIdentifier};
+use colored::Colorize as _;
+use inquire::Select;
+use libium::{
+    config::structs::{Config, ModpackIdentifier},
+    iter_ext::IterExt as _,
+};
 
 pub fn switch(config: &mut Config, modpack_name: Option<String>) -> Result<()> {
     if config.modpacks.len() <= 1 {
@@ -36,14 +38,12 @@ pub fn switch(config: &mut Config, modpack_name: Option<String>) -> Result<()> {
                     modpack.name.bold(),
                 )
             })
-            .collect::<Vec<_>>();
+            .collect_vec();
 
-        let selection = Select::with_theme(&*THEME)
-            .with_prompt("Select which modpack to switch to")
-            .items(&modpack_info)
-            .default(config.active_modpack)
-            .interact()?;
-        config.active_modpack = selection;
+        config.active_modpack = Select::new("Select which modpack to switch to", modpack_info)
+            .with_starting_cursor(config.active_modpack)
+            .raw_prompt()?
+            .index;
         Ok(())
     }
 }

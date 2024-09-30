@@ -10,14 +10,12 @@ pub use info::info;
 pub use switch::switch;
 pub use upgrade::upgrade;
 
-use crate::THEME;
-use anyhow::{anyhow, ensure, Context, Result};
-use dialoguer::Confirm;
+use anyhow::{anyhow, ensure, Context as _, Result};
 use fs_extra::dir::{copy, CopyOptions};
+use inquire::Confirm;
 use libium::{file_picker::pick_folder, HOME};
 use std::{fs::read_dir, path::Path};
 
-#[allow(clippy::expect_used)]
 pub fn check_output_directory(output_dir: &Path) -> Result<()> {
     ensure!(
         output_dir.is_absolute(),
@@ -40,10 +38,7 @@ pub fn check_output_directory(output_dir: &Path) -> Result<()> {
                 "There are files in the {} folder in your output directory, these will be deleted when you upgrade.",
                 check_dir.file_name().context("Unable to get folder name")?.to_string_lossy()
             );
-            if Confirm::with_theme(&*THEME)
-                .with_prompt("Would like to create a backup?")
-                .interact()?
-            {
+            if Confirm::new("Would like to create a backup?").prompt()? {
                 let backup_dir = pick_folder(
                     &*HOME,
                     "Where should the backup be made?",

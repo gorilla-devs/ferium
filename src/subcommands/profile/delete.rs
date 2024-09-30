@@ -1,11 +1,13 @@
 use std::cmp::Ordering;
 
 use super::switch;
-use crate::THEME;
-use anyhow::{anyhow, Result};
-use colored::Colorize;
-use dialoguer::Select;
-use libium::config::structs::Config;
+use anyhow::{Context as _, Result};
+use colored::Colorize as _;
+use inquire::Select;
+use libium::{
+    config::{filters::ProfileParameters as _, structs::Config},
+    iter_ext::IterExt as _,
+};
 
 pub fn delete(
     config: &mut Config,
@@ -17,8 +19,8 @@ pub fn delete(
         config
             .profiles
             .iter()
-            .position(|profile| profile.name == profile_name)
-            .ok_or_else(|| anyhow!("The profile name provided does not exist"))?
+            .position(|profile| profile.name.eq_ignore_ascii_case(&profile_name))
+            .context("The profile name provided does not exist")?
     } else {
         let profile_names = config
             .profiles
@@ -26,21 +28,29 @@ pub fn delete(
             .map(|profile| {
                 format!(
                     "{:6} {:7} {} {}",
-                    format!("{:?}", profile.mod_loader).purple(),
-                    profile.game_version.green(),
+                    profile
+                        .filters
+                        .mod_loader()
+                        .map(ToString::to_string)
+                        .unwrap_or_default()
+                        .purple(),
+                    profile
+                        .filters
+                        .game_versions()
+                        .map(|v| v.iter().display(", "))
+                        .unwrap_or_default()
+                        .green(),
                     profile.name.bold(),
                     format!("({} mods)", profile.mods.len()).yellow(),
                 )
             })
-            .collect::<Vec<_>>();
+            .collect_vec();
 
-        let selection = Select::with_theme(&*THEME)
-            .with_prompt("Select which profile to delete")
-            .items(&profile_names)
-            .default(config.active_profile)
-            .interact_opt()?;
-        if let Some(selection) = selection {
-            selection
+        if let Ok(selection) = Select::new("Select which profile to delete", profile_names)
+            .with_starting_cursor(config.active_profile)
+            .raw_prompt()
+        {
+            selection.index
         } else {
             return Ok(());
         }

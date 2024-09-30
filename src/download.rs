@@ -1,19 +1,15 @@
-// Allow `expect()`s for mutex poisons
-#![allow(clippy::expect_used)]
+#![expect(clippy::expect_used, reason = "For mutex poisons")]
 
 use crate::{STYLE_BYTE, TICK};
 use anyhow::{anyhow, bail, Error, Result};
-use colored::Colorize;
+use colored::Colorize as _;
 use fs_extra::{
     dir::{copy as copy_dir, CopyOptions as DirCopyOptions},
     file::{move_file, CopyOptions as FileCopyOptions},
 };
 use futures::{stream::FuturesUnordered, StreamExt as _};
 use indicatif::ProgressBar;
-use itertools::Itertools;
-use libium::upgrade::DownloadFile;
-use reqwest::Client;
-use size::Size;
+use libium::{iter_ext::IterExt as _, upgrade::DownloadFile};
 use std::{
     ffi::OsString,
     fs::{copy, create_dir_all, read_dir, remove_file},
@@ -43,7 +39,7 @@ pub async fn clean(
                 dupes
                     .into_iter()
                     .map(|i| to_download.swap_remove(i).filename())
-                    .format(", ")
+                    .display(", ")
             )
             .yellow()
             .bold()
@@ -118,7 +114,7 @@ pub async fn download(
         .enable_steady_tick(Duration::from_millis(100));
     let mut tasks = FuturesUnordered::new();
     let semaphore = Arc::new(Semaphore::new(75));
-    let client = Arc::new(Client::new());
+    let client = Arc::new(reqwest::Client::new());
 
     for downloadable in to_download {
         let permit = Arc::clone(&semaphore).acquire_owned().await?;
@@ -142,7 +138,7 @@ pub async fn download(
                 .println(format!(
                     "{} Downloaded  {:>7}  {}",
                     &*TICK,
-                    Size::from_bytes(length)
+                    size::Size::from_bytes(length)
                         .format()
                         .with_base(size::Base::Base10)
                         .to_string(),

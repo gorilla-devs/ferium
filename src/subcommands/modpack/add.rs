@@ -1,13 +1,13 @@
 use super::check_output_directory;
-use crate::{THEME, TICK};
+use crate::TICK;
 use anyhow::{anyhow, Result};
-use colored::Colorize;
-use dialoguer::Confirm;
-use itertools::Itertools;
+use colored::Colorize as _;
+use inquire::Confirm;
 use libium::{
     config::structs::{Config, Modpack, ModpackIdentifier},
     file_picker::pick_folder,
     get_minecraft_dir,
+    iter_ext::IterExt as _,
     modpack::add,
 };
 use std::path::PathBuf;
@@ -34,10 +34,9 @@ pub async fn curseforge(
     check_output_directory(&output_dir)?;
     let install_overrides = match install_overrides {
         Some(some) => some,
-        None => Confirm::with_theme(&*THEME)
-            .default(true)
-            .with_prompt("Should overrides be installed?")
-            .interact()?,
+        None => Confirm::new("Should overrides be installed?")
+            .with_default(true)
+            .prompt()?,
     };
     if install_overrides {
         println!(
@@ -80,10 +79,9 @@ pub async fn modrinth(
     check_output_directory(&output_dir)?;
     let install_overrides = match install_overrides {
         Some(some) => some,
-        None => Confirm::with_theme(&*THEME)
-            .default(true)
-            .with_prompt("Should overrides be installed?")
-            .interact()?,
+        None => Confirm::new("Should overrides be installed?")
+            .with_default(true)
+            .prompt()?,
     };
     if install_overrides {
         println!(
@@ -104,7 +102,7 @@ pub async fn modrinth(
                     this.platform.bold(),
                     this.url.to_string().blue().underline()
                 ))
-                .format(", ")
+                .display(", ")
         );
     }
     config.modpacks.push(Modpack {

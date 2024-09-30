@@ -1,15 +1,14 @@
 use std::collections::HashMap;
 
 use colored::Colorize as _;
-use itertools::Itertools as _;
-use libium::add::Error;
+use libium::{add::Error, iter_ext::IterExt as _};
 
 pub fn display_successes_failures(successes: &[String], failures: Vec<(String, Error)>) -> bool {
     if !successes.is_empty() {
         println!(
             "{} {}",
             "Successfully added".green(),
-            successes.iter().map(|s| s.bold()).format(", ")
+            successes.iter().map(|s| s.bold()).display(", ")
         );
     }
 
@@ -40,7 +39,7 @@ pub fn display_successes_failures(successes: &[String], failures: Vec<(String, E
                 exit_error = true;
                 err.red()
             },
-            ids.iter().map(|s| s.italic()).format(", ")
+            ids.iter().map(|s| s.italic()).display(", ")
         );
     }
 

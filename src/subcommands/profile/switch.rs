@@ -1,8 +1,10 @@
-use crate::THEME;
 use anyhow::{anyhow, Result};
-use colored::Colorize;
-use dialoguer::Select;
-use libium::config::structs::Config;
+use colored::Colorize as _;
+use inquire::Select;
+use libium::{
+    config::{filters::ProfileParameters as _, structs::Config},
+    iter_ext::IterExt as _,
+};
 
 pub fn switch(config: &mut Config, profile_name: Option<String>) -> Result<()> {
     if config.profiles.len() <= 1 {
@@ -25,21 +27,29 @@ pub fn switch(config: &mut Config, profile_name: Option<String>) -> Result<()> {
             .iter()
             .map(|profile| {
                 format!(
-                    "{:6} {:7} {} {}",
-                    format!("{:?}", profile.mod_loader).purple(),
-                    profile.game_version.green(),
+                    "{:8} {:7} {} {}",
+                    profile
+                        .filters
+                        .mod_loader()
+                        .map(|l| l.to_string().purple())
+                        .unwrap_or_default(),
+                    profile
+                        .filters
+                        .game_versions()
+                        .map(|v| v[0].green())
+                        .unwrap_or_default(),
                     profile.name.bold(),
                     format!("({} mods)", profile.mods.len()).yellow(),
                 )
             })
-            .collect::<Vec<_>>();
+            .collect_vec();
 
-        let selection = Select::with_theme(&*THEME)
-            .with_prompt("Select which profile to switch to")
-            .items(&profile_info)
-            .default(config.active_profile)
-            .interact()?;
-        config.active_profile = selection;
+        if let Ok(selection) = Select::new("Select which profile to switch to", profile_info)
+            .with_starting_cursor(config.active_profile)
+            .raw_prompt()
+        {
+            config.active_profile = selection.index;
+        }
         Ok(())
     }
 }

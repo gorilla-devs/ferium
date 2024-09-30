@@ -1,11 +1,13 @@
 use std::cmp::Ordering;
 
 use super::switch;
-use crate::THEME;
 use anyhow::{anyhow, Result};
-use colored::Colorize;
-use dialoguer::Select;
-use libium::config::structs::{Config, ModpackIdentifier};
+use colored::Colorize as _;
+use inquire::Select;
+use libium::{
+    config::structs::{Config, ModpackIdentifier},
+    iter_ext::IterExt as _,
+};
 
 pub fn delete(
     config: &mut Config,
@@ -35,18 +37,12 @@ pub fn delete(
                     modpack.name.bold(),
                 )
             })
-            .collect::<Vec<_>>();
+            .collect_vec();
 
-        let selection = Select::with_theme(&*THEME)
-            .with_prompt("Select which modpack to delete")
-            .items(&modpack_names)
-            .default(config.active_modpack)
-            .interact_opt()?;
-        if let Some(selection) = selection {
-            selection
-        } else {
-            return Ok(());
-        }
+        Select::new("Select which modpack to delete", modpack_names)
+            .with_starting_cursor(config.active_modpack)
+            .raw_prompt()?
+            .index
     };
     config.modpacks.remove(selection);
 

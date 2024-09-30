@@ -1,8 +1,7 @@
 use super::check_output_directory;
-use crate::THEME;
 use anyhow::Result;
-use colored::Colorize;
-use dialoguer::Confirm;
+use colored::Colorize as _;
+use inquire::Confirm;
 use libium::{config::structs::Modpack, file_picker::pick_folder};
 use std::path::PathBuf;
 
@@ -30,10 +29,9 @@ pub fn configure(
     modpack.install_overrides = if let Some(install_overrides) = install_overrides {
         install_overrides
     } else {
-        let install_overrides = Confirm::with_theme(&*THEME)
-            .default(modpack.install_overrides)
-            .with_prompt("Should overrides be installed?")
-            .interact()?;
+        let install_overrides = Confirm::new("Should overrides be installed?")
+            .with_default(modpack.install_overrides)
+            .prompt()?;
         if install_overrides {
             println!(
                 "{}",

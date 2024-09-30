@@ -1,14 +1,12 @@
-#![allow(clippy::unwrap_used)]
-
 use crate::TICK;
-use anyhow::{Context, Result};
-use colored::Colorize;
+use anyhow::{Context as _, Result};
+use colored::Colorize as _;
 use ferinth::structures::{project::Project, user::TeamMember};
 use furse::structures::mod_structs::Mod;
 use futures::{stream::FuturesUnordered, StreamExt as _};
-use itertools::{izip, Itertools};
 use libium::{
     config::structs::{ModIdentifier, Profile},
+    iter_ext::IterExt as _,
     CURSEFORGE_API, GITHUB_API, MODRINTH_API,
 };
 use octocrab::models::{repos::Release, Repository};
@@ -27,6 +25,7 @@ impl Metadata {
         }
     }
 
+    #[expect(clippy::unwrap_used)]
     fn id(&self) -> ModIdentifier {
         match self {
             Metadata::CF(p) => ModIdentifier::CurseForgeProject(p.id),
@@ -66,26 +65,29 @@ pub async fn verbose(profile: &mut Profile, markdown: bool) -> Result<()> {
         }
     }
 
-    let mr_projects = MODRINTH_API
-        .get_multiple_projects(&mr_ids.iter().map(|s| &**s).collect::<Vec<_>>())
-        .await?;
-    let mr_teams_members = MODRINTH_API
-        .list_multiple_teams_members(
-            &mr_projects
-                .iter()
-                .map(|p| &p.team as &str)
-                .collect::<Vec<_>>(),
-        )
-        .await?;
+    let mr_projects = if mr_ids.is_empty() {
+        vec![]
+    } else {
+        MODRINTH_API
+            .get_multiple_projects(&mr_ids.iter().map(AsRef::as_ref).collect_vec())
+            .await?
+    };
+    let mr_teams_members = if mr_projects.is_empty() {
+        vec![]
+    } else {
+        MODRINTH_API
+            .list_multiple_teams_members(&mr_projects.iter().map(|p| p.team.as_ref()).collect_vec())
+            .await?
+    };
 
     let cf_projects = if cf_ids.is_empty() {
-        Vec::new()
+        vec![]
     } else {
         CURSEFORGE_API.get_mods(cf_ids).await?
     };
 
     let mut metadata = Vec::new();
-    for (project, members) in izip!(mr_projects, mr_teams_members) {
+    for (project, members) in mr_projects.into_iter().zip(mr_teams_members) {
         metadata.push(Metadata::MD(project, members));
     }
     for project in cf_projects {
@@ -158,14 +160,14 @@ pub fn curseforge(project: &Mod) {
             .authors
             .iter()
             .map(|author| &author.name)
-            .format(", ")
+            .display(", ")
             .to_string()
             .cyan(),
         project
             .categories
             .iter()
             .map(|category| &category.name)
-            .format(", ")
+            .display(", ")
             .to_string()
             .magenta(),
     );
@@ -198,10 +200,15 @@ pub fn modrinth(project: &Project, team_members: &[TeamMember]) {
         team_members
             .iter()
             .map(|member| &member.user.username)
-            .format(", ")
+            .display(", ")
             .to_string()
             .cyan(),
-        project.categories.iter().format(", ").to_string().magenta(),
+        project
+            .categories
+            .iter()
+            .display(", ")
+            .to_string()
+            .magenta(),
         {
             if project.license.name.is_empty() {
                 "Custom"
@@ -215,6 +222,7 @@ pub fn modrinth(project: &Project, team_members: &[TeamMember]) {
     );
 }
 
+#[expect(clippy::unwrap_used)]
 pub fn github(repo: &Repository, releases: &[Release]) {
     // Calculate number of downloads
     let mut downloads = 0;
@@ -255,7 +263,7 @@ pub fn github(repo: &Repository, releases: &[Release]) {
         repo.owner.as_ref().unwrap().login.cyan(),
         repo.topics.as_ref().map_or("".into(), |topics| topics
             .iter()
-            .format(", ")
+            .display(", ")
             .to_string()
             .magenta()),
         repo.license
@@ -295,12 +303,12 @@ _{}_
             .authors
             .iter()
             .map(|author| format!("[{}]({})", author.name, author.url))
-            .format(", "),
+            .display(", "),
         project
             .categories
             .iter()
             .map(|category| &category.name)
-            .format(", "),
+            .display(", "),
     );
 }
 
@@ -330,11 +338,12 @@ _{}_
                 "[{}](https://modrinth.com/user/{})",
                 member.user.username, member.user.id
             ))
-            .format(", "),
-        project.categories.iter().format(", "),
+            .display(", "),
+        project.categories.iter().display(", "),
     );
 }
 
+#[expect(clippy::unwrap_used)]
 pub fn github_md(repo: &Repository) {
     println!(
         "
@@ -357,7 +366,7 @@ pub fn github_md(repo: &Repository) {
         repo.owner.as_ref().unwrap().html_url,
         repo.topics.as_ref().map_or(String::new(), |topics| format!(
             "\n| Topics | {} |",
-            topics.iter().format(", ")
+            topics.iter().display(", ")
         )),
     );
 }

@@ -1,21 +1,20 @@
-// Allow `expect()`s for mutex poisons
-#![allow(clippy::expect_used)]
+#![expect(clippy::expect_used, reason = "For mutex poisons")]
 
 use crate::{
     download::{clean, download},
     CROSS, STYLE_NO, TICK,
 };
 use anyhow::{anyhow, bail, Result};
-use colored::Colorize;
-use futures::{stream::FuturesUnordered, StreamExt};
+use colored::Colorize as _;
+use futures::{stream::FuturesUnordered, StreamExt as _, TryFutureExt as _};
 use indicatif::ProgressBar;
 use libium::{
-    config::structs::{ModLoader, Profile},
-    upgrade::{
-        check,
-        mod_downloadable::{self},
-        DownloadFile,
+    config::{
+        filters::ProfileParameters as _,
+        structs::{ModLoader, Profile},
     },
+    iter_ext::IterExt as _,
+    upgrade::{check, mod_downloadable, DownloadFile},
 };
 use std::{
     fs::read_dir,
@@ -52,46 +51,45 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
         let permit = Arc::clone(&semaphore).acquire_owned().await?;
         let to_download = Arc::clone(&to_download);
         let progress_bar = Arc::clone(&progress_bar);
+        let filters = if mod_.override_filters {
+            mod_.filters
+        } else {
+            profile
+                .filters
+                .clone()
+                .into_iter()
+                .chain(mod_.filters)
+                .collect_vec()
+        };
 
         tasks.push(async move {
             let _permit = permit;
-            let result = mod_.identifier.fetch_download_files().await;
+            let result = mod_
+                .identifier
+                .fetch_download_files()
+                .map_err(anyhow::Error::from)
+                .and_then(|f| check::select_latest(f, filters).map_err(anyhow::Error::from))
+                .await;
             let progress_bar = progress_bar.lock().expect("Mutex poisoned");
             progress_bar.inc(1);
             match result {
-                Ok(download_files) => {
-                    if let Some(download_file) = check::select_latest(
-                        download_files,
-                        profile.get_version(mod_.check_game_version),
-                        profile.get_loader(mod_.check_mod_loader),
-                    ) {
-                        progress_bar.println(format!(
-                            "{} {:pad_len$}  {}",
-                            TICK.clone(),
-                            mod_.name,
-                            download_file.filename().dimmed()
-                        ));
-                        to_download
-                            .lock()
-                            .expect("Mutex poisoned")
-                            .push(download_file);
-                        Ok(true)
-                    } else {
-                        progress_bar.println(format!(
-                            "{}",
-                            format!(
-                                "{CROSS} {:pad_len$}  No compatible file was found",
-                                mod_.name
-                            )
-                            .red()
-                        ));
-                        Ok(false)
-                    }
+                Ok(download_file) => {
+                    progress_bar.println(format!(
+                        "{} {:pad_len$}  {}",
+                        TICK.clone(),
+                        mod_.name,
+                        download_file.filename().dimmed()
+                    ));
+                    to_download
+                        .lock()
+                        .expect("Mutex poisoned")
+                        .push(download_file);
+                    Ok(true)
                 }
                 Err(err) => {
-                    if let mod_downloadable::Error::ModrinthError(
+                    if let Some(mod_downloadable::Error::ModrinthError(
                         ferinth::Error::RateLimitExceeded(_),
-                    ) = err
+                    )) = err.downcast_ref()
                     {
                         // Immediately fail if the rate limit has been exceeded
                         progress_bar.finish_and_clear();
@@ -127,7 +125,9 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
 pub async fn upgrade(profile: &Profile) -> Result<()> {
     let (mut to_download, error) = get_platform_downloadables(profile).await?;
     let mut to_install = Vec::new();
-    if profile.output_dir.join("user").exists() && profile.mod_loader != ModLoader::Quilt {
+    if profile.output_dir.join("user").exists()
+        && profile.filters.mod_loader() != Some(&ModLoader::Quilt)
+    {
         for file in read_dir(profile.output_dir.join("user"))? {
             let file = file?;
             let path = file.path();

@@ -1,8 +1,8 @@
-use super::{check_output_directory, pick_minecraft_version, pick_mod_loader};
-use crate::THEME;
-use anyhow::Result;
-use dialoguer::{Input, Select};
+use super::{check_output_directory, pick_minecraft_versions, pick_mod_loader};
+use anyhow::{Context as _, Result};
+use inquire::{Select, Text};
 use libium::{
+    config::filters::ProfileParameters as _,
     config::structs::{ModLoader, Profile},
     file_picker::pick_folder,
 };
@@ -10,19 +10,27 @@ use std::path::PathBuf;
 
 pub async fn configure(
     profile: &mut Profile,
-    game_version: Option<String>,
-    mod_loader: Option<ModLoader>,
+    game_versions: Vec<String>,
+    mod_loaders: Vec<ModLoader>,
     name: Option<String>,
     output_dir: Option<PathBuf>,
 ) -> Result<()> {
     let mut interactive = true;
 
-    if let Some(game_version) = game_version {
-        profile.game_version = game_version;
+    if !game_versions.is_empty() {
+        *profile
+            .filters
+            .game_versions_mut()
+            .context("Active profile does not filter by game version")? = game_versions;
+
         interactive = false;
     }
-    if let Some(mod_loader) = mod_loader {
-        profile.mod_loader = mod_loader;
+    if !mod_loaders.is_empty() {
+        *profile
+            .filters
+            .mod_loaders_mut()
+            .context("Active profile does not filter mod loader")? = mod_loaders;
+
         interactive = false;
     }
     if let Some(name) = name {
@@ -49,10 +57,11 @@ pub async fn configure(
         ];
 
         loop {
-            let selection = Select::with_theme(&*THEME)
-                .with_prompt("Which setting would you like to change")
-                .items(&items)
-                .interact_opt()?;
+            // TODO: raw_prompt_skippable
+            let selection = Select::new("Which setting would you like to change", items.clone())
+                .raw_prompt()
+                .ok()
+                .map(|x| x.index);
 
             if let Some(index) = selection {
                 match index {
@@ -66,14 +75,33 @@ pub async fn configure(
                             profile.output_dir = dir;
                         }
                     }
-                    1 => profile.game_version = pick_minecraft_version().await?,
-                    2 => profile.mod_loader = pick_mod_loader(Some(&profile.mod_loader))?,
+                    1 => {
+                        let Some(versions) = profile.filters.game_versions_mut() else {
+                            println!("Active profile does not filter by game version");
+                            continue;
+                        };
+
+                        *versions = pick_minecraft_versions().await?;
+                    }
+                    2 => {
+                        let Some(loaders) = profile.filters.mod_loaders_mut() else {
+                            println!("Active profile does not filter mod loader");
+                            continue;
+                        };
+                        *loaders = match pick_mod_loader(loaders.first())? {
+                            ModLoader::Quilt => vec![ModLoader::Quilt, ModLoader::Fabric],
+                            loader => vec![loader],
+                        }
+                    }
                     3 => {
-                        let name = Input::with_theme(&*THEME)
-                            .with_prompt("Change the profile's name")
-                            .default(profile.name.clone())
-                            .interact_text()?;
-                        profile.name = name;
+                        if let Ok(new_name) = Text::new("Change the profile's name")
+                            .with_default(&profile.name)
+                            .prompt()
+                        {
+                            profile.name = new_name;
+                        } else {
+                            continue;
+                        }
                     }
                     4 => break,
                     _ => unreachable!(),

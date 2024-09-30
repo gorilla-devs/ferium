@@ -1,4 +1,4 @@
-use colored::Colorize;
+use colored::Colorize as _;
 use libium::config::structs::{Modpack, ModpackIdentifier};
 
 pub fn info(modpack: &Modpack, active: bool) {

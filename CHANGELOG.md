@@ -1,45 +1,48 @@
 # Changelog for Ferium
 
-## `v4.8.0`
-###
+## `v5.0.0`
+### TBD
 
-
+- **Features**
+- **Bug Fixes**
+- **Internal Changes**
 
 ## `v4.7.1`
 ### 17.09.2024
 
-- Implement change to libium, mainly removal of async functions
-  - Fixes [#422](https://github.com/gorilla-devs/ferium/issues/422)
-- Also remove unnecessary async from code here
-- Consistently use `FuturesUnordered` for parallelising code
+- **Internal Changes**
+  - Implement changes to libium, mainly the removal of async functions
+    - [#422](https://github.com/gorilla-devs/ferium/issues/422) has been fixed
+  - Also remove unnecessary async from code here
+  - Consistently use `FuturesUnordered` for parallelising code
 
 ## `v4.7.0`
 ### 11.06.2024
 
-- Features
+- **Features**
   - Scan a directory (the profile's output directory by default) to automatically add the mods
   - Uses a maximum of 4 network requests! Unfortunately file hashing and searching for the file on the server take some time so it's not instant, especially with a large number of mods.
 
-- Internal Changes
+- **Internal Changes**
   - Move code for displaying successes and failures to the `add` module
 
 ## `v4.6.0`
 ### 10.06.2024
 
-#### You can now add multiple mods at once! ([#175](https://github.com/gorilla-devs/ferium/issues/175))
+*You can now add multiple mods at once! ([#175](https://github.com/gorilla-devs/ferium/issues/175))*
 
-- Features
+- **Features**
   - Adding mods has been significantly improved
   - No matter how many mods you add, there will only be a maximum of 3 network requests (for each platform)
   - The `--ignore-game-version` and `--ignore-mod-loader` flags will only work when adding a single mod, since these are meant for fine-tuning
 
-- Bug Fixes
+- **Bug Fixes**
   - Fix `No such file or directory (os error 2)` when downloading some specific modpacks ([#402](https://github.com/gorilla-devs/ferium/issues/402))
   - Fix issues with the active profile/modpack index changing when deleting profiles/modpacks
   - Fix `--ignore-mod-loader` not working with curseforge mods ([#417](https://github.com/gorilla-devs/ferium/issues/417))
   - Fix stack overflows on the Windows GNU build ([#377](https://github.com/gorilla-devs/ferium/issues/377))
 
-- Internal Changes
+- **Internal Changes**
   - Use `.eq_ignore_ascii_case()` where appropriate
   - Use `anyhow::ensure!()` where appropriate
   - Use `.ok_or_else()` where appropriate

@@ -9,83 +9,69 @@ pub use delete::delete;
 pub use info::info;
 pub use switch::switch;
 
-use crate::THEME;
 use anyhow::{anyhow, ensure, Result};
-use colored::Colorize;
-use dialoguer::{Confirm, Select};
-use ferinth::{structures::tag::GameVersionType, Ferinth};
+use colored::Colorize as _;
+use ferinth::Ferinth;
 use fs_extra::dir::{copy, CopyOptions};
-use libium::{
-    config::structs::{Config, ModLoader},
-    file_picker::pick_folder,
-    HOME,
+use inquire::{Confirm, MultiSelect, Select};
+use libium::{config::structs::ModLoader, file_picker::pick_folder, iter_ext::IterExt as _, HOME};
+use std::{
+    fs::{create_dir_all, read_dir},
+    path::PathBuf,
 };
-use std::{fs::{create_dir_all, read_dir}, path::PathBuf};
 
+#[expect(clippy::unwrap_used, reason = "All variants are present")]
 pub fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
-    let mut picker = Select::with_theme(&*THEME)
-        .with_prompt("Which mod loader do you use?")
-        .items(&["Quilt", "Fabric", "Forge", "NeoForge"]);
+    let options = vec![
+        ModLoader::Fabric,
+        ModLoader::Quilt,
+        ModLoader::NeoForge,
+        ModLoader::Forge,
+    ];
+    let mut picker = Select::new("Which mod loader do you use?", options.clone());
     if let Some(default) = default {
-        picker = picker.default(match default {
-            ModLoader::Quilt => 0,
-            ModLoader::Fabric => 1,
-            ModLoader::Forge => 2,
-            ModLoader::NeoForge => 3,
-        });
+        picker.starting_cursor = options.iter().position(|l| l == default).unwrap();
     }
-    match picker.interact()? {
-        0 => Ok(ModLoader::Quilt),
-        1 => Ok(ModLoader::Fabric),
-        2 => Ok(ModLoader::Forge),
-        3 => Ok(ModLoader::NeoForge),
-        _ => unreachable!(),
-    }
+    Ok(picker.prompt()?)
 }
 
-pub async fn pick_minecraft_version() -> Result<String> {
-    let versions = Ferinth::default().list_game_versions().await?;
-    let mut major_versions = ["Show all", "Show release"] // Prepend additional options
+pub async fn pick_minecraft_versions() -> Result<Vec<String>> {
+    let mut versions = Ferinth::default().list_game_versions().await?;
+    versions.sort_by(|a, b| {
+        // Sort by release type (release > snapshot > beta > alpha) then in reverse chronological order
+        a.version_type
+            .cmp(&b.version_type)
+            .then(b.date.cmp(&a.date))
+    });
+    let display_versions = versions
+        .iter()
+        .map(|v| {
+            if v.major {
+                v.version.bold()
+            } else {
+                v.version.clone().into()
+            }
+        })
+        .collect_vec();
+
+    let selected_versions =
+        MultiSelect::new("Which version of Minecraft do you play?", display_versions)
+            .raw_prompt()?
+            .into_iter()
+            .map(|s| s.index)
+            .collect_vec();
+
+    Ok(versions
         .into_iter()
-        .chain(
-            versions
-                .iter()
-                .filter(|v| v.major) // Only get major versions
-                .map(|v| v.version.as_ref())
-                .collect::<Vec<_>>(),
-        )
-        .collect::<Vec<_>>();
-    let selected_version = Select::with_theme(&*THEME)
-        .with_prompt("Which version of Minecraft do you play?")
-        .items(&major_versions)
-        .default(2)
-        .interact()?;
-    match selected_version {
-        0 | 1 => {
-            let mut versions = versions
-                .into_iter()
-                .filter(|v| selected_version == 0 || v.version_type == GameVersionType::Release)
-                .map(|v| v.version)
-                .collect::<Vec<_>>();
-            let selected_version = Select::with_theme(&*THEME)
-                .with_prompt("Which version of Minecraft do you play?")
-                .items(&versions)
-                .interact()?;
-            Ok(versions.swap_remove(selected_version))
-        }
-        _ => Ok(major_versions.swap_remove(selected_version).to_owned()),
-    }
-}
-
-/// Check that there isn't already a profile with the same name
-pub fn check_profile_name(config: &Config, name: &str) -> Result<()> {
-    for profile in &config.profiles {
-        ensure!(
-            profile.name != name,
-            "A profile with name {name} already exists"
-        );
-    }
-    Ok(())
+        .enumerate()
+        .filter_map(|(i, v)| {
+            if selected_versions.contains(&i) {
+                Some(v.version)
+            } else {
+                None
+            }
+        })
+        .collect_vec())
 }
 
 pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
@@ -111,10 +97,7 @@ pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
         println!(
             "There are files in your output directory, these will be deleted when you upgrade."
         );
-        if Confirm::with_theme(&*THEME)
-            .with_prompt("Would like to create a backup?")
-            .interact()?
-        {
+        if Confirm::new("Would like to create a backup?").prompt()? {
             let backup_dir = pick_folder(
                 &*HOME,
                 "Where should the backup be made?",

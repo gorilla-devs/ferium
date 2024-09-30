@@ -1,9 +1,10 @@
-use crate::THEME;
 use anyhow::{bail, Result};
-use colored::Colorize;
-use dialoguer::MultiSelect;
-use itertools::Itertools;
-use libium::config::structs::{ModIdentifier, Profile};
+use colored::Colorize as _;
+use inquire::MultiSelect;
+use libium::{
+    config::structs::{ModIdentifier, Profile},
+    iter_ext::IterExt as _,
+};
 
 /// If `to_remove` is empty, display a list of projects in the profile to select from and remove selected ones
 ///
@@ -25,13 +26,10 @@ pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
                 },
             )
         });
-        match MultiSelect::with_theme(&*THEME)
-            .with_prompt("Select mods to remove")
-            .items(&mod_info.collect::<Vec<_>>())
-            .report(false)
-            .interact_opt()?
+        match MultiSelect::new("Select mods to remove", mod_info.collect_vec())
+            .raw_prompt_skippable()?
         {
-            Some(items_to_remove) => items_to_remove,
+            Some(items_to_remove) => items_to_remove.iter().map(|o| o.index).collect_vec(),
             None => return Ok(()), // Exit if the user cancelled
         }
     } else {
@@ -66,7 +64,7 @@ pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
 
     println!(
         "Removed {}",
-        removed.iter().map(|txt| txt.bold()).format(", ")
+        removed.iter().map(|txt| txt.bold()).display(", ")
     );
 
     Ok(())

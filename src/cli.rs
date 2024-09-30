@@ -2,7 +2,7 @@
 
 use clap::{Parser, Subcommand, ValueEnum, ValueHint};
 use clap_complete::Shell;
-use libium::config::structs::ModLoader;
+use libium::config::{filters::ReleaseChannel, structs::ModLoader};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -33,6 +33,10 @@ pub struct Ferium {
 
 #[derive(Subcommand)]
 pub enum SubCommands {
+    /*  TODO:
+        Use this for filter arguments:
+        https://docs.rs/clap/latest/clap/_derive/_tutorial/chapter_3/index.html#argument-relations
+    */
     /// Add mods to the profile
     Add {
         /// The identifier(s) of the mod/project/repository
@@ -43,17 +47,26 @@ pub enum SubCommands {
         /// The GitHub identifier is the repository's full name, e.g. `gorilla-devs/ferium`.
         #[clap(required = true)]
         identifiers: Vec<String>,
+
         /// Temporarily ignore game version and mod loader checks and add the mod anyway
         #[clap(long, short, visible_alias = "override")]
         force: bool,
-        /// The game version will not be checked for this mod.
-        /// Only works when adding a single mod.
-        #[clap(long, short = 'V', alias = "dont-check-game-version")]
-        ignore_game_version: bool,
-        /// The mod loader will not be checked for this mod.
-        /// Only works when adding a single mod.
-        #[clap(long, short = 'M', alias = "dont-check-mod-loader")]
-        ignore_mod_loader: bool,
+
+        #[clap(long, short = 'l', group = "loader")]
+        mod_loader_prefer: Vec<ModLoader>,
+        #[clap(long, group = "loader")]
+        mod_loader_any: Vec<ModLoader>,
+
+        #[clap(long, short = 'v', group = "version")]
+        game_version_strict: Vec<String>,
+        #[clap(long, group = "version")]
+        game_version_minor: Vec<String>,
+
+        #[clap(long, short = 'c')]
+        release_channel: Option<ReleaseChannel>,
+
+        #[clap(long, short = 'n')]
+        file_name: Option<String>,
     },
     /// Scan the profile's output directory (or the specified directory) for mods and add them to the profile
     Scan {
@@ -123,13 +136,13 @@ pub enum ProfileSubCommands {
     /// Optionally, provide the settings to change as arguments.
     #[clap(visible_aliases = ["config", "conf"])]
     Configure {
-        /// The Minecraft version to check compatibility for
+        /// The Minecraft version(s) to consider as compatible
         #[clap(long, short = 'v')]
-        game_version: Option<String>,
-        /// The mod loader to check compatibility for
-        #[clap(long, short)]
+        game_versions: Vec<String>,
+        /// The mod loader(s) to consider as compatible
+        #[clap(long, short = 'l')]
         #[clap(value_enum)]
-        mod_loader: Option<ModLoader>,
+        mod_loaders: Vec<ModLoader>,
         /// The name of the profile
         #[clap(long, short)]
         name: Option<String>,
@@ -146,11 +159,11 @@ pub enum ProfileSubCommands {
         /// Copy over the mods from an existing profile.
         /// Optionally, provide the name of the profile to import mods from.
         #[clap(long, short, visible_aliases = ["copy", "duplicate"])]
-        #[allow(clippy::option_option)]
+        #[expect(clippy::option_option)]
         import: Option<Option<String>>,
         /// The Minecraft version to check compatibility for
         #[clap(long, short = 'v')]
-        game_version: Option<String>,
+        game_version: Vec<String>,
         /// The mod loader to check compatibility for
         #[clap(long, short)]
         #[clap(value_enum)]

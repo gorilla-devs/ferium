@@ -10,9 +10,10 @@
     clippy::unwrap_used,
     clippy::expect_used, // use anyhow::Context instead
     clippy::correctness,
+    clippy::allow_attributes,
 )]
 #![warn(clippy::dbg_macro)]
-#![allow(clippy::multiple_crate_versions, clippy::too_many_lines)]
+#![expect(clippy::multiple_crate_versions, clippy::too_many_lines)]
 
 mod add;
 mod cli;
@@ -23,16 +24,15 @@ use anyhow::{anyhow, bail, ensure, Result};
 use clap::{CommandFactory, Parser};
 use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
-use dialoguer::theme::ColorfulTheme;
 use indicatif::ProgressStyle;
-use itertools::Itertools;
 use libium::{
     config::{
         self,
+        filters::ProfileParameters as _,
         structs::{Config, ModIdentifier, Modpack, Profile},
         DEFAULT_CONFIG_PATH,
     },
-    read_wrapper,
+    iter_ext::IterExt as _,
 };
 use std::{
     env::{set_var, var_os},
@@ -43,18 +43,15 @@ use std::{
 const CROSS: &str = "×";
 static TICK: LazyLock<ColoredString> = LazyLock::new(|| "✓".green());
 
-/// Dialoguer theme
-static THEME: LazyLock<ColorfulTheme> = LazyLock::new(Default::default);
-
 /// Indicatif themes
-#[allow(clippy::expect_used)]
+#[expect(clippy::expect_used)]
 pub static STYLE_NO: LazyLock<ProgressStyle> = LazyLock::new(|| {
     ProgressStyle::default_bar()
         .template("{spinner} {elapsed} [{wide_bar:.cyan/blue}] {pos:.cyan}/{len:.blue}")
         .expect("Progress bar template parse failure")
         .progress_chars("#>-")
 });
-#[allow(clippy::expect_used)]
+#[expect(clippy::expect_used)]
 pub static STYLE_BYTE: LazyLock<ProgressStyle> = LazyLock::new(|| {
     ProgressStyle::default_bar()
         .template(
@@ -68,7 +65,7 @@ fn main() -> ExitCode {
     #[cfg(windows)]
     // Enable colours on conhost (command prompt or powershell)
     {
-        #[allow(clippy::unwrap_used)] // There is actually no error
+        #[expect(clippy::unwrap_used)] // There is actually no error
         colored::control::set_virtual_terminal(true).unwrap();
     }
 
@@ -80,7 +77,7 @@ fn main() -> ExitCode {
     if let Some(threads) = cli.threads {
         builder.worker_threads(threads);
     }
-    #[allow(clippy::expect_used)] // No error handling yet
+    #[expect(clippy::expect_used)] // No error handling yet
     let runtime = builder.build().expect("Could not initialise Tokio runtime");
 
     if let Err(err) = runtime.block_on(actual_main(cli)) {
@@ -147,7 +144,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             .or_else(|| var_os("FERIUM_CONFIG_FILE").map(Into::into))
             .unwrap_or(DEFAULT_CONFIG_PATH.clone()),
     )?;
-    let mut config = config::deserialise(&read_wrapper(&mut config_file)?)?;
+    let mut config = config::deserialise(&libium::read_wrapper(&mut config_file)?)?;
 
     let mut did_add_fail = false;
 
@@ -195,7 +192,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                 }
             }
 
-            let (successes, failures) = libium::add(profile, send_ids, !force, true, true).await?;
+            let (successes, failures) = libium::add(profile, send_ids, !force).await?;
             spinner.finish_and_clear();
 
             did_add_fail = add::display_successes_failures(&successes, failures);
@@ -203,13 +200,24 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
         SubCommands::Add {
             identifiers,
             force,
-            ignore_game_version,
-            ignore_mod_loader,
+            mod_loader_prefer,
+            mod_loader_any,
+            game_version_strict,
+            game_version_minor,
+            release_channel,
+            file_name,
         } => {
             let profile = get_active_profile(&mut config)?;
 
-            if identifiers.len() > 1 && (ignore_game_version || ignore_mod_loader) {
-                bail!("Only use the ignore flags when adding a single mod!")
+            if identifiers.len() > 1
+                && (!mod_loader_prefer.is_empty()
+                    || !mod_loader_any.is_empty()
+                    || !game_version_strict.is_empty()
+                    || !game_version_minor.is_empty()
+                    || release_channel.is_some()
+                    || file_name.is_some())
+            {
+                bail!("Only configure filters when adding a single mod!")
             }
 
             let (successes, failures) = libium::add(
@@ -219,8 +227,6 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     .map(libium::add::parse_id)
                     .collect_vec(),
                 !force,
-                !ignore_game_version,
-                !ignore_mod_loader,
             )
             .await?;
 
@@ -237,8 +243,19 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     "{} {} on {} {}\n",
                     profile.name.bold(),
                     format!("({} mods)", profile.mods.len()).yellow(),
-                    format!("{:?}", profile.mod_loader).purple(),
-                    profile.game_version.green(),
+                    profile
+                        .filters
+                        .mod_loader()
+                        .map(ToString::to_string)
+                        .unwrap_or_default()
+                        .purple(),
+                    profile
+                        .filters
+                        .game_versions()
+                        .unwrap_or(&vec![])
+                        .iter()
+                        .display(", ")
+                        .green(),
                 );
                 for mod_ in &profile.mods {
                     println!(
@@ -344,15 +361,15 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             });
             match subcommand {
                 ProfileSubCommands::Configure {
-                    game_version,
-                    mod_loader,
+                    game_versions,
+                    mod_loaders,
                     name,
                     output_dir,
                 } => {
                     subcommands::profile::configure(
                         get_active_profile(&mut config)?,
-                        game_version,
-                        mod_loader,
+                        game_versions,
+                        mod_loaders,
                         name,
                         output_dir,
                     )
@@ -368,7 +385,11 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     subcommands::profile::create(
                         &mut config,
                         import,
-                        game_version,
+                        if game_version.is_empty() {
+                            None
+                        } else {
+                            Some(game_version)
+                        },
                         mod_loader,
                         name,
                         output_dir,

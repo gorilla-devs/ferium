@@ -2,15 +2,16 @@ use crate::{
     download::{clean, download, read_overrides},
     STYLE_BYTE, TICK,
 };
-use anyhow::{Context, Result};
-use colored::Colorize;
+use anyhow::{Context as _, Result};
+use colored::Colorize as _;
 use futures::{stream::FuturesUnordered, StreamExt as _};
 use indicatif::ProgressBar;
-use itertools::Itertools;
 use libium::{
     config::structs::{Modpack, ModpackIdentifier},
+    iter_ext::IterExt as _,
     modpack::{
-        curseforge::structs::Manifest, modrinth::structs::Metadata, read_file_from_zip, zip_extract,
+        curseforge::structs::Manifest as CFManifest, modrinth::structs::Metadata as MRMetadata,
+        read_file_from_zip, zip_extract,
     },
     upgrade::{DistributionDeniedError, DownloadFile},
     CURSEFORGE_API, HOME,
@@ -46,7 +47,7 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
 
     match &modpack.identifier {
         ModpackIdentifier::CurseForgeModpack(_) => {
-            let manifest: Manifest = serde_json::from_str(
+            let manifest: CFManifest = serde_json::from_str(
                 &read_file_from_zip(BufReader::new(modpack_file), "manifest.json")?
                     .context("Does not contain manifest")?,
             )?;
@@ -108,7 +109,7 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
                     .mod_loaders
                     .iter()
                     .map(|this| &this.id)
-                    .format(", or ")
+                    .display(", ")
             );
 
             if modpack.install_overrides {
@@ -122,7 +123,7 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
             }
         }
         ModpackIdentifier::ModrinthModpack(_) => {
-            let metadata: Metadata = serde_json::from_str(
+            let metadata: MRMetadata = serde_json::from_str(
                 &read_file_from_zip(BufReader::new(modpack_file), "modrinth.index.json")?
                     .context("Does not contain metadata file")?,
             )?;
@@ -137,7 +138,7 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
                     .dependencies
                     .iter()
                     .map(|this| format!("{:?} {}", this.0, this.1))
-                    .format("\n")
+                    .display("\n")
             );
 
             if modpack.install_overrides {
