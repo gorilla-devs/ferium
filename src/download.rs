@@ -19,6 +19,8 @@ use std::{
 };
 use tokio::sync::Semaphore;
 
+const CONCURRENT_DOWNLOADS: usize = 6;
+
 /// Check the given `directory`
 ///
 /// - If there are files there that are not in `to_download` or `to_install`, they will be moved to `directory`/.old
@@ -113,7 +115,7 @@ pub async fn download(
         .expect("Mutex poisoned")
         .enable_steady_tick(Duration::from_millis(100));
     let mut tasks = FuturesUnordered::new();
-    let semaphore = Arc::new(Semaphore::new(75));
+    let semaphore = Arc::new(Semaphore::new(CONCURRENT_DOWNLOADS));
     let client = Arc::new(reqwest::Client::new());
 
     for downloadable in to_download {
