@@ -1,10 +1,10 @@
 use super::{check_output_directory, pick_minecraft_versions, pick_mod_loader};
+use crate::file_picker::pick_folder;
 use anyhow::{Context as _, Result};
 use inquire::{Select, Text};
 use libium::{
     config::filters::ProfileParameters as _,
     config::structs::{ModLoader, Profile},
-    file_picker::pick_folder,
 };
 use std::path::PathBuf;
 

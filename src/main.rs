@@ -18,6 +18,7 @@
 mod add;
 mod cli;
 mod download;
+mod file_picker;
 mod subcommands;
 
 use anyhow::{anyhow, bail, ensure, Result};
@@ -65,7 +66,7 @@ fn main() -> ExitCode {
     #[cfg(windows)]
     // Enable colours on conhost (command prompt or powershell)
     {
-        #[expect(clippy::unwrap_used)] // There is actually no error
+        #[expect(clippy::unwrap_used, reason = "There is actually no error")]
         colored::control::set_virtual_terminal(true).unwrap();
     }
 

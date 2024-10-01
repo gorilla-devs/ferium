@@ -9,12 +9,13 @@ pub use delete::delete;
 pub use info::info;
 pub use switch::switch;
 
+use crate::file_picker::pick_folder;
 use anyhow::{ensure, Context as _, Result};
 use colored::Colorize as _;
 use ferinth::Ferinth;
 use fs_extra::dir::{copy, CopyOptions};
 use inquire::{Confirm, MultiSelect, Select};
-use libium::{config::structs::ModLoader, file_picker::pick_folder, iter_ext::IterExt as _, HOME};
+use libium::{config::structs::ModLoader, iter_ext::IterExt as _, HOME};
 use std::{
     fs::{create_dir_all, read_dir},
     path::PathBuf,

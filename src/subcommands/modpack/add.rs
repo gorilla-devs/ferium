@@ -1,11 +1,10 @@
 use super::check_output_directory;
-use crate::TICK;
+use crate::{file_picker::pick_folder, TICK};
 use anyhow::{Context as _, Result};
 use colored::Colorize as _;
 use inquire::Confirm;
 use libium::{
     config::structs::{Config, Modpack, ModpackIdentifier},
-    file_picker::pick_folder,
     get_minecraft_dir,
     iter_ext::IterExt as _,
     modpack::add,

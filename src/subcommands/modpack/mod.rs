@@ -10,10 +10,11 @@ pub use info::info;
 pub use switch::switch;
 pub use upgrade::upgrade;
 
+use crate::file_picker::pick_folder;
 use anyhow::{ensure, Context as _, Result};
 use fs_extra::dir::{copy, CopyOptions};
 use inquire::Confirm;
-use libium::{file_picker::pick_folder, HOME};
+use libium::HOME;
 use std::{fs::read_dir, path::Path};
 
 pub fn check_output_directory(output_dir: &Path) -> Result<()> {

@@ -1,8 +1,9 @@
 use super::check_output_directory;
+use crate::file_picker::pick_folder;
 use anyhow::Result;
 use colored::Colorize as _;
 use inquire::Confirm;
-use libium::{config::structs::Modpack, file_picker::pick_folder};
+use libium::config::structs::Modpack;
 use std::path::PathBuf;
 
 pub fn configure(

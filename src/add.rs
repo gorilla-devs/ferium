@@ -1,7 +1,6 @@
-use std::collections::HashMap;
-
 use colored::Colorize as _;
 use libium::{add::Error, iter_ext::IterExt as _};
+use std::collections::HashMap;
 
 pub fn display_successes_failures(successes: &[String], failures: Vec<(String, Error)>) -> bool {
     if !successes.is_empty() {

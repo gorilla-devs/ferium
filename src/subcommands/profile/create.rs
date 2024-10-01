@@ -1,4 +1,5 @@
 use super::{check_output_directory, pick_minecraft_versions, pick_mod_loader};
+use crate::file_picker::pick_folder;
 use anyhow::{bail, ensure, Context as _, Result};
 use colored::Colorize as _;
 use inquire::{
@@ -7,7 +8,6 @@ use inquire::{
 };
 use libium::{
     config::structs::{Config, ModLoader, Profile},
-    file_picker::pick_folder,
     get_minecraft_dir,
     iter_ext::IterExt as _,
 };
