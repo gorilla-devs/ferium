@@ -117,13 +117,13 @@ pub async fn download(
     let client = Arc::new(reqwest::Client::new());
 
     for downloadable in to_download {
-        let permit = Arc::clone(&semaphore).acquire_owned().await?;
+        let semaphore = Arc::clone(&semaphore);
         let progress_bar = Arc::clone(&progress_bar);
         let client = Arc::clone(&client);
         let output_dir = output_dir.clone();
 
         tasks.push(async move {
-            let _permit = permit;
+            let _permit = semaphore.acquire_owned().await?;
             let (length, filename) = downloadable
                 .download(&client, &output_dir, |additional| {
                     progress_bar
