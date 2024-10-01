@@ -307,7 +307,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     .await
                     {
                         return Err(
-                            if err.to_string() == ferinth::Error::InvalidIDorSlug.to_string() {
+                            if let Some(&ferinth::Error::InvalidIDorSlug) = err.downcast_ref() {
                                 anyhow!("Invalid identifier")
                             } else {
                                 err

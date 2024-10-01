@@ -13,7 +13,7 @@ pub fn switch(config: &mut Config, profile_name: Option<String>) -> Result<()> {
         match config
             .profiles
             .iter()
-            .position(|profile| profile.name == profile_name)
+            .position(|profile| profile.name.eq_ignore_ascii_case(&profile_name))
         {
             Some(selection) => {
                 config.active_profile = selection;

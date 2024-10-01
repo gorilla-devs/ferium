@@ -14,7 +14,7 @@ pub fn switch(config: &mut Config, modpack_name: Option<String>) -> Result<()> {
         match config
             .modpacks
             .iter()
-            .position(|modpack| modpack.name == modpack_name)
+            .position(|modpack| modpack.name.eq_ignore_ascii_case(&modpack_name))
         {
             Some(selection) => {
                 config.active_modpack = selection;

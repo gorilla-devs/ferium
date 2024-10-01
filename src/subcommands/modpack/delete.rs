@@ -18,7 +18,7 @@ pub fn delete(
         config
             .modpacks
             .iter()
-            .position(|modpack| modpack.name == modpack_name)
+            .position(|modpack| modpack.name.eq_ignore_ascii_case(&modpack_name))
             .context("The modpack name provided does not exist")?
     } else {
         let modpack_names = config

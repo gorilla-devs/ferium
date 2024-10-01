@@ -115,7 +115,11 @@ pub async fn upgrade(profile: &Profile) -> Result<()> {
         for file in read_dir(profile.output_dir.join("user"))? {
             let file = file?;
             let path = file.path();
-            if path.is_file() && path.extension().is_some_and(|ext| ext == "jar") {
+            if path.is_file()
+                && path
+                    .extension()
+                    .is_some_and(|ext| ext.eq_ignore_ascii_case("jar"))
+            {
                 to_install.push((file.file_name(), path));
             }
         }
