@@ -9,7 +9,7 @@ pub use delete::delete;
 pub use info::info;
 pub use switch::switch;
 
-use anyhow::{anyhow, ensure, Result};
+use anyhow::{ensure, Context as _, Result};
 use colored::Colorize as _;
 use ferinth::Ferinth;
 use fs_extra::dir::{copy, CopyOptions};
@@ -28,14 +28,16 @@ pub fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
         ModLoader::NeoForge,
         ModLoader::Forge,
     ];
-    let mut picker = Select::new("Which mod loader do you use?", options.clone());
+    let mut picker = Select::new("Which mod loader do you use?", options.clone())
+        .without_filtering()
+        .without_help_message();
     if let Some(default) = default {
         picker.starting_cursor = options.iter().position(|l| l == default).unwrap();
     }
     Ok(picker.prompt()?)
 }
 
-pub async fn pick_minecraft_versions() -> Result<Vec<String>> {
+pub async fn pick_minecraft_versions(default: &[String]) -> Result<Vec<String>> {
     let mut versions = Ferinth::default().list_game_versions().await?;
     versions.sort_by(|a, b| {
         // Sort by release type (release > snapshot > beta > alpha) then in reverse chronological order
@@ -43,9 +45,14 @@ pub async fn pick_minecraft_versions() -> Result<Vec<String>> {
             .cmp(&b.version_type)
             .then(b.date.cmp(&a.date))
     });
+    let mut default_indices = vec![];
     let display_versions = versions
         .iter()
-        .map(|v| {
+        .enumerate()
+        .map(|(i, v)| {
+            if default.contains(&v.version) {
+                default_indices.push(i);
+            }
             if v.major {
                 v.version.bold()
             } else {
@@ -56,6 +63,7 @@ pub async fn pick_minecraft_versions() -> Result<Vec<String>> {
 
     let selected_versions =
         MultiSelect::new("Which version of Minecraft do you play?", display_versions)
+            .with_default(&default_indices)
             .raw_prompt()?
             .into_iter()
             .map(|s| s.index)
@@ -97,13 +105,16 @@ pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
         println!(
             "There are files in your output directory, these will be deleted when you upgrade."
         );
-        if Confirm::new("Would like to create a backup?").prompt()? {
+        if Confirm::new("Would like to create a backup?")
+            .prompt()
+            .unwrap_or_default()
+        {
             let backup_dir = pick_folder(
                 &*HOME,
                 "Where should the backup be made?",
                 "Output Directory",
             )?
-            .ok_or_else(|| anyhow!("Please pick a backup directory"))?;
+            .context("Please pick a backup directory")?;
             create_dir_all(&backup_dir)?;
             copy(output_dir, backup_dir, &CopyOptions::new())?;
         }

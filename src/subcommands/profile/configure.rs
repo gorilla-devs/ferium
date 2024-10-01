@@ -56,60 +56,57 @@ pub async fn configure(
             "Quit",
         ];
 
-        loop {
-            // TODO: raw_prompt_skippable
-            let selection = Select::new("Which setting would you like to change", items.clone())
-                .raw_prompt()
-                .ok()
-                .map(|x| x.index);
-
-            if let Some(index) = selection {
-                match index {
-                    0 => {
-                        if let Some(dir) = pick_folder(
-                            &profile.output_dir,
-                            "Pick an output directory",
-                            "Output Directory",
-                        )? {
-                            check_output_directory(&dir).await?;
-                            profile.output_dir = dir;
-                        }
+        while let Ok(selection) =
+            Select::new("Which setting would you like to change", items.clone()).raw_prompt()
+        {
+            match selection.index {
+                0 => {
+                    if let Some(dir) = pick_folder(
+                        &profile.output_dir,
+                        "Pick an output directory",
+                        "Output Directory",
+                    )? {
+                        check_output_directory(&dir).await?;
+                        profile.output_dir = dir;
                     }
-                    1 => {
-                        let Some(versions) = profile.filters.game_versions_mut() else {
-                            println!("Active profile does not filter by game version");
-                            continue;
-                        };
+                }
+                1 => {
+                    let Some(versions) = profile.filters.game_versions_mut() else {
+                        println!("Active profile does not filter by game version");
+                        continue;
+                    };
 
-                        *versions = pick_minecraft_versions().await?;
+                    if let Ok(selection) = pick_minecraft_versions(versions).await {
+                        *versions = selection;
                     }
-                    2 => {
-                        let Some(loaders) = profile.filters.mod_loaders_mut() else {
-                            println!("Active profile does not filter mod loader");
-                            continue;
-                        };
-                        *loaders = match pick_mod_loader(loaders.first())? {
+                }
+                2 => {
+                    let Some(loaders) = profile.filters.mod_loaders_mut() else {
+                        println!("Active profile does not filter mod loader");
+                        continue;
+                    };
+
+                    if let Ok(selection) = pick_mod_loader(loaders.first()) {
+                        *loaders = match selection {
                             ModLoader::Quilt => vec![ModLoader::Quilt, ModLoader::Fabric],
                             loader => vec![loader],
                         }
                     }
-                    3 => {
-                        if let Ok(new_name) = Text::new("Change the profile's name")
-                            .with_default(&profile.name)
-                            .prompt()
-                        {
-                            profile.name = new_name;
-                        } else {
-                            continue;
-                        }
-                    }
-                    4 => break,
-                    _ => unreachable!(),
                 }
-                println!();
-            } else {
-                break;
+                3 => {
+                    if let Ok(new_name) = Text::new("Change the profile's name")
+                        .with_default(&profile.name)
+                        .prompt()
+                    {
+                        profile.name = new_name;
+                    } else {
+                        continue;
+                    }
+                }
+                4 => break,
+                _ => unreachable!(),
             }
+            println!();
         }
     }
 

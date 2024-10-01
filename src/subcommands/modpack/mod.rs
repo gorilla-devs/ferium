@@ -10,7 +10,7 @@ pub use info::info;
 pub use switch::switch;
 pub use upgrade::upgrade;
 
-use anyhow::{anyhow, ensure, Context as _, Result};
+use anyhow::{ensure, Context as _, Result};
 use fs_extra::dir::{copy, CopyOptions};
 use inquire::Confirm;
 use libium::{file_picker::pick_folder, HOME};
@@ -38,13 +38,16 @@ pub fn check_output_directory(output_dir: &Path) -> Result<()> {
                 "There are files in the {} folder in your output directory, these will be deleted when you upgrade.",
                 check_dir.file_name().context("Unable to get folder name")?.to_string_lossy()
             );
-            if Confirm::new("Would like to create a backup?").prompt()? {
+            if Confirm::new("Would like to create a backup?")
+                .prompt()
+                .unwrap_or_default()
+            {
                 let backup_dir = pick_folder(
                     &*HOME,
                     "Where should the backup be made?",
                     "Output Directory",
                 )?
-                .ok_or_else(|| anyhow!("Please pick an output directory"))?;
+                .context("Please pick an output directory")?;
                 copy(check_dir, backup_dir, &CopyOptions::new())?;
             }
         }

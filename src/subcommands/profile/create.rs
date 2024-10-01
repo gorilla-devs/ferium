@@ -46,7 +46,7 @@ pub async fn create(
             );
             if Confirm::new("Would you like to specify a custom mods directory?")
                 .prompt()
-                .unwrap_or(false)
+                .unwrap_or_default()
             {
                 if let Some(dir) = pick_folder(
                     &selected_mods_dir,
@@ -74,7 +74,7 @@ pub async fn create(
             Profile::new(
                 name,
                 selected_mods_dir,
-                pick_minecraft_versions().await?,
+                pick_minecraft_versions(&[]).await?,
                 pick_mod_loader(None)?,
             )
         }

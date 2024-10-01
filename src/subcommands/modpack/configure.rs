@@ -31,7 +31,8 @@ pub fn configure(
     } else {
         let install_overrides = Confirm::new("Should overrides be installed?")
             .with_default(modpack.install_overrides)
-            .prompt()?;
+            .prompt()
+            .unwrap_or(modpack.install_overrides);
         if install_overrides {
             println!(
                 "{}",

@@ -6,15 +6,14 @@ use crate::{
 };
 use anyhow::{anyhow, bail, Result};
 use colored::Colorize as _;
-use futures::{stream::FuturesUnordered, StreamExt as _, TryFutureExt as _};
+use futures::{stream::FuturesUnordered, StreamExt as _};
 use indicatif::ProgressBar;
 use libium::{
     config::{
         filters::ProfileParameters as _,
         structs::{ModLoader, Profile},
     },
-    iter_ext::IterExt as _,
-    upgrade::{check, mod_downloadable, DownloadFile},
+    upgrade::{mod_downloadable, DownloadFile},
 };
 use std::{
     fs::read_dir,
@@ -51,25 +50,10 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
         let permit = Arc::clone(&semaphore).acquire_owned().await?;
         let to_download = Arc::clone(&to_download);
         let progress_bar = Arc::clone(&progress_bar);
-        let filters = if mod_.override_filters {
-            mod_.filters
-        } else {
-            profile
-                .filters
-                .clone()
-                .into_iter()
-                .chain(mod_.filters)
-                .collect_vec()
-        };
 
         tasks.push(async move {
             let _permit = permit;
-            let result = mod_
-                .identifier
-                .fetch_download_files()
-                .map_err(anyhow::Error::from)
-                .and_then(|f| check::select_latest(f, filters).map_err(anyhow::Error::from))
-                .await;
+            let result = mod_.fetch_download_file(profile.filters.clone()).await;
             let progress_bar = progress_bar.lock().expect("Mutex poisoned");
             progress_bar.inc(1);
             match result {
@@ -87,9 +71,9 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
                     Ok(true)
                 }
                 Err(err) => {
-                    if let Some(mod_downloadable::Error::ModrinthError(
+                    if let mod_downloadable::Error::ModrinthError(
                         ferinth::Error::RateLimitExceeded(_),
-                    )) = err.downcast_ref()
+                    ) = err
                     {
                         // Immediately fail if the rate limit has been exceeded
                         progress_bar.finish_and_clear();

@@ -1,6 +1,6 @@
 use super::check_output_directory;
 use crate::TICK;
-use anyhow::{anyhow, Result};
+use anyhow::{Context as _, Result};
 use colored::Colorize as _;
 use inquire::Confirm;
 use libium::{
@@ -29,14 +29,15 @@ pub async fn curseforge(
             "Pick an output directory",
             "Output Directory",
         )?
-        .ok_or_else(|| anyhow!("Please pick an output directory"))?,
+        .context("Please pick an output directory")?,
     };
     check_output_directory(&output_dir)?;
     let install_overrides = match install_overrides {
         Some(some) => some,
         None => Confirm::new("Should overrides be installed?")
             .with_default(true)
-            .prompt()?,
+            .prompt()
+            .unwrap_or_default(),
     };
     if install_overrides {
         println!(
@@ -74,14 +75,15 @@ pub async fn modrinth(
             "Pick an output directory",
             "Output Directory",
         )?
-        .ok_or_else(|| anyhow!("Please pick an output directory"))?,
+        .context("Please pick an output directory")?,
     };
     check_output_directory(&output_dir)?;
     let install_overrides = match install_overrides {
         Some(some) => some,
         None => Confirm::new("Should overrides be installed?")
             .with_default(true)
-            .prompt()?,
+            .prompt()
+            .unwrap_or_default(),
     };
     if install_overrides {
         println!(

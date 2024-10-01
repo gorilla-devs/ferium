@@ -11,27 +11,31 @@ use libium::{
 /// Else, search the given strings with the projects' name and IDs and remove them
 pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
     let mut indices_to_remove = if to_remove.is_empty() {
-        let mod_info = profile.mods.iter().map(|mod_| {
-            format!(
-                "{:11}  {}",
-                match &mod_.identifier {
-                    ModIdentifier::CurseForgeProject(id) => format!("CF {:8}", id.to_string()),
-                    ModIdentifier::ModrinthProject(id) => format!("MR {id:8}"),
-                    ModIdentifier::GitHubRepository(_) => "GH".to_string(),
-                },
-                match &mod_.identifier {
-                    ModIdentifier::ModrinthProject(_) | ModIdentifier::CurseForgeProject(_) =>
-                        mod_.name.clone(),
-                    ModIdentifier::GitHubRepository(id) => format!("{}/{}", id.0, id.1),
-                },
-            )
-        });
-        match MultiSelect::new("Select mods to remove", mod_info.collect_vec())
+        let mod_info = profile
+            .mods
+            .iter()
+            .map(|mod_| {
+                format!(
+                    "{:11}  {}",
+                    match &mod_.identifier {
+                        ModIdentifier::CurseForgeProject(id) => format!("CF {:8}", id.to_string()),
+                        ModIdentifier::ModrinthProject(id) => format!("MR {id:8}"),
+                        ModIdentifier::GitHubRepository(_) => "GH".to_string(),
+                    },
+                    match &mod_.identifier {
+                        ModIdentifier::ModrinthProject(_) | ModIdentifier::CurseForgeProject(_) =>
+                            mod_.name.clone(),
+                        ModIdentifier::GitHubRepository(id) => format!("{}/{}", id.0, id.1),
+                    },
+                )
+            })
+            .collect_vec();
+        MultiSelect::new("Select mods to remove", mod_info.clone())
             .raw_prompt_skippable()?
-        {
-            Some(items_to_remove) => items_to_remove.iter().map(|o| o.index).collect_vec(),
-            None => return Ok(()), // Exit if the user cancelled
-        }
+            .unwrap_or_default()
+            .iter()
+            .map(|o| o.index)
+            .collect_vec()
     } else {
         let mut items_to_remove = Vec::new();
         for to_remove in to_remove {
@@ -62,10 +66,12 @@ pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
         removed.push(profile.mods.swap_remove(index).name);
     }
 
-    println!(
-        "Removed {}",
-        removed.iter().map(|txt| txt.bold()).display(", ")
-    );
+    if !removed.is_empty() {
+        println!(
+            "Removed {}",
+            removed.iter().map(|txt| txt.bold()).display(", ")
+        );
+    }
 
     Ok(())
 }

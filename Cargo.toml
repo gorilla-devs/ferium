@@ -58,7 +58,7 @@ ferinth = "2.11"
 colored = "2.1"
 futures = "0.3"
 inquire = "0.7"
-libium = { git = "https://github.com/gorilla-devs/libium", rev = "b80b16412018e11ae7adde0727eb32065a32ddc7" }
+libium = { git = "https://github.com/gorilla-devs/libium", rev = "2fe13808755141b6169ed32013198a7ccfdf109b" }
 # libium = { path = "../libium" }
 # libium = "1.32"
 anyhow = "1.0"

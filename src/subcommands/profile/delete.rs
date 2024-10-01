@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 use super::switch;
 use anyhow::{Context as _, Result};
 use colored::Colorize as _;
@@ -8,6 +6,7 @@ use libium::{
     config::{filters::ProfileParameters as _, structs::Config},
     iter_ext::IterExt as _,
 };
+use std::cmp::Ordering;
 
 pub fn delete(
     config: &mut Config,
