@@ -116,12 +116,12 @@ pub async fn download(
         .enable_steady_tick(Duration::from_millis(100));
     let mut tasks = FuturesUnordered::new();
     let semaphore = Arc::new(Semaphore::new(CONCURRENT_DOWNLOADS));
-    let client = Arc::new(reqwest::Client::new());
+    let client = reqwest::Client::new();
 
     for downloadable in to_download {
         let semaphore = Arc::clone(&semaphore);
         let progress_bar = Arc::clone(&progress_bar);
-        let client = Arc::clone(&client);
+        let client = client.clone();
         let output_dir = output_dir.clone();
 
         tasks.push(async move {
