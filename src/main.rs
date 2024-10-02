@@ -38,11 +38,14 @@ use libium::{
 use std::{
     env::{set_var, var_os},
     process::ExitCode,
-    sync::LazyLock,
+    sync::{LazyLock, OnceLock},
 };
 
 const CROSS: &str = "×";
 static TICK: LazyLock<ColoredString> = LazyLock::new(|| "✓".green());
+
+pub static PARALLEL_NETWORK: OnceLock<usize> = OnceLock::new();
+pub const DEFAULT_PARALLEL_NETWORK: usize = 10;
 
 /// Indicatif themes
 #[expect(clippy::expect_used)]
@@ -71,6 +74,8 @@ fn main() -> ExitCode {
     }
 
     let cli = Ferium::parse();
+
+    let _ = rustls::crypto::ring::default_provider().install_default();
 
     let mut builder = tokio::runtime::Builder::new_multi_thread();
     builder.enable_all();
@@ -137,6 +142,9 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
     }
     if let Some(key) = cli_app.curseforge_api_key {
         set_var("CURSEFORGE_API_KEY", key);
+    }
+    if let Some(n) = cli_app.parallel_network {
+        let _ = PARALLEL_NETWORK.set(n);
     }
 
     let mut config_file = config::get_file(

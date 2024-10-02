@@ -1,6 +1,6 @@
 #![expect(clippy::expect_used, reason = "For mutex poisons")]
 
-use crate::{STYLE_BYTE, TICK};
+use crate::{DEFAULT_PARALLEL_NETWORK, PARALLEL_NETWORK, STYLE_BYTE, TICK};
 use anyhow::{anyhow, bail, Error, Result};
 use colored::Colorize as _;
 use fs_extra::{
@@ -18,8 +18,6 @@ use std::{
     time::Duration,
 };
 use tokio::sync::Semaphore;
-
-const CONCURRENT_DOWNLOADS: usize = 6;
 
 /// Check the given `directory`
 ///
@@ -115,7 +113,9 @@ pub async fn download(
         .expect("Mutex poisoned")
         .enable_steady_tick(Duration::from_millis(100));
     let mut tasks = FuturesUnordered::new();
-    let semaphore = Arc::new(Semaphore::new(CONCURRENT_DOWNLOADS));
+    let semaphore = Arc::new(Semaphore::new(
+        *PARALLEL_NETWORK.get_or_init(|| DEFAULT_PARALLEL_NETWORK),
+    ));
     let client = reqwest::Client::new();
 
     for downloadable in to_download {
@@ -126,6 +126,7 @@ pub async fn download(
 
         tasks.push(async move {
             let _permit = semaphore.acquire_owned().await?;
+
             let (length, filename) = downloadable
                 .download(&client, &output_dir, |additional| {
                     progress_bar

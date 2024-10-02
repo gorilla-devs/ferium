@@ -2,7 +2,7 @@
 
 use crate::{
     download::{clean, download},
-    CROSS, STYLE_NO, TICK,
+    CROSS, DEFAULT_PARALLEL_NETWORK, PARALLEL_NETWORK, STYLE_NO, TICK,
 };
 use anyhow::{anyhow, bail, Result};
 use colored::Colorize as _;
@@ -34,7 +34,9 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
     let mut tasks = FuturesUnordered::new();
 
     println!("{}\n", "Determining the Latest Compatible Versions".bold());
-    let semaphore = Arc::new(Semaphore::new(75));
+    let semaphore = Arc::new(Semaphore::new(
+        *PARALLEL_NETWORK.get_or_init(|| DEFAULT_PARALLEL_NETWORK),
+    ));
     progress_bar
         .lock()
         .expect("Mutex poisoned")
@@ -47,12 +49,12 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
         .unwrap_or(20)
         .clamp(20, 50);
     for mod_ in profile.mods.clone() {
-        let permit = Arc::clone(&semaphore).acquire_owned().await?;
+        let semaphore = Arc::clone(&semaphore);
         let to_download = Arc::clone(&to_download);
         let progress_bar = Arc::clone(&progress_bar);
 
         tasks.push(async move {
-            let _permit = permit;
+            let _permit = semaphore.acquire_owned().await?;
             let result = mod_.fetch_download_file(profile.filters.clone()).await;
             let progress_bar = progress_bar.lock().expect("Mutex poisoned");
             progress_bar.inc(1);

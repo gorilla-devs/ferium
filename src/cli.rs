@@ -15,6 +15,9 @@ pub struct Ferium {
     /// You can also use the environment variable `TOKIO_WORKER_THREADS`.
     #[clap(long, short)]
     pub threads: Option<usize>,
+    /// Specify the maximum number of parallel network requests to perform.
+    #[clap(long, short = 'p')]
+    pub parallel_network: Option<usize>,
     /// Set a GitHub personal access token for increasing the GitHub API rate limit.
     /// You can also use the environment variable `GITHUB_TOKEN`.
     #[clap(long, visible_alias = "gh")]
