@@ -64,12 +64,16 @@ jobs:
 
       - name: Build macOS Intel
         if: matrix.os == 'macos-latest'
+        env:
+          MACOSX_DEPLOYMENT_TARGET: 10.12 # Sierra
         run: |
           cargo build --target=x86_64-apple-darwin --release
           zip -r out/ferium-macos-x64.zip -j target/x86_64-apple-darwin/release/ferium
 
       - name: Build macOS ARM
         if: matrix.os == 'macos-latest'
+        env:
+          MACOSX_DEPLOYMENT_TARGET: 11.0 # Big Sur
         run: |
           cargo build --target=aarch64-apple-darwin --release
           zip -r out/ferium-macos-arm.zip -j target/aarch64-apple-darwin/release/ferium
