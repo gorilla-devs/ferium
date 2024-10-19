@@ -13,7 +13,7 @@ use libium::{
         filters::ProfileParameters as _,
         structs::{ModLoader, Profile},
     },
-    upgrade::{mod_downloadable, DownloadFile},
+    upgrade::{mod_downloadable, DownloadData},
 };
 use std::{
     fs::read_dir,
@@ -26,7 +26,7 @@ use tokio::sync::Semaphore;
 ///
 /// If an error occurs with a resolving task, instead of failing immediately,
 /// resolution will continue and the error return flag is set to true.
-pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<DownloadFile>, bool)> {
+pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<DownloadData>, bool)> {
     let to_download = Arc::new(Mutex::new(Vec::new()));
     let progress_bar = Arc::new(Mutex::new(
         ProgressBar::new(profile.mods.len() as u64).with_style(STYLE_NO.clone()),

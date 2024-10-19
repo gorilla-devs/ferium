@@ -1,8 +1,11 @@
 #![deny(missing_docs)]
 
-use clap::{Parser, Subcommand, ValueEnum, ValueHint};
+use clap::{Args, Parser, Subcommand, ValueEnum, ValueHint};
 use clap_complete::Shell;
-use libium::config::{filters::ReleaseChannel, structs::ModLoader};
+use libium::config::{
+    filters::{self, Filter},
+    structs::ModLoader,
+};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -55,21 +58,8 @@ pub enum SubCommands {
         #[clap(long, short, visible_alias = "override")]
         force: bool,
 
-        #[clap(long, short = 'l', group = "loader")]
-        mod_loader_prefer: Vec<ModLoader>,
-        #[clap(long, group = "loader")]
-        mod_loader_any: Vec<ModLoader>,
-
-        #[clap(long, short = 'v', group = "version")]
-        game_version_strict: Vec<String>,
-        #[clap(long, group = "version")]
-        game_version_minor: Vec<String>,
-
-        #[clap(long, short = 'c')]
-        release_channel: Option<ReleaseChannel>,
-
-        #[clap(long, short = 'n')]
-        file_name: Option<String>,
+        #[command(flatten)]
+        filters: FilterArguments,
     },
     /// Scan the profile's output directory (or the specified directory) for mods and add them to the profile
     Scan {
@@ -256,6 +246,67 @@ pub enum ModpackSubCommands {
     /// Download and install the latest version of the modpack
     #[clap(visible_aliases = ["download", "install"])]
     Upgrade,
+}
+
+#[derive(Args)]
+#[group(id = "loader", multiple = false)]
+// #[group(id = "version", multiple = false)]
+pub struct FilterArguments {
+    #[clap(long, short = 'p')]
+    pub override_profile: bool,
+
+    #[clap(long, short = 'l', group = "loader")]
+    pub mod_loader_prefer: Vec<ModLoader>,
+    #[clap(long, group = "loader")]
+    pub mod_loader_any: Vec<ModLoader>,
+
+    #[clap(long, short = 'v', group = "version")]
+    pub game_version_strict: Vec<String>,
+    #[clap(long, group = "version")]
+    pub game_version_minor: Vec<String>,
+
+    #[clap(long, short = 'c')]
+    pub release_channel: Option<filters::ReleaseChannel>,
+
+    #[clap(long, short = 'n')]
+    pub filename: Option<String>,
+    #[clap(long, short = 't')]
+    pub title: Option<String>,
+    #[clap(long, short = 'd')]
+    pub description: Option<String>,
+}
+
+impl From<FilterArguments> for Vec<Filter> {
+    fn from(value: FilterArguments) -> Self {
+        let mut filters = vec![];
+
+        if !value.mod_loader_prefer.is_empty() {
+            filters.push(Filter::ModLoaderPrefer(value.mod_loader_prefer));
+        }
+        if !value.mod_loader_any.is_empty() {
+            filters.push(Filter::ModLoaderAny(value.mod_loader_any));
+        }
+        if !value.game_version_strict.is_empty() {
+            filters.push(Filter::GameVersionStrict(value.game_version_strict));
+        }
+        if !value.game_version_minor.is_empty() {
+            filters.push(Filter::GameVersionMinor(value.game_version_minor));
+        }
+        if let Some(release_channel) = value.release_channel {
+            filters.push(Filter::ReleaseChannel(release_channel));
+        }
+        if let Some(regex) = value.filename {
+            filters.push(Filter::Filename(regex));
+        }
+        if let Some(regex) = value.title {
+            filters.push(Filter::Title(regex));
+        }
+        if let Some(regex) = value.description {
+            filters.push(Filter::Description(regex));
+        }
+
+        filters
+    }
 }
 
 #[derive(Clone, Copy, Default, ValueEnum)]

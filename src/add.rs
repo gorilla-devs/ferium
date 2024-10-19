@@ -9,6 +9,17 @@ pub fn display_successes_failures(successes: &[String], failures: Vec<(String, E
             "Successfully added".green(),
             successes.iter().map(|s| s.bold()).display(", ")
         );
+
+    // No need to print the ID again if there is only one
+    } else if failures.len() == 1 {
+        let err = &failures[0].1;
+        return if matches!(err, libium::add::Error::AlreadyAdded) {
+            println!("{}", err.to_string().yellow());
+            false
+        } else {
+            println!("{}", err.to_string().red());
+            true
+        };
     }
 
     let mut grouped_errors = HashMap::new();

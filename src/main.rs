@@ -75,8 +75,6 @@ fn main() -> ExitCode {
 
     let cli = Ferium::parse();
 
-    let _ = rustls::crypto::ring::default_provider().install_default();
-
     let mut builder = tokio::runtime::Builder::new_multi_thread();
     builder.enable_all();
     builder.thread_name("ferium-worker");
@@ -201,7 +199,8 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                 }
             }
 
-            let (successes, failures) = libium::add(profile, send_ids, !force).await?;
+            let (successes, failures) =
+                libium::add(profile, send_ids, !force, false, vec![]).await?;
             spinner.finish_and_clear();
 
             did_add_fail = add::display_successes_failures(&successes, failures);
@@ -209,23 +208,13 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
         SubCommands::Add {
             identifiers,
             force,
-            mod_loader_prefer,
-            mod_loader_any,
-            game_version_strict,
-            game_version_minor,
-            release_channel,
-            file_name,
+            filters,
         } => {
             let profile = get_active_profile(&mut config)?;
+            let override_profile = filters.override_profile;
+            let filters: Vec<_> = filters.into();
 
-            if identifiers.len() > 1
-                && (!mod_loader_prefer.is_empty()
-                    || !mod_loader_any.is_empty()
-                    || !game_version_strict.is_empty()
-                    || !game_version_minor.is_empty()
-                    || release_channel.is_some()
-                    || file_name.is_some())
-            {
+            if identifiers.len() > 1 && !filters.is_empty() {
                 bail!("Only configure filters when adding a single mod!")
             }
 
@@ -236,6 +225,8 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     .map(libium::add::parse_id)
                     .collect_vec(),
                 !force,
+                override_profile,
+                filters,
             )
             .await?;
 

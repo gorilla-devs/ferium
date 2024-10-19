@@ -13,7 +13,7 @@ use libium::{
         curseforge::structs::Manifest as CFManifest, modrinth::structs::Metadata as MRMetadata,
         read_file_from_zip, zip_extract,
     },
-    upgrade::{DistributionDeniedError, DownloadFile},
+    upgrade::{from_modpack_file, try_from_cf_file, DistributionDeniedError, DownloadData},
     CURSEFORGE_API, HOME,
 };
 use std::{
@@ -24,7 +24,7 @@ use std::{
 };
 
 pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
-    let mut to_download: Vec<DownloadFile> = Vec::new();
+    let mut to_download: Vec<DownloadData> = Vec::new();
     let mut to_install = Vec::new();
     let install_msg;
 
@@ -61,8 +61,8 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
             let mut tasks = FuturesUnordered::new();
             let mut msg_shown = false;
             for file in files {
-                match TryInto::<DownloadFile>::try_into(file) {
-                    Ok(mut downloadable) => {
+                match try_from_cf_file(file) {
+                    Ok((_, mut downloadable)) => {
                         downloadable.output = PathBuf::from(
                             if Path::new(&downloadable.filename())
                                 .extension()
@@ -129,7 +129,7 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
             )?;
 
             for file in metadata.files {
-                to_download.push(file.into());
+                to_download.push(from_modpack_file(file));
             }
 
             install_msg = format!(

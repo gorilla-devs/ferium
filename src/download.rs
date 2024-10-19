@@ -9,7 +9,7 @@ use fs_extra::{
 };
 use futures::{stream::FuturesUnordered, StreamExt as _};
 use indicatif::ProgressBar;
-use libium::{iter_ext::IterExt as _, upgrade::DownloadFile};
+use libium::{iter_ext::IterExt as _, upgrade::DownloadData};
 use std::{
     ffi::OsString,
     fs::{copy, create_dir_all, read_dir, remove_file},
@@ -26,10 +26,10 @@ use tokio::sync::Semaphore;
 /// - If the file is a `.part` file or if the move failed, the file will be deleted
 pub async fn clean(
     directory: &Path,
-    to_download: &mut Vec<DownloadFile>,
+    to_download: &mut Vec<DownloadData>,
     to_install: &mut Vec<(OsString, PathBuf)>,
 ) -> Result<()> {
-    let dupes = find_dupes_by_key(to_download, DownloadFile::filename);
+    let dupes = find_dupes_by_key(to_download, DownloadData::filename);
     if !dupes.is_empty() {
         println!(
             "{}",
@@ -96,7 +96,7 @@ pub fn read_overrides(directory: &Path) -> Result<Vec<(OsString, PathBuf)>> {
 /// Download and install the files in `to_download` and `to_install` to `output_dir`
 pub async fn download(
     output_dir: PathBuf,
-    to_download: Vec<DownloadFile>,
+    to_download: Vec<DownloadData>,
     to_install: Vec<(OsString, PathBuf)>,
 ) -> Result<()> {
     let progress_bar = Arc::new(Mutex::new(
@@ -128,7 +128,7 @@ pub async fn download(
             let _permit = semaphore.acquire_owned().await?;
 
             let (length, filename) = downloadable
-                .download(&client, &output_dir, |additional| {
+                .download(client, &output_dir, |additional| {
                     progress_bar
                         .lock()
                         .expect("Mutex poisoned")
