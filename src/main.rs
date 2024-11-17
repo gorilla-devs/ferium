@@ -45,6 +45,7 @@ const CROSS: &str = "×";
 static TICK: LazyLock<ColoredString> = LazyLock::new(|| "✓".green());
 
 pub static PARALLEL_NETWORK: OnceLock<usize> = OnceLock::new();
+// Bump up the default to ~50
 pub const DEFAULT_PARALLEL_NETWORK: usize = 10;
 
 /// Indicatif themes
@@ -184,7 +185,9 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     (filename, None, None) => {
                         println!("{} {}", "Unknown file:".yellow(), filename.dimmed());
                     }
-                    (_, Some(mr_id), None) => send_ids.push(ModIdentifier::ModrinthProject(mr_id)),
+                    (_, Some(mr_id), None) => {
+                        send_ids.push(ModIdentifier::ModrinthProject(mr_id));
+                    }
                     (_, None, Some(cf_id)) => {
                         send_ids.push(ModIdentifier::CurseForgeProject(cf_id));
                     }
@@ -265,13 +268,15 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                                 format!("{} {:8}", "CF".red(), id.to_string().dimmed()),
                             ModIdentifier::ModrinthProject(id) =>
                                 format!("{} {:8}", "MR".green(), id.dimmed()),
-                            ModIdentifier::GitHubRepository(_) => "GH".purple().to_string(),
+                            ModIdentifier::GitHubRepository(..) => "GH".purple().to_string(),
+                            _ => todo!(),
                         },
                         match &mod_.identifier {
                             ModIdentifier::ModrinthProject(_)
                             | ModIdentifier::CurseForgeProject(_) => mod_.name.bold().to_string(),
-                            ModIdentifier::GitHubRepository(id) =>
-                                format!("{}/{}", id.0.dimmed(), id.1.bold()),
+                            ModIdentifier::GitHubRepository(owner, repo) =>
+                                format!("{}/{}", owner.dimmed(), repo.bold()),
+                            _ => todo!(),
                         },
                     );
                 }
@@ -458,7 +463,7 @@ fn get_active_profile(config: &mut Config) -> Result<&mut Profile> {
             bail!("There are no profiles configured, add a profile using `ferium profile create`")
         }
         1 => config.active_profile = 0,
-        n if n <= config.active_profile => {
+        n if config.active_profile >= n => {
             println!(
                 "{}",
                 "Active profile specified incorrectly, please pick a profile to use"

@@ -20,12 +20,14 @@ pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
                     match &mod_.identifier {
                         ModIdentifier::CurseForgeProject(id) => format!("CF {:8}", id.to_string()),
                         ModIdentifier::ModrinthProject(id) => format!("MR {id:8}"),
-                        ModIdentifier::GitHubRepository(_) => "GH".to_string(),
+                        ModIdentifier::GitHubRepository(..) => "GH".to_string(),
+                        _ => todo!(),
                     },
                     match &mod_.identifier {
                         ModIdentifier::ModrinthProject(_) | ModIdentifier::CurseForgeProject(_) =>
                             mod_.name.clone(),
-                        ModIdentifier::GitHubRepository(id) => format!("{}/{}", id.0, id.1),
+                        ModIdentifier::GitHubRepository(owner, repo) => format!("{owner}/{repo}"),
+                        _ => todo!(),
                     },
                 )
             })
@@ -44,9 +46,10 @@ pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
                     || match &mod_.identifier {
                         ModIdentifier::CurseForgeProject(id) => id.to_string() == to_remove,
                         ModIdentifier::ModrinthProject(id) => id == &to_remove,
-                        ModIdentifier::GitHubRepository((owner, name)) => {
+                        ModIdentifier::GitHubRepository(owner, name) => {
                             format!("{owner}/{name}").eq_ignore_ascii_case(&to_remove)
                         }
+                        _ => todo!(),
                     }
             }) {
                 items_to_remove.push(index);

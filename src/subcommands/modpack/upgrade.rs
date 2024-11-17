@@ -4,7 +4,6 @@ use crate::{
 };
 use anyhow::{Context as _, Result};
 use colored::Colorize as _;
-use futures::{stream::FuturesUnordered, StreamExt as _};
 use indicatif::ProgressBar;
 use libium::{
     config::structs::{Modpack, ModpackIdentifier},
@@ -22,6 +21,7 @@ use std::{
     path::{Path, PathBuf},
     time::Duration,
 };
+use tokio::task::JoinSet;
 
 pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
     let mut to_download: Vec<DownloadData> = Vec::new();
@@ -58,7 +58,7 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
             let files = CURSEFORGE_API.get_files(file_ids).await?;
             println!("{} Fetched {} mods", &*TICK, files.len());
 
-            let mut tasks = FuturesUnordered::new();
+            let mut tasks = JoinSet::new();
             let mut msg_shown = false;
             for file in files {
                 match try_from_cf_file(file) {
@@ -81,7 +81,7 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
                             println!("\n{}", "The following mod(s) have denied 3rd parties such as Ferium from downloading it".red().bold());
                         }
                         msg_shown = true;
-                        tasks.push(async move {
+                        tasks.spawn(async move {
                             let project = CURSEFORGE_API.get_mod(mod_id).await?;
                             eprintln!(
                                 "- {}
@@ -97,7 +97,7 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
                 }
             }
 
-            while let Some(res) = tasks.next().await {
+            for res in tasks.join_all().await {
                 res?;
             }
 

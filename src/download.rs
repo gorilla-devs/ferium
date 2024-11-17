@@ -7,7 +7,6 @@ use fs_extra::{
     dir::{copy as copy_dir, CopyOptions as DirCopyOptions},
     file::{move_file, CopyOptions as FileCopyOptions},
 };
-use futures::{stream::FuturesUnordered, StreamExt as _};
 use indicatif::ProgressBar;
 use libium::{iter_ext::IterExt as _, upgrade::DownloadData};
 use std::{
@@ -17,7 +16,7 @@ use std::{
     sync::{Arc, Mutex},
     time::Duration,
 };
-use tokio::sync::Semaphore;
+use tokio::{sync::Semaphore, task::JoinSet};
 
 /// Check the given `directory`
 ///
@@ -112,7 +111,7 @@ pub async fn download(
         .lock()
         .expect("Mutex poisoned")
         .enable_steady_tick(Duration::from_millis(100));
-    let mut tasks = FuturesUnordered::new();
+    let mut tasks = JoinSet::new();
     let semaphore = Arc::new(Semaphore::new(
         *PARALLEL_NETWORK.get_or_init(|| DEFAULT_PARALLEL_NETWORK),
     ));
@@ -124,7 +123,7 @@ pub async fn download(
         let client = client.clone();
         let output_dir = output_dir.clone();
 
-        tasks.push(async move {
+        tasks.spawn(async move {
             let _permit = semaphore.acquire_owned().await?;
 
             let (length, filename) = downloadable
@@ -150,7 +149,7 @@ pub async fn download(
             Ok::<(), Error>(())
         });
     }
-    while let Some(res) = tasks.next().await {
+    for res in tasks.join_all().await {
         res?;
     }
     Arc::try_unwrap(progress_bar)

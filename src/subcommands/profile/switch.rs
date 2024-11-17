@@ -44,10 +44,11 @@ pub fn switch(config: &mut Config, profile_name: Option<String>) -> Result<()> {
             })
             .collect_vec();
 
-        if let Ok(selection) = Select::new("Select which profile to switch to", profile_info)
-            .with_starting_cursor(config.active_profile)
-            .raw_prompt()
-        {
+        let mut select = Select::new("Select which profile to switch to", profile_info);
+        if config.active_profile < config.profiles.len() {
+            select.starting_cursor = config.active_profile;
+        }
+        if let Ok(selection) = select.raw_prompt() {
             config.active_profile = selection.index;
         }
         Ok(())

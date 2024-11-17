@@ -40,10 +40,11 @@ pub fn switch(config: &mut Config, modpack_name: Option<String>) -> Result<()> {
             })
             .collect_vec();
 
-        if let Ok(selection) = Select::new("Select which modpack to switch to", modpack_info)
-            .with_starting_cursor(config.active_modpack)
-            .raw_prompt()
-        {
+        let mut select = Select::new("Select which modpack to switch to", modpack_info);
+        if config.active_modpack < config.modpacks.len() {
+            select.starting_cursor = config.active_modpack;
+        }
+        if let Ok(selection) = select.raw_prompt() {
             config.active_modpack = selection.index;
         }
         Ok(())

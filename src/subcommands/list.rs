@@ -3,13 +3,13 @@ use anyhow::{Context as _, Result};
 use colored::Colorize as _;
 use ferinth::structures::{project::Project, user::TeamMember};
 use furse::structures::mod_structs::Mod;
-use futures::{stream::FuturesUnordered, StreamExt as _};
 use libium::{
     config::structs::{ModIdentifier, Profile},
     iter_ext::IterExt as _,
     CURSEFORGE_API, GITHUB_API, MODRINTH_API,
 };
 use octocrab::models::{repos::Release, Repository};
+use tokio::task::JoinSet;
 
 enum Metadata {
     CF(Mod),
@@ -31,7 +31,7 @@ impl Metadata {
             Metadata::CF(p) => ModIdentifier::CurseForgeProject(p.id),
             Metadata::MD(p, _) => ModIdentifier::ModrinthProject(p.id.clone()),
             Metadata::GH(p, _) => {
-                ModIdentifier::GitHubRepository((p.owner.clone().unwrap().login, p.name.clone()))
+                ModIdentifier::GitHubRepository(p.owner.clone().unwrap().login, p.name.clone())
             }
         }
     }
@@ -42,26 +42,23 @@ pub async fn verbose(profile: &mut Profile, markdown: bool) -> Result<()> {
         eprint!("Querying metadata... ");
     }
 
-    let mut tasks = FuturesUnordered::new();
+    let mut tasks = JoinSet::new();
     let mut mr_ids = Vec::new();
     let mut cf_ids = Vec::new();
     for mod_ in &profile.mods {
         match mod_.identifier.clone() {
             ModIdentifier::CurseForgeProject(project_id) => cf_ids.push(project_id),
             ModIdentifier::ModrinthProject(project_id) => mr_ids.push(project_id),
-            ModIdentifier::GitHubRepository((owner, repo)) => {
-                tasks.push(async {
+            ModIdentifier::GitHubRepository(owner, repo) => {
+                let repo = GITHUB_API.repos(owner, repo);
+                tasks.spawn(async move {
                     Ok::<_, anyhow::Error>((
-                        GITHUB_API.repos(&owner, &repo).get().await?,
-                        GITHUB_API
-                            .repos(owner, repo)
-                            .releases()
-                            .list()
-                            .send()
-                            .await?,
+                        repo.get().await?,
+                        repo.releases().list().send().await?,
                     ))
                 });
             }
+            _ => todo!(),
         }
     }
 
@@ -93,7 +90,7 @@ pub async fn verbose(profile: &mut Profile, markdown: bool) -> Result<()> {
     for project in cf_projects {
         metadata.push(Metadata::CF(project));
     }
-    while let Some(res) = tasks.next().await {
+    for res in tasks.join_all().await {
         let (repo, releases) = res?;
         metadata.push(Metadata::GH(repo, releases.items));
     }
