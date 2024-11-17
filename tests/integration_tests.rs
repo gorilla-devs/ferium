@@ -133,16 +133,13 @@ fn add_curseforge() -> Result {
 #[test]
 fn add_github() -> Result {
     // Add Sodium to config
-    run_command(
-        vec!["add", "CaffeineMC/sodium-fabric"],
-        Some("empty_profile"),
-    )
+    run_command(vec!["add", "CaffeineMC/sodium"], Some("empty_profile"))
 }
 
 #[test]
 fn add_all() -> Result {
     run_command(
-        vec!["add", "starlight", "591388", "CaffeineMC/sodium-fabric"],
+        vec!["add", "starlight", "591388", "CaffeineMC/sodium"],
         Some("empty_profile"),
     )
 }
@@ -193,11 +190,7 @@ fn modpack_add_curseforge() -> Result {
 fn already_added() {
     assert!(run_command(vec!["add", "StArLiGhT"], Some("one_profile_full")).is_ok());
     assert!(run_command(vec!["add", "591388"], Some("one_profile_full")).is_ok());
-    assert!(run_command(
-        vec!["add", "caffeinemc/Sodium-Fabric"],
-        Some("one_profile_full")
-    )
-    .is_ok());
+    assert!(run_command(vec!["add", "cAfFeInEmC/SoDiUm"], Some("one_profile_full")).is_ok());
 }
 
 #[test]
@@ -295,7 +288,7 @@ fn remove_fail() {
 #[test]
 fn remove_name() -> Result {
     run_command(
-        vec!["remove", "starlight (fabric)", "incendium", "sodium-fabric"],
+        vec!["remove", "starlight (fabric)", "incendium", "sodium"],
         Some("one_profile_full"),
     )
 }
@@ -303,7 +296,7 @@ fn remove_name() -> Result {
 #[test]
 fn remove_id() -> Result {
     run_command(
-        vec!["remove", "H8CaAYZC", "591388", "caffeinemc/sodium-fabric"],
+        vec!["remove", "H8CaAYZC", "591388", "caffeinemc/sodium"],
         Some("one_profile_full"),
     )
 }

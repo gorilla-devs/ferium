@@ -5,13 +5,13 @@ set windows-powershell := true
 install:
   cargo install --force --path .
 
-# Install ferium to cargo's binary folder, but with faster compilation (offline, debug, nightly, parallel frontend)
+# Install ferium to cargo's binary folder, but with faster compilation (offline & debug)
 install-dev:
   cargo install --offline --debug --force --path .
 
 # Delete test artefacts
 clean-test:
-  rm -rf tests/mods
-  rm -rf tests/md_modpack
-  rm -rf tests/cf_modpack
-  rm -rf tests/configs/running
+  rm -rf tests/mods \
+    tests/md_modpack \
+    tests/cf_modpack \
+    tests/configs/running

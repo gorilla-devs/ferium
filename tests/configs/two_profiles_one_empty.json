@@ -21,11 +21,11 @@
                     }
                 },
                 {
-                    "name": "sodium-fabric",
+                    "name": "sodium",
                     "identifier": {
                         "GitHubRepository": [
                             "CaffeineMC",
-                            "sodium-fabric"
+                            "sodium"
                         ]
                     }
                 }

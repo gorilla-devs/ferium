@@ -201,8 +201,8 @@ So to add [Terralith](https://www.curseforge.com/minecraft/mc-mods/terralith), y
 ```bash
 ferium add owner/name
 ```
-`owner` is the username of the owner of the repository and `name` is the name of the repository, both are case-insensitive. (e.g. [Sodium's repository](https://github.com/CaffeineMC/sodium-fabric) has the id `CaffeineMC/sodium-fabric`). You can find these at the top left of the repository's page.  
-So to add [Sodium](https://github.com/CaffeineMC/sodium-fabric), you should run `ferium add CaffeineMC/sodium-fabric` (again, case-insensitive).
+`owner` is the username of the owner of the repository and `name` is the name of the repository, both are case-insensitive (e.g. [Sodium's repository](https://github.com/CaffeineMC/sodium) has the id `CaffeineMC/sodium`). You can find these at the top left of the repository's page.  
+So to add [Sodium](https://github.com/CaffeineMC/sodium), you should run `ferium add CaffeineMC/sodium`.
 
 > [!IMPORTANT]
 > The GitHub repository needs to upload JAR files to their _Releases_ for ferium to download, or else it will refuse to be added.
