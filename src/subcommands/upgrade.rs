@@ -1,5 +1,3 @@
-#![expect(clippy::expect_used, reason = "For mutex poisons")]
-
 use crate::{
     download::{clean, download},
     CROSS, DEFAULT_PARALLEL_NETWORK, PARALLEL_NETWORK, STYLE_NO, TICK,
@@ -14,10 +12,11 @@ use libium::{
     },
     upgrade::{mod_downloadable, DownloadData},
 };
+use parking_lot::Mutex;
 use std::{
     fs::read_dir,
     mem::take,
-    sync::{mpsc, Arc, Mutex},
+    sync::{mpsc, Arc},
     time::Duration,
 };
 use tokio::{sync::Semaphore, task::JoinSet};
@@ -43,7 +42,6 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
     ));
     progress_bar
         .lock()
-        .expect("Mutex poisoned")
         .enable_steady_tick(Duration::from_millis(100));
     let pad_len = profile
         .mods
@@ -83,7 +81,6 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
                 }) {
                     progress_bar
                         .lock()
-                        .expect("Mutex poisoned")
                         .println(format!(
                             "{} Multiple versions of {} were requested, {} and {}. Ignoring the latter.",
                             "Warning:".bold().yellow(),
@@ -105,7 +102,7 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
             }
 
             done_mods.push(mod_.identifier.clone());
-            progress_bar.lock().expect("Mutex poisoned").inc_length(1);
+            progress_bar.lock().inc_length(1);
 
             let filters = profile.filters.clone();
             let dep_sender = Arc::clone(&mod_sender);
@@ -118,18 +115,15 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
 
                 let result = mod_.fetch_download_file(filters).await;
 
-                progress_bar.lock().expect("Mutex poisoned").inc(1);
+                progress_bar.lock().inc(1);
                 match result {
                     Ok(mut download_file) => {
-                        progress_bar
-                            .lock()
-                            .expect("Mutex poisoned")
-                            .println(format!(
-                                "{} {:pad_len$}  {}",
-                                TICK.clone(),
-                                mod_.name,
-                                download_file.filename().dimmed()
-                            ));
+                        progress_bar.lock().println(format!(
+                            "{} {:pad_len$}  {}",
+                            TICK.clone(),
+                            mod_.name,
+                            download_file.filename().dimmed()
+                        ));
                         for dep in take(&mut download_file.dependencies) {
                             dep_sender.send(Mod {
                                 name: format!(
@@ -147,10 +141,7 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
                                 override_filters: false,
                             })?;
                         }
-                        to_download
-                            .lock()
-                            .expect("Mutex poisoned")
-                            .push(download_file);
+                        to_download.lock().push(download_file);
                         Ok(true)
                     }
                     Err(err) => {
@@ -159,19 +150,13 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
                         ) = err
                         {
                             // Immediately fail if the rate limit has been exceeded
-                            progress_bar
-                                .lock()
-                                .expect("Mutex poisoned")
-                                .finish_and_clear();
+                            progress_bar.lock().finish_and_clear();
                             bail!(err);
                         }
-                        progress_bar
-                            .lock()
-                            .expect("Mutex poisoned")
-                            .println(format!(
-                                "{}",
-                                format!("{CROSS} {:pad_len$}  {err}", mod_.name).red()
-                            ));
+                        progress_bar.lock().println(format!(
+                            "{}",
+                            format!("{CROSS} {:pad_len$}  {err}", mod_.name).red()
+                        ));
                         Ok(false)
                     }
                 }
@@ -187,12 +172,12 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
 
     Arc::try_unwrap(progress_bar)
         .map_err(|_| anyhow!("Failed to run threads to completion"))?
-        .into_inner()?
+        .into_inner()
         .finish_and_clear();
     Ok((
         Arc::try_unwrap(to_download)
             .map_err(|_| anyhow!("Failed to run threads to completion"))?
-            .into_inner()?,
+            .into_inner(),
         error,
     ))
 }

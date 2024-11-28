@@ -2,6 +2,7 @@
 /.idea
 /.vscode
 /out
+/perf
 /tests/configs/running
 /tests/mods
 /tests/md_modpack

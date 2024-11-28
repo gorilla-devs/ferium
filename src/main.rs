@@ -45,8 +45,7 @@ const CROSS: &str = "×";
 static TICK: LazyLock<ColoredString> = LazyLock::new(|| "✓".green());
 
 pub static PARALLEL_NETWORK: OnceLock<usize> = OnceLock::new();
-// Bump up the default to ~50
-pub const DEFAULT_PARALLEL_NETWORK: usize = 10;
+pub const DEFAULT_PARALLEL_NETWORK: usize = 50;
 
 /// Indicatif themes
 #[expect(clippy::expect_used)]
