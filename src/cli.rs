@@ -249,7 +249,7 @@ pub enum ModpackSubCommands {
     Upgrade,
 }
 
-#[derive(Clone, Debug, Args)]
+#[derive(Clone, Default, Debug, Args)]
 #[group(id = "loader", multiple = false)]
 pub struct FilterArguments {
     #[clap(long, short = 'p')]

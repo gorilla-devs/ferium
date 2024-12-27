@@ -1,3 +1,4 @@
+#![cfg_attr(test, feature(assert_matches))]
 #![deny(
     clippy::all,
     clippy::perf,
