@@ -1,4 +1,4 @@
-use crate::{DEFAULT_PARALLEL_NETWORK, PARALLEL_NETWORK, STYLE_BYTE, TICK};
+use crate::{DEFAULT_PARALLEL_NETWORK, SEMAPHORE, STYLE_BYTE, TICK};
 use anyhow::{anyhow, bail, Error, Result};
 use colored::Colorize as _;
 use fs_extra::{
@@ -110,19 +110,18 @@ pub async fn download(
         .lock()
         .enable_steady_tick(Duration::from_millis(100));
     let mut tasks = JoinSet::new();
-    let semaphore = Arc::new(Semaphore::new(
-        *PARALLEL_NETWORK.get_or_init(|| DEFAULT_PARALLEL_NETWORK),
-    ));
     let client = reqwest::Client::new();
 
     for downloadable in to_download {
-        let semaphore = Arc::clone(&semaphore);
         let progress_bar = Arc::clone(&progress_bar);
         let client = client.clone();
         let output_dir = output_dir.clone();
 
         tasks.spawn(async move {
-            let _permit = semaphore.acquire_owned().await?;
+            let _permit = SEMAPHORE
+                .get_or_init(|| Semaphore::new(DEFAULT_PARALLEL_NETWORK))
+                .acquire()
+                .await?;
 
             let (length, filename) = downloadable
                 .download(client, &output_dir, |additional| {

@@ -1,5 +1,6 @@
 #![deny(missing_docs)]
 
+use crate::DEFAULT_PARALLEL_NETWORK;
 use clap::{Args, Parser, Subcommand, ValueEnum, ValueHint};
 use clap_complete::Shell;
 use libium::config::{
@@ -8,7 +9,7 @@ use libium::config::{
 };
 use std::path::PathBuf;
 
-#[derive(Parser)]
+#[derive(Clone, Debug, Parser)]
 #[clap(author, version, about)]
 #[clap(arg_required_else_help = true)]
 pub struct Ferium {
@@ -19,8 +20,8 @@ pub struct Ferium {
     #[clap(long, short)]
     pub threads: Option<usize>,
     /// Specify the maximum number of parallel network requests to perform.
-    #[clap(long, short = 'p')]
-    pub parallel_network: Option<usize>,
+    #[clap(long, short = 'p', default_value_t = DEFAULT_PARALLEL_NETWORK)]
+    pub parallel_network: usize,
     /// Set a GitHub personal access token for increasing the GitHub API rate limit.
     /// You can also use the environment variable `GITHUB_TOKEN`.
     #[clap(long, visible_alias = "gh")]
@@ -37,7 +38,7 @@ pub struct Ferium {
     pub config_file: Option<PathBuf>,
 }
 
-#[derive(Subcommand)]
+#[derive(Clone, Debug, Subcommand)]
 pub enum SubCommands {
     /*  TODO:
         Use this for filter arguments:
@@ -123,7 +124,7 @@ pub enum SubCommands {
     Upgrade,
 }
 
-#[derive(Subcommand)]
+#[derive(Clone, Debug, Subcommand)]
 pub enum ProfileSubCommands {
     /// Configure the current profile's name, Minecraft version, mod loader, and output directory.
     /// Optionally, provide the settings to change as arguments.
@@ -191,7 +192,7 @@ pub enum ProfileSubCommands {
     },
 }
 
-#[derive(Subcommand)]
+#[derive(Clone, Debug, Subcommand)]
 pub enum ModpackSubCommands {
     /// Add a modpack to the config
     Add {
@@ -248,9 +249,8 @@ pub enum ModpackSubCommands {
     Upgrade,
 }
 
-#[derive(Args)]
+#[derive(Clone, Debug, Args)]
 #[group(id = "loader", multiple = false)]
-// #[group(id = "version", multiple = false)]
 pub struct FilterArguments {
     #[clap(long, short = 'p')]
     pub override_profile: bool,
@@ -309,7 +309,7 @@ impl From<FilterArguments> for Vec<Filter> {
     }
 }
 
-#[derive(Clone, Copy, Default, ValueEnum)]
+#[derive(Clone, Copy, Debug, Default, ValueEnum)]
 pub enum Platform {
     #[default]
     #[clap(alias = "mr")]

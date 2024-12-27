@@ -1,6 +1,6 @@
 use crate::{
     download::{clean, download},
-    CROSS, DEFAULT_PARALLEL_NETWORK, PARALLEL_NETWORK, STYLE_NO, TICK,
+    CROSS, DEFAULT_PARALLEL_NETWORK, SEMAPHORE, STYLE_NO, TICK,
 };
 use anyhow::{anyhow, bail, Result};
 use colored::Colorize as _;
@@ -37,9 +37,6 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
     let mod_sender = Arc::new(mod_sender);
 
     println!("{}\n", "Determining the Latest Compatible Versions".bold());
-    let semaphore = Arc::new(Semaphore::new(
-        *PARALLEL_NETWORK.get_or_init(|| DEFAULT_PARALLEL_NETWORK),
-    ));
     progress_bar
         .lock()
         .enable_steady_tick(Duration::from_millis(100));
@@ -70,50 +67,23 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
                 continue;
             }
 
-            // TODO: handle case where non-pinned version is requested for a pinned mod
-
-            // Modrinth mods may request a different version of a mod that's already been processed
-            if let ModIdentifier::PinnedModrinthProject(proj_id, file_id) = &mod_.identifier {
-                if let Some(clash) = done_mods.iter().find(|m| {
-                    matches!(m, ModIdentifier::PinnedModrinthProject(p, _)
-                                | ModIdentifier::ModrinthProject(p)
-                                if p == proj_id)
-                }) {
-                    progress_bar
-                        .lock()
-                        .println(format!(
-                            "{} Multiple versions of {} were requested, {} and {}. Ignoring the latter.",
-                            "Warning:".bold().yellow(),
-
-                            match clash {
-                                ModIdentifier::ModrinthProject(p)
-                                | ModIdentifier::PinnedModrinthProject(p, _) => p,
-                                _ => unreachable!(),
-                            },
-                            match clash {
-                                ModIdentifier::PinnedModrinthProject(_, f) => f,
-                                ModIdentifier::ModrinthProject(_) => "latest",
-                                _ => unreachable!(),
-                            },
-                            file_id,
-                    ));
-                    continue;
-                }
-            }
-
             done_mods.push(mod_.identifier.clone());
             progress_bar.lock().inc_length(1);
 
             let filters = profile.filters.clone();
             let dep_sender = Arc::clone(&mod_sender);
-            let semaphore = Arc::clone(&semaphore);
             let to_download = Arc::clone(&to_download);
             let progress_bar = Arc::clone(&progress_bar);
 
             tasks.spawn(async move {
-                let _permit = semaphore.acquire_owned().await?;
+                let permit = SEMAPHORE
+                    .get_or_init(|| Semaphore::new(DEFAULT_PARALLEL_NETWORK))
+                    .acquire()
+                    .await?;
 
                 let result = mod_.fetch_download_file(filters).await;
+
+                drop(permit);
 
                 progress_bar.lock().inc(1);
                 match result {
@@ -125,21 +95,26 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
                             download_file.filename().dimmed()
                         ));
                         for dep in take(&mut download_file.dependencies) {
-                            dep_sender.send(Mod {
-                                name: format!(
+                            dep_sender.send(Mod::new(
+                                format!(
                                     "Dependency: {}",
                                     match &dep {
                                         ModIdentifier::CurseForgeProject(id) => id.to_string(),
                                         ModIdentifier::ModrinthProject(id)
-                                        | ModIdentifier::PinnedModrinthProject(_, id) =>
+                                        | ModIdentifier::PinnedModrinthProject(id, _) =>
                                             id.to_owned(),
                                         _ => unreachable!(),
                                     }
                                 ),
-                                identifier: dep,
-                                filters: vec![],
-                                override_filters: false,
-                            })?;
+                                match dep {
+                                    ModIdentifier::PinnedModrinthProject(id, _) => {
+                                        ModIdentifier::ModrinthProject(id)
+                                    }
+                                    _ => dep,
+                                },
+                                vec![],
+                                false,
+                            ))?;
                         }
                         to_download.lock().push(download_file);
                         Ok(true)

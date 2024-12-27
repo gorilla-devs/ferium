@@ -21,6 +21,9 @@ mod download;
 mod file_picker;
 mod subcommands;
 
+#[cfg(test)]
+mod tests;
+
 use anyhow::{anyhow, bail, ensure, Result};
 use clap::{CommandFactory, Parser};
 use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
@@ -44,7 +47,7 @@ use std::{
 const CROSS: &str = "×";
 static TICK: LazyLock<ColoredString> = LazyLock::new(|| "✓".green());
 
-pub static PARALLEL_NETWORK: OnceLock<usize> = OnceLock::new();
+pub static SEMAPHORE: OnceLock<tokio::sync::Semaphore> = OnceLock::new();
 pub const DEFAULT_PARALLEL_NETWORK: usize = 50;
 
 /// Indicatif themes
@@ -141,17 +144,13 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
     if let Some(key) = cli_app.curseforge_api_key {
         set_var("CURSEFORGE_API_KEY", key);
     }
-    if let Some(n) = cli_app.parallel_network {
-        let _ = PARALLEL_NETWORK.set(n);
-    }
+    let _ = SEMAPHORE.set(tokio::sync::Semaphore::new(cli_app.parallel_network));
 
-    let mut config_file = config::get_file(
-        &cli_app
-            .config_file
-            .or_else(|| var_os("FERIUM_CONFIG_FILE").map(Into::into))
-            .unwrap_or(DEFAULT_CONFIG_PATH.clone()),
-    )?;
-    let mut config = config::deserialise(&libium::read_wrapper(&mut config_file)?)?;
+    let config_path = &cli_app
+        .config_file
+        .or_else(|| var_os("FERIUM_CONFIG_FILE").map(Into::into))
+        .unwrap_or(DEFAULT_CONFIG_PATH.clone());
+    let mut config = config::read_config(config_path)?;
 
     let mut did_add_fail = false;
 
@@ -446,7 +445,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             .sort_unstable_by_key(|mod_| mod_.name.to_lowercase());
     });
     // Update config file with possibly edited config
-    config::write_file(&mut config_file, &config)?;
+    config::write_config(config_path, &config)?;
 
     if did_add_fail {
         Err(anyhow!(""))
