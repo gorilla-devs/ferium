@@ -35,16 +35,20 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin, x86_64-apple-darwin
+          toolchain: stable, nightly
 
       - name: Install Rust for Windows
         if: matrix.os == 'windows-latest'
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable, nightly
 
       - name: Install Rust for Linux
         if: matrix.os == 'ubuntu-latest'
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-gnu, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl
+          toolchain: stable, nightly
 
       - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-latest'
