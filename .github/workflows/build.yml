@@ -23,6 +23,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v4
       - name: Create `out/`
@@ -35,16 +36,20 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
         with:
           targets: aarch64-apple-darwin, x86_64-apple-darwin
+          components: clippy
 
       - name: Install Rust for Windows
         if: matrix.os == 'windows-latest'
         uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy
 
       - name: Install Rust for Linux
         if: matrix.os == 'ubuntu-latest'
         uses: dtolnay/rust-toolchain@nightly
         with:
           targets: x86_64-pc-windows-gnu, x86_64-unknown-linux-musl, aarch64-unknown-linux-musl
+          components: clippy
 
       - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-latest'
@@ -56,11 +61,14 @@ jobs:
       - name: Install Rust cache
         uses: Swatinem/rust-cache@v2
 
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
+
       - name: Lint code
         run: cargo clippy
 
       - name: Run tests
-        run: cargo+nightly test --no-default-features
+        run: cargo nextest run --no-default-features --no-fail-fast
 
       - name: Build macOS Intel
         if: matrix.os == 'macos-latest'
