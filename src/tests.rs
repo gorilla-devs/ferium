@@ -523,6 +523,7 @@ async fn delete_profile() {
     );
 }
 
+#[tokio::test(flavor = "multi_thread")]
 async fn delete_modpack() {
     assert_matches!(
         actual_main(get_args(
