@@ -19,6 +19,7 @@ const DEFAULT: Ferium = Ferium {
     github_token: None,
     curseforge_api_key: None,
     config_file: None,
+    no_gui: Some(true),
 };
 
 fn get_args(subcommand: SubCommands, config_file: Option<&str>) -> Ferium {

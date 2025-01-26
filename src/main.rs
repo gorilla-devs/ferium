@@ -299,6 +299,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                             project_id,
                             output_dir,
                             install_overrides,
+                            cli_app.no_gui,
                         )
                         .await?;
                     } else if let Err(err) = subcommands::modpack::add::modrinth(
@@ -306,6 +307,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                         &identifier,
                         output_dir,
                         install_overrides,
+                        cli_app.no_gui,
                     )
                     .await
                     {
@@ -326,6 +328,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                         get_active_modpack(&mut config)?,
                         output_dir,
                         install_overrides,
+                        cli_app.no_gui,
                     )?;
                 }
                 ModpackSubCommands::Delete {
@@ -376,6 +379,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                         mod_loaders,
                         name,
                         output_dir,
+                        cli_app.no_gui,
                     )
                     .await?;
                 }
@@ -397,6 +401,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                         mod_loader,
                         name,
                         output_dir,
+                        cli_app.no_gui,
                     )
                     .await?;
                 }

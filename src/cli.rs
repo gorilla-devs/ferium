@@ -36,6 +36,10 @@ pub struct Ferium {
     #[clap(long, short, visible_aliases = ["config", "conf"])]
     #[clap(value_hint(ValueHint::FilePath))]
     pub config_file: Option<PathBuf>,
+    /// Whether no gui mode is enabled or not.
+    /// You can also use the environment variable `FERIUM_NO_GUI`.
+    #[clap(short, long, visible_alias = "ng")]
+    pub no_gui: Option<bool>,
 }
 
 #[derive(Clone, Debug, Subcommand)]

@@ -10,10 +10,11 @@ pub fn configure(
     modpack: &mut Modpack,
     output_dir: Option<PathBuf>,
     install_overrides: Option<bool>,
+    no_gui_mode: Option<bool>,
 ) -> Result<()> {
     match output_dir {
         Some(output_dir) => {
-            check_output_directory(&output_dir)?;
+            check_output_directory(&output_dir, no_gui_mode)?;
             modpack.output_dir = output_dir;
         }
         None => {
@@ -21,8 +22,9 @@ pub fn configure(
                 &modpack.output_dir,
                 "Pick an output directory",
                 "Output Directory",
+                no_gui_mode,
             )? {
-                check_output_directory(&dir)?;
+                check_output_directory(&dir, no_gui_mode)?;
                 modpack.output_dir = dir;
             }
         }

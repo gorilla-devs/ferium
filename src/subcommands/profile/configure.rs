@@ -14,6 +14,7 @@ pub async fn configure(
     mod_loaders: Vec<ModLoader>,
     name: Option<String>,
     output_dir: Option<PathBuf>,
+    no_gui_mode: Option<bool>,
 ) -> Result<()> {
     let mut interactive = true;
 
@@ -65,8 +66,9 @@ pub async fn configure(
                         &profile.output_dir,
                         "Pick an output directory",
                         "Output Directory",
+                        no_gui_mode,
                     )? {
-                        check_output_directory(&dir).await?;
+                        check_output_directory(&dir, no_gui_mode).await?;
                         profile.output_dir = dir;
                     }
                 }

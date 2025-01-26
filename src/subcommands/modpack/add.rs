@@ -16,6 +16,7 @@ pub async fn curseforge(
     project_id: i32,
     output_dir: Option<PathBuf>,
     install_overrides: Option<bool>,
+    no_gui_mode: Option<bool>,
 ) -> Result<()> {
     eprint!("Checking modpack... ");
     let project = add::curseforge(config, project_id).await?;
@@ -27,10 +28,11 @@ pub async fn curseforge(
             get_minecraft_dir(),
             "Pick an output directory",
             "Output Directory",
+            no_gui_mode,
         )?
         .context("Please pick an output directory")?,
     };
-    check_output_directory(&output_dir)?;
+    check_output_directory(&output_dir, no_gui_mode)?;
     let install_overrides = match install_overrides {
         Some(some) => some,
         None => Confirm::new("Should overrides be installed?")
@@ -62,6 +64,7 @@ pub async fn modrinth(
     project_id: &str,
     output_dir: Option<PathBuf>,
     install_overrides: Option<bool>,
+    no_gui_mode: Option<bool>,
 ) -> Result<()> {
     eprint!("Checking modpack... ");
     let project = add::modrinth(config, project_id).await?;
@@ -73,10 +76,11 @@ pub async fn modrinth(
             get_minecraft_dir(),
             "Pick an output directory",
             "Output Directory",
+            no_gui_mode,
         )?
         .context("Please pick an output directory")?,
     };
-    check_output_directory(&output_dir)?;
+    check_output_directory(&output_dir, no_gui_mode)?;
     let install_overrides = match install_overrides {
         Some(some) => some,
         None => Confirm::new("Should overrides be installed?")

@@ -21,6 +21,7 @@ pub async fn create(
     mod_loader: Option<ModLoader>,
     name: Option<String>,
     output_dir: Option<PathBuf>,
+    no_gui_mode: Option<bool>,
 ) -> Result<()> {
     let mut profile = match (game_versions, mod_loader, name, output_dir) {
         (Some(game_versions), Some(mod_loader), Some(name), output_dir) => {
@@ -52,8 +53,9 @@ pub async fn create(
                     &selected_mods_dir,
                     "Pick an output directory",
                     "Output Directory",
+                    no_gui_mode,
                 )? {
-                    check_output_directory(&dir).await?;
+                    check_output_directory(&dir, no_gui_mode).await?;
                     selected_mods_dir = dir;
                 };
             }

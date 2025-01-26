@@ -17,7 +17,7 @@ use inquire::Confirm;
 use libium::HOME;
 use std::{fs::read_dir, path::Path};
 
-pub fn check_output_directory(output_dir: &Path) -> Result<()> {
+pub fn check_output_directory(output_dir: &Path, no_gui_mode: Option<bool>) -> Result<()> {
     ensure!(
         output_dir.is_absolute(),
         "The provided output directory is not absolute, i.e. it is a relative path"
@@ -47,6 +47,7 @@ pub fn check_output_directory(output_dir: &Path) -> Result<()> {
                     &*HOME,
                     "Where should the backup be made?",
                     "Output Directory",
+                    no_gui_mode,
                 )?
                 .context("Please pick an output directory")?;
                 copy(check_dir, backup_dir, &CopyOptions::new())?;
