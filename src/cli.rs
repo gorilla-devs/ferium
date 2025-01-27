@@ -188,6 +188,20 @@ pub enum ProfileSubCommands {
     Info,
     /// List all the profiles with their data
     List,
+    /// Import an existing profile
+    Import {
+        /// The name of the profile
+        #[clap(long, short)]
+        name: Option<String>,
+        /// The path to the profile
+        #[clap(long, short)]
+        #[clap(value_hint(ValueHint::FilePath))]
+        path: Option<PathBuf>,
+        /// The directory the profile will output mods to
+        #[clap(long, short)]
+        #[clap(value_hint(ValueHint::DirPath))]
+        output_dir: Option<PathBuf>,
+    },
     /// Switch between different profiles.
     /// Optionally, provide the name of the profile to switch to.
     Switch {

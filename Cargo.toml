@@ -53,9 +53,8 @@ fs_extra = "1.3"
 ferinth = "2.11"
 colored = "2.2"
 inquire = "0.7"
-libium = { git = "https://github.com/gorilla-devs/libium", rev = "713057124a8216d78b7bdba58c67541c6e9a904a" }
-# libium = { path = "../libium" }
-# libium = "1.32"
+# libium = { git = "https://github.com/OgGhostJelly/libium.git" }
+libium = { path = "../libium" }
 anyhow = "1.0"
 furse = "1.5"
 size = "0.4"

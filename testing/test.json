@@ -1,0 +1,16 @@
+{
+  "filters": [
+    {
+      "ModLoaderPrefer": [
+        "Quilt",
+        "Fabric"
+      ]
+    },
+    {
+      "GameVersionStrict": [
+        "1.21.1"
+      ]
+    }
+  ],
+  "mods": []
+}

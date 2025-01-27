@@ -6,14 +6,14 @@ use libium::{
     iter_ext::IterExt as _,
 };
 
+use crate::try_iter_profiles;
+
 pub fn switch(config: &mut Config, profile_name: Option<String>) -> Result<()> {
     if config.profiles.len() <= 1 {
         Err(anyhow!("There is only 1 profile in your config"))
     } else if let Some(profile_name) = profile_name {
-        match config
-            .profiles
-            .iter()
-            .position(|profile| profile.name.eq_ignore_ascii_case(&profile_name))
+        match config.profiles.iter()
+            .position(|item| item.name.eq_ignore_ascii_case(&profile_name))
         {
             Some(selection) => {
                 config.active_profile = selection;
@@ -22,10 +22,8 @@ pub fn switch(config: &mut Config, profile_name: Option<String>) -> Result<()> {
             None => Err(anyhow!("The profile provided does not exist")),
         }
     } else {
-        let profile_info = config
-            .profiles
-            .iter()
-            .map(|profile| {
+        let profile_info = try_iter_profiles(&mut config.profiles)
+            .map(|(item, profile)| {
                 format!(
                     "{:8} {:7} {} {}",
                     profile
@@ -38,7 +36,7 @@ pub fn switch(config: &mut Config, profile_name: Option<String>) -> Result<()> {
                         .game_versions()
                         .map(|v| v[0].green())
                         .unwrap_or_default(),
-                    profile.name.bold(),
+                    item.name.bold(),
                     format!("({} mods)", profile.mods.len()).yellow(),
                 )
             })

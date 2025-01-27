@@ -1,17 +1,19 @@
 use colored::Colorize;
 use libium::{
-    config::{filters::ProfileParameters as _, structs::Profile},
+    config::{filters::ProfileParameters as _, structs::{Profile, ProfileItem}},
     iter_ext::IterExt as _,
 };
 
-pub fn info(profile: &Profile, active: bool) {
+pub fn info(profile_item: &ProfileItem, profile: &Profile, active: bool) {
     println!(
         "{}{}
+        \r  Profile Path:       {}
         \r  Output directory:   {}{}{}
         \r  Mods:               {}\n",
-        profile.name.bold(),
+        profile_item.name.bold(),
         if active { " *" } else { "" },
-        profile.output_dir.display().to_string().blue().underline(),
+        profile_item.path.display().to_string().blue().underline(),
+        profile_item.output_dir.display().to_string().blue().underline(),
         profile
             .filters
             .game_versions()
