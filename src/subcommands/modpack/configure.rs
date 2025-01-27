@@ -1,5 +1,5 @@
 use super::check_output_directory;
-use crate::file_picker::pick_folder;
+use crate::file_picker::pick_file;
 use anyhow::Result;
 use colored::Colorize as _;
 use inquire::Confirm;
@@ -18,10 +18,11 @@ pub fn configure(
             modpack.output_dir = output_dir;
         }
         None => {
-            if let Some(dir) = pick_folder(
+            if let Some(dir) = pick_file(
                 &modpack.output_dir,
                 "Pick an output directory",
                 "Output Directory",
+                true,
                 no_gui_mode,
             )? {
                 check_output_directory(&dir, no_gui_mode)?;

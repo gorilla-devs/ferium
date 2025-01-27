@@ -1,5 +1,5 @@
 use super::check_output_directory;
-use crate::{file_picker::pick_folder, TICK};
+use crate::{file_picker::pick_file, TICK};
 use anyhow::{Context as _, Result};
 use colored::Colorize as _;
 use inquire::Confirm;
@@ -24,10 +24,11 @@ pub async fn curseforge(
     println!("Where should the modpack be installed to?");
     let output_dir = match output_dir {
         Some(some) => some,
-        None => pick_folder(
+        None => pick_file(
             get_minecraft_dir(),
             "Pick an output directory",
             "Output Directory",
+            true,
             no_gui_mode,
         )?
         .context("Please pick an output directory")?,
@@ -72,10 +73,11 @@ pub async fn modrinth(
     println!("Where should the modpack be installed to?");
     let output_dir = match output_dir {
         Some(some) => some,
-        None => pick_folder(
+        None => pick_file(
             get_minecraft_dir(),
             "Pick an output directory",
             "Output Directory",
+            true,
             no_gui_mode,
         )?
         .context("Please pick an output directory")?,

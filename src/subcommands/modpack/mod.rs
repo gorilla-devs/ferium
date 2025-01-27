@@ -10,7 +10,7 @@ pub use info::info;
 pub use switch::switch;
 pub use upgrade::upgrade;
 
-use crate::file_picker::pick_folder;
+use crate::file_picker::pick_file;
 use anyhow::{ensure, Context as _, Result};
 use fs_extra::dir::{copy, CopyOptions};
 use inquire::Confirm;
@@ -43,10 +43,11 @@ pub fn check_output_directory(output_dir: &Path, no_gui_mode: Option<bool>) -> R
                 .prompt()
                 .unwrap_or_default()
             {
-                let backup_dir = pick_folder(
+                let backup_dir = pick_file(
                     &*HOME,
                     "Where should the backup be made?",
                     "Output Directory",
+                    true,
                     no_gui_mode,
                 )?
                 .context("Please pick an output directory")?;

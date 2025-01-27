@@ -4,11 +4,17 @@ use anyhow::{bail, Result};
 use inquire::{validator::{ErrorMessage, Validation}, Confirm, Text};
 use libium::{config::{self, structs::{Config, ProfileItem}}, get_minecraft_dir};
 
-use crate::file_picker::{pick_folder, pick_file};
+use crate::file_picker::pick_file;
 
 use super::check_output_directory;
 
-pub async fn import(config: &mut Config, name: Option<String>, path: Option<PathBuf>, output_dir: Option<PathBuf>) -> Result<()> {
+pub async fn import(
+    config: &mut Config,
+    name: Option<String>,
+    path: Option<PathBuf>,
+    output_dir: Option<PathBuf>,
+    no_gui_mode: Option<bool>,
+) -> Result<()> {
     let path = if let Some(path) = path {
         path
     } else {
@@ -16,7 +22,9 @@ pub async fn import(config: &mut Config, name: Option<String>, path: Option<Path
         if let Some(path) = pick_file(
             current_dir()?,
             "Pick the profile to import",
-            "Profile"
+            "Profile",
+            false,
+            no_gui_mode,
         )? {
             path.canonicalize()?
         } else {
@@ -40,12 +48,14 @@ pub async fn import(config: &mut Config, name: Option<String>, path: Option<Path
             .prompt()
             .unwrap_or_default()
         {
-            if let Some(dir) = pick_folder(
+            if let Some(dir) = pick_file(
                 &selected_mods_dir,
                 "Pick an output directory",
                 "Output Directory",
+                true,
+                no_gui_mode,
             )? {
-                check_output_directory(&dir).await?;
+                check_output_directory(&dir, no_gui_mode).await?;
                 selected_mods_dir = dir;
             };
         };

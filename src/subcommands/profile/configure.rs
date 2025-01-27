@@ -1,5 +1,5 @@
 use super::{check_output_directory, pick_minecraft_versions, pick_mod_loader};
-use crate::file_picker::pick_folder;
+use crate::file_picker::pick_file;
 use anyhow::{Context as _, Result};
 use inquire::{Select, Text};
 use libium::config::{filters::ProfileParameters as _, structs::{ModLoader, Profile, ProfileItem}};
@@ -60,10 +60,11 @@ pub async fn configure(
         {
             match selection.index {
                 0 => {
-                    if let Some(dir) = pick_folder(
+                    if let Some(dir) = pick_file(
                         &profile_item.output_dir,
                         "Pick an output directory",
                         "Output Directory",
+                        true,
                         no_gui_mode,
                     )? {
                         check_output_directory(&dir, no_gui_mode).await?;

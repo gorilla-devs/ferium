@@ -11,7 +11,7 @@ pub use info::info;
 pub use switch::switch;
 pub use import::import;
 
-use crate::file_picker::pick_folder;
+use crate::file_picker::pick_file;
 use anyhow::{ensure, Context as _, Result};
 use colored::{ColoredString, Colorize as _};
 use ferinth::Ferinth;
@@ -117,10 +117,11 @@ pub async fn check_output_directory(output_dir: &PathBuf, no_gui_mode: Option<bo
             .prompt()
             .unwrap_or_default()
         {
-            let backup_dir = pick_folder(
+            let backup_dir = pick_file(
                 &*HOME,
                 "Where should the backup be made?",
                 "Output Directory",
+                true,
                 no_gui_mode,
             )?
             .context("Please pick a backup directory")?;
