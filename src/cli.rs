@@ -59,6 +59,10 @@ pub enum SubCommands {
         #[clap(long, short, visible_alias = "override")]
         force: bool,
 
+        /// Pin a mod to a specific version
+        #[clap(long, short, visible_alias = "lock")]
+        pin: Option<String>,
+
         #[command(flatten)]
         filters: FilterArguments,
     },
@@ -252,7 +256,7 @@ pub enum ModpackSubCommands {
 #[derive(Clone, Default, Debug, Args)]
 #[group(id = "loader", multiple = false)]
 pub struct FilterArguments {
-    #[clap(long, short = 'p')]
+    #[clap(long)]
     pub override_profile: bool,
 
     #[clap(long, short = 'l', group = "loader")]

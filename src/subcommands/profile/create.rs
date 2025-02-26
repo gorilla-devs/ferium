@@ -55,7 +55,7 @@ pub async fn create(
                 )? {
                     check_output_directory(&dir).await?;
                     selected_mods_dir = dir;
-                };
+                }
             }
 
             let profiles = config.profiles.clone();

@@ -25,7 +25,7 @@ mod subcommands;
 #[cfg(test)]
 mod tests;
 
-use anyhow::{anyhow, bail, ensure, Result};
+use anyhow::{anyhow, bail, ensure, Context as _, Result};
 use clap::{CommandFactory, Parser};
 use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
 use colored::{ColoredString, Colorize};
@@ -210,27 +210,53 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
         SubCommands::Add {
             identifiers,
             force,
+            pin,
             filters,
         } => {
             let profile = get_active_profile(&mut config)?;
             let override_profile = filters.override_profile;
             let filters: Vec<_> = filters.into();
 
-            if identifiers.len() > 1 && !filters.is_empty() {
-                bail!("Only configure filters when adding a single mod!")
-            }
+            ensure!(
+                // If filters are specified, there should only be one mod
+                filters.is_empty() || identifiers.len() == 1,
+                "You can only configure filters when adding a single mod!"
+            );
+            ensure!(
+                // If a pin is specified, there should only be one mod
+                pin.is_none() || identifiers.len() == 1,
+                "You can only pin a version when adding a single mod!"
+            );
 
-            let (successes, failures) = libium::add(
-                profile,
+            let identifiers = if let Some(pin) = pin {
+                let id = libium::add::parse_id(identifiers[0].clone());
+                vec![match id {
+                    ModIdentifier::CurseForgeProject(project_id) => {
+                        ModIdentifier::PinnedCurseForgeProject(
+                            project_id,
+                            pin.parse().context("Invalid file ID for CurseForge file")?,
+                        )
+                    }
+                    ModIdentifier::ModrinthProject(project_id) => {
+                        ModIdentifier::PinnedModrinthProject(project_id, pin)
+                    }
+                    ModIdentifier::GitHubRepository(owner, repo) => {
+                        ModIdentifier::PinnedGitHubRepository(
+                            (owner, repo),
+                            pin.parse().context("Invalid asset ID for GitHub")?,
+                        )
+                    }
+                    _ => unreachable!(),
+                }]
+            } else {
                 identifiers
                     .into_iter()
                     .map(libium::add::parse_id)
-                    .collect_vec(),
-                !force,
-                override_profile,
-                filters,
-            )
-            .await?;
+                    .collect_vec()
+            };
+
+            let (successes, failures) =
+                libium::add(profile, identifiers, !force, override_profile, filters).await?;
 
             did_add_fail = add::display_successes_failures(&successes, failures);
         }
@@ -348,7 +374,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                 ModpackSubCommands::Upgrade => {
                     subcommands::modpack::upgrade(get_active_modpack(&mut config)?).await?;
                 }
-            };
+            }
             if default_flag {
                 println!(
                     "{} ferium modpack help {}",
@@ -419,7 +445,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                 ProfileSubCommands::Switch { profile_name } => {
                     subcommands::profile::switch(&mut config, profile_name)?;
                 }
-            };
+            }
             if default_flag {
                 println!(
                     "{} ferium profile help {}",
@@ -438,7 +464,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             check_empty_profile(profile)?;
             subcommands::upgrade(profile).await?;
         }
-    };
+    }
 
     config.profiles.iter_mut().for_each(|profile| {
         profile

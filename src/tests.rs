@@ -152,6 +152,7 @@ async fn add_modrinth() {
             SubCommands::Add {
                 identifiers: vec!["starlight".to_owned()],
                 force: false,
+                pin: None,
                 filters: FilterArguments::default(),
             },
             Some("empty_profile"),
@@ -168,6 +169,7 @@ async fn add_curseforge() {
             SubCommands::Add {
                 identifiers: vec!["591388".to_owned()],
                 force: false,
+                pin: None,
                 filters: FilterArguments::default(),
             },
             Some("empty_profile"),
@@ -184,6 +186,7 @@ async fn add_github() {
             SubCommands::Add {
                 identifiers: vec!["CaffeineMC/sodium".to_owned()],
                 force: false,
+                pin: None,
                 filters: FilterArguments::default(),
             },
             Some("empty_profile"),
@@ -204,6 +207,7 @@ async fn add_all() {
                     "CaffeineMC/sodium".to_owned()
                 ],
                 force: false,
+                pin: None,
                 filters: FilterArguments::default(),
             },
             Some("empty_profile"),
@@ -224,6 +228,7 @@ async fn already_added() {
                     "CaffeineMC/sodium".to_owned()
                 ],
                 force: false,
+                pin: None,
                 filters: FilterArguments::default(),
             },
             Some("one_profile_full"),
