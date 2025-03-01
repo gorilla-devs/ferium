@@ -44,12 +44,17 @@ use std::{
     process::ExitCode,
     sync::{LazyLock, OnceLock},
 };
+use tokio::sync::Semaphore;
 
 const CROSS: &str = "×";
 static TICK: LazyLock<ColoredString> = LazyLock::new(|| "✓".green());
 
-pub static SEMAPHORE: OnceLock<tokio::sync::Semaphore> = OnceLock::new();
-pub const DEFAULT_PARALLEL_NETWORK: usize = 50;
+pub const DEFAULT_PARALLEL_TASKS: usize = 50;
+pub static SEMAPHORE: OnceLock<Semaphore> = OnceLock::new();
+#[must_use]
+pub const fn default_semaphore() -> Semaphore {
+    Semaphore::const_new(DEFAULT_PARALLEL_TASKS)
+}
 
 /// Indicatif themes
 #[expect(clippy::expect_used)]
@@ -149,7 +154,8 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             set_var("CURSEFORGE_API_KEY", key);
         }
     }
-    let _ = SEMAPHORE.set(tokio::sync::Semaphore::new(cli_app.parallel_network));
+
+    let _ = SEMAPHORE.set(Semaphore::new(cli_app.parallel_tasks));
 
     let config_path = &cli_app
         .config_file

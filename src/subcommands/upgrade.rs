@@ -1,6 +1,7 @@
 use crate::{
+    default_semaphore,
     download::{clean, download},
-    CROSS, DEFAULT_PARALLEL_NETWORK, SEMAPHORE, STYLE_NO, TICK,
+    CROSS, SEMAPHORE, STYLE_NO, TICK,
 };
 use anyhow::{anyhow, bail, Result};
 use colored::Colorize as _;
@@ -19,7 +20,7 @@ use std::{
     sync::{mpsc, Arc},
     time::Duration,
 };
-use tokio::{sync::Semaphore, task::JoinSet};
+use tokio::task::JoinSet;
 
 /// Get the latest compatible downloadable for the mods in `profile`
 ///
@@ -76,10 +77,7 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
             let progress_bar = Arc::clone(&progress_bar);
 
             tasks.spawn(async move {
-                let permit = SEMAPHORE
-                    .get_or_init(|| Semaphore::new(DEFAULT_PARALLEL_NETWORK))
-                    .acquire()
-                    .await?;
+            let permit = SEMAPHORE.get_or_init(default_semaphore).acquire().await?;
 
                 let result = mod_.fetch_download_file(filters).await;
 

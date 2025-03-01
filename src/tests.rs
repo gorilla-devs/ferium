@@ -15,7 +15,7 @@ use std::{
 const DEFAULT: Ferium = Ferium {
     subcommand: SubCommands::Profile { subcommand: None },
     threads: None,
-    parallel_network: 10,
+    parallel_tasks: 10,
     github_token: None,
     curseforge_api_key: None,
     config_file: None,

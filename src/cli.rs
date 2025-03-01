@@ -1,6 +1,6 @@
 #![deny(missing_docs)]
 
-use crate::DEFAULT_PARALLEL_NETWORK;
+use crate::DEFAULT_PARALLEL_TASKS;
 use clap::{Args, Parser, Subcommand, ValueEnum, ValueHint};
 use clap_complete::Shell;
 use libium::config::{
@@ -18,9 +18,9 @@ pub struct Ferium {
     /// You can also use the environment variable `TOKIO_WORKER_THREADS`.
     #[clap(long, short)]
     pub threads: Option<usize>,
-    /// Specify the maximum number of parallel network requests to perform.
-    #[clap(long, short = 'p', default_value_t = DEFAULT_PARALLEL_NETWORK)]
-    pub parallel_network: usize,
+    /// Specify the maximum number of simultaneous parallel tasks.
+    #[clap(long, short = 'p', default_value_t = DEFAULT_PARALLEL_TASKS)]
+    pub parallel_tasks: usize,
     /// Set a GitHub personal access token for increasing the GitHub API rate limit.
     #[clap(long, visible_alias = "gh", env = "GITHUB_TOKEN")]
     pub github_token: Option<String>,

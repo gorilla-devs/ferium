@@ -1,4 +1,4 @@
-use crate::{DEFAULT_PARALLEL_NETWORK, SEMAPHORE, STYLE_BYTE, TICK};
+use crate::{default_semaphore, SEMAPHORE, STYLE_BYTE, TICK};
 use anyhow::{anyhow, bail, Error, Result};
 use colored::Colorize as _;
 use fs_extra::{
@@ -15,7 +15,7 @@ use std::{
     sync::Arc,
     time::Duration,
 };
-use tokio::{sync::Semaphore, task::JoinSet};
+use tokio::task::JoinSet;
 
 /// Check the given `directory`
 ///
@@ -118,10 +118,7 @@ pub async fn download(
         let output_dir = output_dir.clone();
 
         tasks.spawn(async move {
-            let _permit = SEMAPHORE
-                .get_or_init(|| Semaphore::new(DEFAULT_PARALLEL_NETWORK))
-                .acquire()
-                .await?;
+            let _permit = SEMAPHORE.get_or_init(default_semaphore).acquire().await?;
 
             let (length, filename) = downloadable
                 .download(client, &output_dir, |additional| {
