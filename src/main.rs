@@ -9,10 +9,10 @@
     clippy::complexity,
     clippy::create_dir,
     clippy::unwrap_used,
-    clippy::expect_used, // use anyhow::Context instead
     clippy::correctness,
-    clippy::allow_attributes,
+    clippy::allow_attributes
 )]
+#![deny(clippy::expect_used, reason = "Use anyhow::Context instead")]
 #![warn(clippy::dbg_macro)]
 #![expect(clippy::multiple_crate_versions, clippy::too_many_lines)]
 
@@ -140,10 +140,14 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
     }
 
     if let Some(token) = cli_app.github_token {
-        set_var("GITHUB_TOKEN", token);
+        if !token.is_empty() {
+            set_var("GITHUB_TOKEN", token);
+        }
     }
     if let Some(key) = cli_app.curseforge_api_key {
-        set_var("CURSEFORGE_API_KEY", key);
+        if !key.is_empty() {
+            set_var("CURSEFORGE_API_KEY", key);
+        }
     }
     let _ = SEMAPHORE.set(tokio::sync::Semaphore::new(cli_app.parallel_network));
 

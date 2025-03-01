@@ -11,7 +11,6 @@ use std::path::PathBuf;
 
 #[derive(Clone, Debug, Parser)]
 #[clap(author, version, about)]
-#[clap(arg_required_else_help = true)]
 pub struct Ferium {
     #[clap(subcommand)]
     pub subcommand: SubCommands,
@@ -23,12 +22,10 @@ pub struct Ferium {
     #[clap(long, short = 'p', default_value_t = DEFAULT_PARALLEL_NETWORK)]
     pub parallel_network: usize,
     /// Set a GitHub personal access token for increasing the GitHub API rate limit.
-    /// You can also use the environment variable `GITHUB_TOKEN`.
-    #[clap(long, visible_alias = "gh")]
+    #[clap(long, visible_alias = "gh", env = "GITHUB_TOKEN")]
     pub github_token: Option<String>,
     /// Set a custom Curseforge API key.
-    /// You can also use the environment variable `CURSEFORGE_API_KEY`.
-    #[clap(long, visible_alias = "cf")]
+    #[clap(long, visible_alias = "cf", env = "CURSEFORGE_API_KEY")]
     pub curseforge_api_key: Option<String>,
     /// Set the file to read the config from.
     /// This does not change the `cache` and `tmp` directories.
