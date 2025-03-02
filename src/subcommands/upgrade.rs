@@ -27,7 +27,6 @@ use tokio::task::JoinSet;
 /// If an error occurs with a resolving task, instead of failing immediately,
 /// resolution will continue and the error return flag is set to true.
 pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<DownloadData>, bool)> {
-    let to_download = Arc::new(Mutex::new(Vec::new()));
     let progress_bar = Arc::new(Mutex::new(ProgressBar::new(0).with_style(STYLE_NO.clone())));
     let mut tasks = JoinSet::new();
     let mut done_mods = Vec::new();
@@ -73,11 +72,10 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
 
             let filters = profile.filters.clone();
             let dep_sender = Arc::clone(&mod_sender);
-            let to_download = Arc::clone(&to_download);
             let progress_bar = Arc::clone(&progress_bar);
 
             tasks.spawn(async move {
-            let permit = SEMAPHORE.get_or_init(default_semaphore).acquire().await?;
+                let permit = SEMAPHORE.get_or_init(default_semaphore).acquire().await?;
 
                 let result = mod_.fetch_download_file(filters).await;
 
@@ -114,8 +112,7 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
                                 false,
                             ))?;
                         }
-                        to_download.lock().push(download_file);
-                        Ok(true)
+                        Ok(Some(download_file))
                     }
                     Err(err) => {
                         if let mod_downloadable::Error::ModrinthError(
@@ -130,29 +127,28 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
                             "{}",
                             format!("{CROSS} {:pad_len$}  {err}", mod_.name).red()
                         ));
-                        Ok(false)
+                        Ok(None)
                     }
                 }
             });
         }
     }
 
-    let error = tasks
-        .join_all()
-        .await
-        .iter()
-        .any(|r| matches!(r, Ok(false)));
-
     Arc::try_unwrap(progress_bar)
         .map_err(|_| anyhow!("Failed to run threads to completion"))?
         .into_inner()
         .finish_and_clear();
-    Ok((
-        Arc::try_unwrap(to_download)
-            .map_err(|_| anyhow!("Failed to run threads to completion"))?
-            .into_inner(),
-        error,
-    ))
+
+    let tasks = tasks
+        .join_all()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>>>()?;
+
+    let error = tasks.iter().any(Option::is_none);
+    let to_download = tasks.into_iter().flatten().collect();
+
+    Ok((to_download, error))
 }
 
 pub async fn upgrade(profile: &Profile) -> Result<()> {
