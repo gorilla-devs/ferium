@@ -14,7 +14,7 @@ use tokio::task::JoinSet;
 enum Metadata {
     CF(Mod),
     MD(Project, Vec<TeamMember>),
-    GH(Repository, Vec<Release>),
+    GH(Box<Repository>, Vec<Release>),
 }
 impl Metadata {
     fn name(&self) -> &str {
@@ -100,7 +100,7 @@ pub async fn verbose(profile: &mut Profile, markdown: bool) -> Result<()> {
     }
     for res in tasks.join_all().await {
         let (repo, releases) = res?;
-        metadata.push(Metadata::GH(repo, releases.items));
+        metadata.push(Metadata::GH(Box::new(repo), releases.items));
     }
     metadata.sort_unstable_by_key(|e| e.name().to_lowercase());
 
