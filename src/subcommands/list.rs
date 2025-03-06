@@ -35,6 +35,14 @@ impl Metadata {
             }
         }
     }
+
+    fn slug(&self) -> &str {
+        match self {
+            Metadata::CF(p) => &p.slug,
+            Metadata::MD(p, _) => &p.slug,
+            Metadata::GH(p, _) => &p.name,
+        }
+    }
 }
 
 pub async fn verbose(profile: &mut Profile, markdown: bool) -> Result<()> {
@@ -101,12 +109,14 @@ pub async fn verbose(profile: &mut Profile, markdown: bool) -> Result<()> {
     }
 
     for project in &metadata {
-        profile
+        let mod_ = profile
             .mods
             .iter_mut()
             .find(|mod_| mod_.identifier == project.id())
-            .context("Could not find expected mod")?
-            .name = project.name().to_string();
+            .context("Could not find expected mod")?;
+
+        mod_.name = project.name().to_string();
+        mod_.slug = Some(project.slug().to_string());
 
         if markdown {
             match project {
