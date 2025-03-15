@@ -1,18 +1,18 @@
 name: Bug Report
-description: File a bug report.
-labels: ["bug"]
+description: Report behaviour that should not occur
+type: Bug
 body:
   - type: textarea
     attributes:
       label: Description
-      description: Describe the bug that occurs.
+      description: Describe the bug
     validations:
       required: true
 
   - type: textarea
     attributes:
-      label: Steps to reproduce
-      description: How can you reproduce this bug? You can also describe how you encountered the bug if you're unsure of how to make it happen again.
+      label: Steps to Reproduce
+      description: How do you reproduce this bug? You can also describe how you encountered the bug if you are unsure.
       placeholder: |
         For example:
         1. Run `ferium ...`
@@ -24,7 +24,8 @@ body:
   - type: dropdown
     attributes:
       label: Operating System
-      description: The operating system are you encountered the bug on.
+      description: The operating system you encountered the bug on
+      multiple: true
       options:
         - Windows
         - Linux
@@ -33,16 +34,32 @@ body:
     validations:
       required: true
 
-  - type: checkboxes
+  - type: dropdown
     attributes:
-      label: Are you using the latest version of ferium?
-      description: The bug you encountered might have been fixed in a newer version, make sure you have the [latest version](https://github.com/gorilla-devs/ferium/releases/latest).
+      label: Installation Method
+      description: How did you install ferium?
       options:
-        - label: I am using the latest version of ferium
-          required: true
+        - AUR (pacman)
+        - Homebrew
+        - winget
+        - Scoop
+        - Pacstall
+        - Nixpkgs
+        - LoaTcHi's overlay (Gentoo Portage)
+        - XBPS
+        - crates.io (`cargo install`)
+        - GitHub Releases (manually installed)
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Ferium version
+      description: What is the output of `ferium --version`?
+    validations:
+      required: true
 
   - type: textarea
     attributes:
       label: Additional Information
       description: Any additional information you would like to provide. You can even drop images or videos here.
-
