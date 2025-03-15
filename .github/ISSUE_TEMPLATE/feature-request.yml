@@ -1,6 +1,6 @@
 name: Feature Request
-description: Suggest a new feature for the project.
-labels: ["enhancement"]
+description: Suggest a new feature for the project
+type: Feature
 body:
   - type: textarea
     attributes:
@@ -16,9 +16,8 @@ body:
   - type: textarea
     attributes:
       label: Your Solution(s)
-      description: Have you thought of ways ferium can solve your problem? If so, share them here.
+      description: How could ferium solve your problem?
       placeholder: |
         For example:
         Ferium should do ...
         Instead of doing ..., ferium should ... instead.
-
