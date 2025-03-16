@@ -51,6 +51,10 @@ pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
                         }
                         _ => todo!(),
                     }
+                    || match &mod_.slug {
+                        Some(slug) => to_remove.eq_ignore_ascii_case(slug),
+                        None => false,
+                    }
             }) {
                 items_to_remove.push(index);
             } else {

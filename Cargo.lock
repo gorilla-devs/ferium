@@ -1468,7 +1468,7 @@ checksum = "875b3680cb2f8f71bdcf9a30f38d48282f5d3c95cbf9b3fa57269bb5d5c06828"
 [[package]]
 name = "libium"
 version = "1.32.0"
-source = "git+https://github.com/gorilla-devs/libium?rev=e043a6e17a475158a595cfcf1767ef81521d0587#e043a6e17a475158a595cfcf1767ef81521d0587"
+source = "git+https://github.com/gorilla-devs/libium?rev=425a043553f42e2872a70f193cd5042effce561a#425a043553f42e2872a70f193cd5042effce561a"
 dependencies = [
  "clap",
  "derive_more",
