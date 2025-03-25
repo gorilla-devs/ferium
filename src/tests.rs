@@ -512,6 +512,28 @@ async fn remove_id() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn remove_slug() {
+    // Load the slugs into the config first
+    let mut args = get_args(
+        SubCommands::List {
+            verbose: true,
+            markdown: false,
+        },
+        Some("two_profiles_one_empty"),
+    );
+    assert_matches!(actual_main(args.clone()).await, Ok(()));
+
+    args.subcommand = SubCommands::Remove {
+        mod_names: vec![
+            "starlight".to_owned(),
+            "incendium".to_owned(),
+            "sodium".to_owned(),
+        ],
+    };
+    assert_matches!(actual_main(args).await, Ok(()));
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn delete_profile() {
     assert_matches!(
         actual_main(get_args(
