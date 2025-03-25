@@ -14,7 +14,7 @@ use tokio::task::JoinSet;
 enum Metadata {
     CF(Mod),
     MD(Project, Vec<TeamMember>),
-    GH(Repository, Vec<Release>),
+    GH(Box<Repository>, Vec<Release>),
 }
 impl Metadata {
     fn name(&self) -> &str {
@@ -33,6 +33,14 @@ impl Metadata {
             Metadata::GH(p, _) => {
                 ModIdentifier::GitHubRepository(p.owner.clone().unwrap().login, p.name.clone())
             }
+        }
+    }
+
+    fn slug(&self) -> &str {
+        match self {
+            Metadata::CF(p) => &p.slug,
+            Metadata::MD(p, _) => &p.slug,
+            Metadata::GH(p, _) => &p.name,
         }
     }
 }
@@ -92,7 +100,7 @@ pub async fn verbose(profile: &mut Profile, markdown: bool) -> Result<()> {
     }
     for res in tasks.join_all().await {
         let (repo, releases) = res?;
-        metadata.push(Metadata::GH(repo, releases.items));
+        metadata.push(Metadata::GH(Box::new(repo), releases.items));
     }
     metadata.sort_unstable_by_key(|e| e.name().to_lowercase());
 
@@ -101,12 +109,14 @@ pub async fn verbose(profile: &mut Profile, markdown: bool) -> Result<()> {
     }
 
     for project in &metadata {
-        profile
+        let mod_ = profile
             .mods
             .iter_mut()
             .find(|mod_| mod_.identifier == project.id())
-            .context("Could not find expected mod")?
-            .name = project.name().to_string();
+            .context("Could not find expected mod")?;
+
+        mod_.name = project.name().to_string();
+        mod_.slug = Some(project.slug().to_string());
 
         if markdown {
             match project {
