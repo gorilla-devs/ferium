@@ -265,7 +265,10 @@ If ferium fails to download a mod, it will print its name in red and try to give
 
 You can list out all the mods in your current profile by running `ferium list`. If you want to see more information about them, you can use `ferium list -v` or `ferium list --verbose`.
 
-You can remove any of your mods using `ferium remove`; just select the ones you would like to remove using the space key, and press enter once you're done. You can also provide the names or IDs of the mods to remove as arguments.
+You can remove any of your mods using `ferium remove`; just select the ones you would like to remove using the space key, and press enter once you're done. You can also provide the names, IDs, or slugs of the mods as arguments.
+
+> [!TIP]
+> Older versions did not have the ability to remove mods by their slug, since it wasn't stored in the config. If you are upgrading from an older version, you will initially not be able to remove mods by their slugs. You can run `ferium list -v` to load the slugs into the profile.
 
 > [!IMPORTANT]
 > Both mod names and GitHub repository identifiers are case insensitive.  
