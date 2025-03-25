@@ -39,15 +39,14 @@ gui = ["rfd"]
 
 
 [dependencies]
-# Waiting for rfd to use ashpd 0.11, since older versions unnecessarily pull wayland dependencies
-rfd = { version = "0.14", optional = true, default-features = false, features = [
+rfd = { version = "0.15", optional = true, default-features = false, features = [
     "xdg-portal",
     "tokio",
 ] }
 reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls",
 ] }
-tokio = { version = "1.43", default-features = false, features = [
+tokio = { version = "1.44", default-features = false, features = [
     "rt-multi-thread",
     "macros",
 ] }
