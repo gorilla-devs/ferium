@@ -60,7 +60,7 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
 
             let mut tasks = JoinSet::new();
             let mut msg_shown = false;
-            for file in files {
+            for file in files.into_iter().flatten() {
                 match try_from_cf_file(file) {
                     Ok((_, mut downloadable)) => {
                         downloadable.output = PathBuf::from(

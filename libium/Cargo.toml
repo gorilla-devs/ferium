@@ -1,0 +1,39 @@
+[package]
+name = "libium"
+version = "1.32.0"
+edition = "2021"
+authors = [
+    "Ilesh Thiada (theRookieCoder) <ileshkt@gmail.com>",
+    "Daniel Hauck (SolidTux)",
+]
+description = "Multi-source backend for managing Minecraft mods and modpacks from Modrinth, CurseForge, and Github Releases"
+repository = "https://github.com/gorilla-devs/libium"
+readme = "README.md"
+license = "MPL-2.0"
+categories = ["games"]
+keywords = [
+    "minecraft",
+    "mod-manager",
+    "modrinth",
+    "curseforge",
+    "github-releases",
+]
+
+[dependencies]
+serde_json.workspace = true
+octocrab.workspace = true
+ferinth.workspace = true
+reqwest.workspace = true
+furse.workspace = true
+clap.workspace = true
+
+derive_more = { version = "2.0", features = ["display"] }
+serde = { version = "1.0", features = ["derive"] }
+url = { version = "2.5", features = ["serde"] }
+zip-extensions = "0.8"
+futures-util = "0.3"
+thiserror = "2.0"
+regex = "1.11"
+sha1 = "0.10"
+home = "0.5"
+zip = "2.5"
