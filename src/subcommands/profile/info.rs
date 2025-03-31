@@ -9,7 +9,11 @@ pub fn info(profile: &Profile, active: bool) {
         "{}{}
         \r  Output directory:   {}{}{}
         \r  Mods:               {}\n",
-        profile.name.bold(),
+        if active {
+            profile.name.bold().italic()
+        } else {
+            profile.name.bold()
+        },
         if active { " *" } else { "" },
         profile.output_dir.display().to_string().blue().underline(),
         profile
