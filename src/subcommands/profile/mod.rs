@@ -23,15 +23,13 @@ use std::{
 
 #[expect(clippy::unwrap_used, reason = "All variants are present")]
 pub fn pick_mod_loader(default: Option<&ModLoader>) -> Result<ModLoader> {
-    let options = vec![
+    let options = [
         ModLoader::Fabric,
         ModLoader::Quilt,
         ModLoader::NeoForge,
         ModLoader::Forge,
     ];
-    let mut picker = Select::new("Which mod loader do you use?", options.clone())
-        .without_filtering()
-        .without_help_message();
+    let mut picker = Select::new("Which mod loader do you use?", options.into());
     if let Some(default) = default {
         picker.starting_cursor = options.iter().position(|l| l == default).unwrap();
     }
