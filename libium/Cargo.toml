@@ -7,7 +7,7 @@ authors = [
     "Daniel Hauck (SolidTux)",
 ]
 description = "Multi-source backend for managing Minecraft mods and modpacks from Modrinth, CurseForge, and Github Releases"
-repository = "https://github.com/gorilla-devs/libium"
+repository = "https://github.com/gorilla-devs/ferium/tree/main/libium"
 readme = "README.md"
 license = "MPL-2.0"
 categories = ["games"]

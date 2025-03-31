@@ -140,7 +140,7 @@ cargo install ferium
 ## Overview / Help Page
 
 > [!NOTE]
-> A lot of ferium's backend is in a separate project; [libium](https://github.com/theRookieCoder/libium).  
+> A lot of ferium's backend is implemented in [libium](https://github.com/gorilla-devs/ferium/tree/main/libium).  
 > It deals with things such as the config, adding mod(pack)s, upgrading, file pickers, etc.
 
 ### Program Configuration
