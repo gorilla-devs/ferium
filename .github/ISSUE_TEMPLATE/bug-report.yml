@@ -49,6 +49,8 @@ body:
         - XBPS
         - crates.io (`cargo install`)
         - GitHub Releases (manually installed)
+        - Locally compiled
+        - GitHub Actions
     validations:
       required: true
 
