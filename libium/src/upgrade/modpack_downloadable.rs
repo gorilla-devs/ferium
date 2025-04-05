@@ -6,7 +6,8 @@ use std::{fs::create_dir_all, path::PathBuf};
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
 pub enum Error {
-    /// The user can manually download the modpack zip file and place it in `~/.config/ferium/.cache/` to mitigate this.
+    /// The user can manually download the modpack zip file and place it in `~/.config/ferium/.cache/`
+    /// (or `%APPDATA%\ferium\.cache` on Windows) to mitigate this.
     /// However, they will have to manually update the modpack file.
     DistributionDenied(#[from] DistributionDeniedError),
     ModrinthError(#[from] ferinth::Error),
@@ -32,6 +33,13 @@ impl ModpackIdentifier {
             }
         };
 
+        #[cfg(target_os = "windows")]
+        let cache_dir = HOME
+            .join("AppData")
+            .join("Roaming")
+            .join("ferium")
+            .join(".cache");
+        #[cfg(not(target_os = "windows"))]
         let cache_dir = HOME.join(".config").join("ferium").join(".cache");
         let modpack_path = cache_dir.join(&download_data.output);
         if !modpack_path.exists() {

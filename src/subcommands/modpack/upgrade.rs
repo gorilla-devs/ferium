@@ -113,6 +113,14 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
             );
 
             if modpack.install_overrides {
+                #[cfg(target_os = "windows")]
+                let tmp_dir = HOME
+                    .join("AppData")
+                    .join("Roaming")
+                    .join("ferium")
+                    .join(".tmp")
+                    .join(manifest.name);
+                #[cfg(not(target_os = "windows"))]
                 let tmp_dir = HOME
                     .join(".config")
                     .join("ferium")
@@ -142,6 +150,14 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
             );
 
             if modpack.install_overrides {
+                #[cfg(target_os = "windows")]
+                let tmp_dir = HOME
+                    .join("AppData")
+                    .join("Roaming")
+                    .join("ferium")
+                    .join(".tmp")
+                    .join(metadata.name);
+                #[cfg(not(target_os = "windows"))]
                 let tmp_dir = HOME
                     .join(".config")
                     .join("ferium")
