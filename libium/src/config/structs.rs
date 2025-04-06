@@ -61,7 +61,7 @@ pub struct Profile {
 }
 
 impl Profile {
-    /// A simple contructor that automatically deals with converting to filters
+    /// A simple constructor that automatically deals with converting to filters
     pub fn new(
         name: String,
         output_dir: PathBuf,

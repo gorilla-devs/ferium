@@ -107,7 +107,7 @@ fn main() -> ExitCode {
             {
                 eprintln!(
                     "{}",
-                    "Verify that you are connnected to the internet"
+                    "Verify that you are connected to the internet"
                         .yellow()
                         .bold()
                 );

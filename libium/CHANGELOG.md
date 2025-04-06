@@ -61,7 +61,7 @@ Added filters
 
 - Simplify error handling since custom catching of "not found" errors is no longer needed
 - Added a function to parse a string into either a curseforge, github, or modrinth identifier
-- Required information about projects is now sent batched to the relevent APIs
+- Required information about projects is now sent batched to the relevant APIs
 - GitHub batched queries use GraphQL
 - `github()`, `curseforge()`, and `modrinth()` do not perform any network requests, they solely use the data provided in their arguments
 - All of these functions now perform compatibility checks by themselves, again without any additional network requests
@@ -347,7 +347,7 @@ Change macOS default mods directory from using the `ApplicationSupport` shortcut
 
 - Replace the `for` loop in `check_mod_loader()` with an iterator call
 - The upgrade functions no longer deal with Quilt -> Fabric backwards compatibility
-- Upgrade functions (again) return only the compatibile asset they found
+- Upgrade functions (again) return only the compatible asset they found
 - Upgrade functions no longer take a `profile`, they check for compatibility with the `game_version_to_check` and `mod_loader_to_check` provided
 
 ## `1.10.0`
