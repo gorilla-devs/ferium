@@ -13,7 +13,7 @@ use libium::{
         read_file_from_zip, zip_extract,
     },
     upgrade::{from_modpack_file, try_from_cf_file, DistributionDeniedError, DownloadData},
-    CURSEFORGE_API, HOME,
+    CURSEFORGE_API,
 };
 use std::{
     fs::File,
@@ -113,16 +113,14 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
             );
 
             if modpack.install_overrides {
-                #[cfg(target_os = "windows")]
-                let tmp_dir = HOME
-                    .join("AppData")
-                    .join("Roaming")
+                #[cfg(target_os = "macos")]
+                let tmp_dir = libium::HOME
+                    .join(".config")
                     .join("ferium")
                     .join(".tmp")
                     .join(manifest.name);
-                #[cfg(not(target_os = "windows"))]
-                let tmp_dir = HOME
-                    .join(".config")
+                #[cfg(not(target_os = "macos"))]
+                let tmp_dir = libium::CONFIG
                     .join("ferium")
                     .join(".tmp")
                     .join(manifest.name);
@@ -150,16 +148,14 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
             );
 
             if modpack.install_overrides {
-                #[cfg(target_os = "windows")]
-                let tmp_dir = HOME
-                    .join("AppData")
-                    .join("Roaming")
+                #[cfg(target_os = "macos")]
+                let tmp_dir = libium::HOME
+                    .join(".config")
                     .join("ferium")
                     .join(".tmp")
                     .join(metadata.name);
-                #[cfg(not(target_os = "windows"))]
-                let tmp_dir = HOME
-                    .join(".config")
+                #[cfg(not(target_os = "macos"))]
+                let tmp_dir = libium::CONFIG
                     .join("ferium")
                     .join(".tmp")
                     .join(metadata.name);

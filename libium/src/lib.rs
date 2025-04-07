@@ -37,23 +37,27 @@ pub static MODRINTH_API: LazyLock<ferinth::Ferinth> = LazyLock::new(|| {
 });
 
 pub static HOME: LazyLock<PathBuf> =
-    LazyLock::new(|| home::home_dir().expect("Could not get user's home directory"));
+    LazyLock::new(|| dirs::home_dir().expect("Could not get user's home directory"));
+
+pub static CONFIG: LazyLock<PathBuf> =
+    LazyLock::new(|| dirs::config_dir().expect("Could not get user's config directory"));
 
 /// Gets the default Minecraft instance directory based on the current compilation `target_os`
-///
-/// If the `target_os` doesn't match `"macos"`, `"linux"`, or `"windows"`, this function will not compile.
 pub fn get_minecraft_dir() -> PathBuf {
-    #[cfg(target_os = "windows")]
-    return HOME.join("AppData").join("Roaming").join(".minecraft");
-
     #[cfg(target_os = "macos")]
-    return HOME
-        .join("Library")
-        .join("Application Support")
-        .join("minecraft");
+    {
+        CONFIG.join("minecraft")
+    }
 
-    #[cfg(target_os = "linux")]
-    return HOME.join(".minecraft");
+    #[cfg(target_os = "windows")]
+    {
+        CONFIG.join(".minecraft")
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    {
+        HOME.join(".minecraft")
+    }
 }
 
 /// Read `source` and return the data as a string

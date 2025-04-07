@@ -1,5 +1,5 @@
 use super::{from_mr_version, try_from_cf_file, DistributionDeniedError};
-use crate::{config::structs::ModpackIdentifier, CURSEFORGE_API, HOME, MODRINTH_API};
+use crate::{config::structs::ModpackIdentifier, CURSEFORGE_API, MODRINTH_API};
 use reqwest::Client;
 use std::{fs::create_dir_all, path::PathBuf};
 
@@ -33,14 +33,10 @@ impl ModpackIdentifier {
             }
         };
 
-        #[cfg(target_os = "windows")]
-        let cache_dir = HOME
-            .join("AppData")
-            .join("Roaming")
-            .join("ferium")
-            .join(".cache");
-        #[cfg(not(target_os = "windows"))]
-        let cache_dir = HOME.join(".config").join("ferium").join(".cache");
+        #[cfg(target_os = "macos")]
+        let cache_dir = crate::HOME.join(".config").join("ferium").join(".cache");
+        #[cfg(not(target_os = "macos"))]
+        let cache_dir = crate::CONFIG.join("ferium").join(".cache");
         let modpack_path = cache_dir.join(&download_data.output);
         if !modpack_path.exists() {
             create_dir_all(&cache_dir)?;
