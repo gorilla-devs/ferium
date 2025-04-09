@@ -9,10 +9,18 @@ use std::{
 };
 
 pub static DEFAULT_CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    crate::HOME
-        .join(".config")
-        .join("ferium")
-        .join("config.json")
+    #[cfg(target_os = "macos")]
+    {
+        crate::HOME
+            .join(".config")
+            .join("ferium")
+            .join("config.json")
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        crate::CONFIG.join("ferium").join("config.json")
+    }
 });
 
 /// Open the config file at `path` and deserialise it into a config struct

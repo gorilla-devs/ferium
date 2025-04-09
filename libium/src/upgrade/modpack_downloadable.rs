@@ -1,12 +1,13 @@
 use super::{from_mr_version, try_from_cf_file, DistributionDeniedError};
-use crate::{config::structs::ModpackIdentifier, CURSEFORGE_API, HOME, MODRINTH_API};
+use crate::{config::structs::ModpackIdentifier, CURSEFORGE_API, MODRINTH_API};
 use reqwest::Client;
 use std::{fs::create_dir_all, path::PathBuf};
 
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
 pub enum Error {
-    /// The user can manually download the modpack zip file and place it in `~/.config/ferium/.cache/` to mitigate this.
+    /// The user can manually download the modpack zip file and place it in `~/.config/ferium/.cache/`
+    /// (or `%APPDATA%\ferium\.cache` on Windows) to mitigate this.
     /// However, they will have to manually update the modpack file.
     DistributionDenied(#[from] DistributionDeniedError),
     ModrinthError(#[from] ferinth::Error),
@@ -32,7 +33,10 @@ impl ModpackIdentifier {
             }
         };
 
-        let cache_dir = HOME.join(".config").join("ferium").join(".cache");
+        #[cfg(target_os = "macos")]
+        let cache_dir = crate::HOME.join(".config").join("ferium").join(".cache");
+        #[cfg(not(target_os = "macos"))]
+        let cache_dir = crate::CONFIG.join("ferium").join(".cache");
         let modpack_path = cache_dir.join(&download_data.output);
         if !modpack_path.exists() {
             create_dir_all(&cache_dir)?;
