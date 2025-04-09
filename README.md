@@ -145,7 +145,7 @@ cargo install ferium
 
 ### Program Configuration
 
-Ferium stores profile and modpack information in its config file. By default, this is located at `~/.config/ferium/config.json`.  
+Ferium stores profile and modpack information in its config file. By default, this is located at `~/.config/ferium/config.json` on Linux, `%LOCALAPPDATA%/ferium/config/config.json` on Windows, and `~/Library/Application Support/ferium/config.json` on macOS.  
 You can change this in 2 ways, setting the `FERIUM_CONFIG_FILE` environment variable, or setting the `--config-file` global flag.
 The flag always takes precedence.
 

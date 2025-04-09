@@ -7,6 +7,7 @@ pub mod upgrade;
 pub mod version_ext;
 
 pub use add::add;
+use directories::{BaseDirs, ProjectDirs};
 pub use scan::scan;
 
 use std::{path::PathBuf, sync::LazyLock};
@@ -36,27 +37,28 @@ pub static MODRINTH_API: LazyLock<ferinth::Ferinth> = LazyLock::new(|| {
     .expect("Could not build Modrinth client") // This should never fail since no `authorisation` token was provided
 });
 
-pub static HOME: LazyLock<PathBuf> =
-    LazyLock::new(|| dirs::home_dir().expect("Could not get user's home directory"));
+pub static PROJECT_DIRS: LazyLock<ProjectDirs> = LazyLock::new(|| {
+    ProjectDirs::from("", "", "ferium").expect("Could not get OS specific directories")
+});
 
-pub static CONFIG: LazyLock<PathBuf> =
-    LazyLock::new(|| dirs::config_dir().expect("Could not get user's config directory"));
+pub static BASE_DIRS: LazyLock<BaseDirs> =
+    LazyLock::new(|| BaseDirs::new().expect("Could not get OS specific directories"));
 
 /// Gets the default Minecraft instance directory based on the current compilation `target_os`
 pub fn get_minecraft_dir() -> PathBuf {
     #[cfg(target_os = "macos")]
     {
-        CONFIG.join("minecraft")
+        BASE_DIRS.data_dir().join("minecraft")
     }
 
     #[cfg(target_os = "windows")]
     {
-        CONFIG.join(".minecraft")
+        BASE_DIRS.data_dir().join(".minecraft")
     }
 
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     {
-        HOME.join(".minecraft")
+        BASE_DIRS.home_dir().join(".minecraft")
     }
 }
 

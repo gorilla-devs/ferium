@@ -35,9 +35,9 @@ use libium::{
         self,
         filters::ProfileParameters as _,
         structs::{Config, ModIdentifier, Modpack, Profile},
-        DEFAULT_CONFIG_PATH,
     },
     iter_ext::IterExt as _,
+    PROJECT_DIRS,
 };
 use std::{
     env::{set_var, var_os},
@@ -160,7 +160,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
     let config_path = &cli_app
         .config_file
         .or_else(|| var_os("FERIUM_CONFIG_FILE").map(Into::into))
-        .unwrap_or(DEFAULT_CONFIG_PATH.clone());
+        .unwrap_or(PROJECT_DIRS.config_local_dir().join("config.json"));
     let mut config = config::read_config(config_path)?;
 
     let mut did_add_fail = false;

@@ -1,8 +1,9 @@
-use libium::HOME;
 use std::{
     io::Result,
     path::{Path, PathBuf},
 };
+
+use libium::BASE_DIRS;
 
 #[cfg(feature = "gui")]
 /// Uses the system file picker to pick a file, with a `default` path
@@ -38,7 +39,7 @@ pub fn pick_folder(
                 .components()
                 .map(|c| {
                     if c.as_os_str() == "~" {
-                        HOME.as_os_str()
+                        BASE_DIRS.home_dir().as_os_str()
                     } else {
                         c.as_os_str()
                     }

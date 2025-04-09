@@ -15,7 +15,7 @@ use colored::Colorize as _;
 use ferinth::Ferinth;
 use fs_extra::dir::{copy, CopyOptions};
 use inquire::{Confirm, MultiSelect, Select};
-use libium::{config::structs::ModLoader, iter_ext::IterExt as _, HOME};
+use libium::{config::structs::ModLoader, iter_ext::IterExt as _, BASE_DIRS};
 use std::{
     fs::{create_dir_all, read_dir},
     path::PathBuf,
@@ -109,7 +109,7 @@ pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
             .unwrap_or_default()
         {
             let backup_dir = pick_folder(
-                &*HOME,
+                &*BASE_DIRS.home_dir(),
                 "Where should the backup be made?",
                 "Output Directory",
             )?

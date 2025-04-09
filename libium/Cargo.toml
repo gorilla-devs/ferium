@@ -32,8 +32,8 @@ serde = { version = "1.0", features = ["derive"] }
 url = { version = "2.5", features = ["serde"] }
 zip-extensions = "0.8"
 futures-util = "0.3"
+directories = "6.0"
 thiserror = "2.0"
 regex = "1.11"
 sha1 = "0.10"
-dirs = "6.0"
 zip = "2.5"

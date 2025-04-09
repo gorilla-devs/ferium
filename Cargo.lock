@@ -558,10 +558,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "dirs"
+name = "directories"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3e8aa94d75141228480295a7d0e7feb620b1a5ad9f12bc40be62411e38cce4e"
+checksum = "16f5094c54661b38d03bd7e50df373292118db60b585c08a411c6d840017fe7d"
 dependencies = [
  "dirs-sys",
 ]
@@ -1385,7 +1385,7 @@ version = "1.32.0"
 dependencies = [
  "clap",
  "derive_more",
- "dirs",
+ "directories",
  "ferinth",
  "furse",
  "futures-util",
