@@ -7,9 +7,9 @@ pub mod upgrade;
 pub mod version_ext;
 
 pub use add::add;
-use directories::{BaseDirs, ProjectDirs};
 pub use scan::scan;
 
+use directories::{BaseDirs, ProjectDirs};
 use std::{path::PathBuf, sync::LazyLock};
 
 pub static GITHUB_API: LazyLock<octocrab::Octocrab> = LazyLock::new(|| {
