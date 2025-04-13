@@ -44,7 +44,7 @@ pub fn check_output_directory(output_dir: &Path) -> Result<()> {
                 .unwrap_or_default()
             {
                 let backup_dir = pick_folder(
-                    &*BASE_DIRS.home_dir(),
+                    BASE_DIRS.home_dir(),
                     "Where should the backup be made?",
                     "Output Directory",
                 )?

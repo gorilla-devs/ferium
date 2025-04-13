@@ -12,7 +12,7 @@ pub enum Error {
     ///
     /// Ferium cache path:
     /// - Windows: `%LOCALAPPDATA%/ferium/cache`
-    /// - Linux: `${XDG_CACHE_HOME}/.cache/ferium` or `~/.cache/ferium`
+    /// - Linux: `${XDG_CACHE_HOME}/ferium` or `~/.cache/ferium`
     /// - MacOS: `~/Library/Caches/ferium`
     DistributionDenied(#[from] DistributionDeniedError),
     ModrinthError(#[from] ferinth::Error),

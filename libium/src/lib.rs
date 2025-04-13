@@ -50,12 +50,10 @@ pub fn get_minecraft_dir() -> PathBuf {
     {
         BASE_DIRS.data_dir().join("minecraft")
     }
-
     #[cfg(target_os = "windows")]
     {
         BASE_DIRS.data_dir().join(".minecraft")
     }
-
     #[cfg(not(any(target_os = "macos", target_os = "windows")))]
     {
         BASE_DIRS.home_dir().join(".minecraft")

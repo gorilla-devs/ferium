@@ -170,7 +170,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
             }
             #[cfg(not(target_os = "macos"))]
             {
-                libium::PROJECT_DIRS.config_local_dir().join("config.json")
+                libium::PROJECT_DIRS.config_dir().join("config.json")
             }
         });
     let mut config = config::read_config(config_path)?;

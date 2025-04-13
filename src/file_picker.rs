@@ -1,9 +1,8 @@
+use libium::BASE_DIRS;
 use std::{
     io::Result,
     path::{Path, PathBuf},
 };
-
-use libium::BASE_DIRS;
 
 #[cfg(feature = "gui")]
 /// Uses the system file picker to pick a file, with a `default` path
