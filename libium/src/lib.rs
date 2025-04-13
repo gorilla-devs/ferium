@@ -37,12 +37,12 @@ pub static MODRINTH_API: LazyLock<ferinth::Ferinth> = LazyLock::new(|| {
     .expect("Could not build Modrinth client") // This should never fail since no `authorisation` token was provided
 });
 
+pub static BASE_DIRS: LazyLock<BaseDirs> =
+    LazyLock::new(|| BaseDirs::new().expect("Could not get OS specific directories"));
+
 pub static PROJECT_DIRS: LazyLock<ProjectDirs> = LazyLock::new(|| {
     ProjectDirs::from("", "", "ferium").expect("Could not get OS specific directories")
 });
-
-pub static BASE_DIRS: LazyLock<BaseDirs> =
-    LazyLock::new(|| BaseDirs::new().expect("Could not get OS specific directories"));
 
 /// Gets the default Minecraft instance directory based on the current compilation `target_os`
 pub fn get_minecraft_dir() -> PathBuf {
