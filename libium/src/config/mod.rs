@@ -1,19 +1,10 @@
 pub mod filters;
 pub mod structs;
-
 use std::{
     fs::{create_dir_all, File},
     io::{BufReader, Result},
-    path::{Path, PathBuf},
-    sync::LazyLock,
+    path::Path,
 };
-
-pub static DEFAULT_CONFIG_PATH: LazyLock<PathBuf> = LazyLock::new(|| {
-    crate::HOME
-        .join(".config")
-        .join("ferium")
-        .join("config.json")
-});
 
 /// Open the config file at `path` and deserialise it into a config struct
 pub fn read_config(path: impl AsRef<Path>) -> Result<structs::Config> {
