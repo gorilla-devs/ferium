@@ -12,8 +12,8 @@ use octocrab::models::{repos::Release, Repository};
 use tokio::task::JoinSet;
 
 enum Metadata {
-    CF(Mod),
-    MD(Project, Vec<TeamMember>),
+    CF(Box<Mod>),
+    MD(Box<Project>, Vec<TeamMember>),
     GH(Box<Repository>, Vec<Release>),
 }
 impl Metadata {
@@ -93,10 +93,10 @@ pub async fn verbose(profile: &mut Profile, markdown: bool) -> Result<()> {
 
     let mut metadata = Vec::new();
     for (project, members) in mr_projects.into_iter().zip(mr_teams_members) {
-        metadata.push(Metadata::MD(project, members));
+        metadata.push(Metadata::MD(Box::new(project), members));
     }
     for project in cf_projects {
-        metadata.push(Metadata::CF(project));
+        metadata.push(Metadata::CF(Box::new(project)));
     }
     for res in tasks.join_all().await {
         let (repo, releases) = res?;

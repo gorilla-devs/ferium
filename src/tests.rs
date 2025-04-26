@@ -33,7 +33,7 @@ fn get_args(subcommand: SubCommands, config_file: Option<&str>) -> Ferium {
     }
     Ferium {
         subcommand,
-        config_file: Some(running.into()),
+        config_file: Some(running),
         ..DEFAULT
     }
 }
