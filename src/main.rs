@@ -167,7 +167,7 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
         .unwrap_or({
             #[cfg(target_os = "macos")]
             {
-                old_default_config_path
+                old_default_config_path.clone()
             }
             #[cfg(not(target_os = "macos"))]
             {
