@@ -14,7 +14,7 @@ use crate::file_picker::pick_folder;
 use anyhow::{ensure, Context as _, Result};
 use fs_extra::dir::{copy, CopyOptions};
 use inquire::Confirm;
-use libium::HOME;
+use libium::BASE_DIRS;
 use std::{fs::read_dir, path::Path};
 
 pub fn check_output_directory(output_dir: &Path) -> Result<()> {
@@ -44,7 +44,7 @@ pub fn check_output_directory(output_dir: &Path) -> Result<()> {
                 .unwrap_or_default()
             {
                 let backup_dir = pick_folder(
-                    &*HOME,
+                    BASE_DIRS.home_dir(),
                     "Where should the backup be made?",
                     "Output Directory",
                 )?

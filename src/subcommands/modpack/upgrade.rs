@@ -13,7 +13,7 @@ use libium::{
         read_file_from_zip, zip_extract,
     },
     upgrade::{from_modpack_file, try_from_cf_file, DistributionDeniedError, DownloadData},
-    CURSEFORGE_API, HOME,
+    CURSEFORGE_API,
 };
 use std::{
     fs::File,
@@ -113,10 +113,9 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
             );
 
             if modpack.install_overrides {
-                let tmp_dir = HOME
-                    .join(".config")
-                    .join("ferium")
-                    .join(".tmp")
+                let tmp_dir = libium::PROJECT_DIRS
+                    .cache_dir()
+                    .join("extracted")
                     .join(manifest.name);
                 zip_extract(&modpack_filepath, &tmp_dir)?;
                 to_install = read_overrides(&tmp_dir.join(manifest.overrides))?;
@@ -142,10 +141,9 @@ pub async fn upgrade(modpack: &'_ Modpack) -> Result<()> {
             );
 
             if modpack.install_overrides {
-                let tmp_dir = HOME
-                    .join(".config")
-                    .join("ferium")
-                    .join(".tmp")
+                let tmp_dir = libium::PROJECT_DIRS
+                    .cache_dir()
+                    .join("extracted")
                     .join(metadata.name);
                 zip_extract(&modpack_filepath, &tmp_dir)?;
                 to_install = read_overrides(&tmp_dir.join("overrides"))?;
