@@ -28,7 +28,7 @@ impl ModpackIdentifier {
                 try_from_cf_file(CURSEFORGE_API.get_mod_files(*id).await?.swap_remove(0))?
             }
             ModpackIdentifier::ModrinthModpack(id) => {
-                from_mr_version(MODRINTH_API.list_versions(id).await?.swap_remove(0))
+                from_mr_version(MODRINTH_API.version_list(id).await?.swap_remove(0))
             }
         };
 

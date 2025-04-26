@@ -38,7 +38,7 @@ impl Mod {
                 Ok(try_from_cf_file(CURSEFORGE_API.get_mod_file(*mod_id, *pin).await?)?.1)
             }
             ModIdentifier::PinnedModrinthProject(_, pin) => {
-                Ok(from_mr_version(MODRINTH_API.get_version(pin).await?).1)
+                Ok(from_mr_version(MODRINTH_API.version_get(pin).await?).1)
             }
             ModIdentifier::PinnedGitHubRepository((owner, repo), pin) => Ok(from_gh_asset(
                 GITHUB_API
@@ -58,7 +58,7 @@ impl Mod {
                             .collect::<Result<Vec<_>>>()?
                     }
                     ModIdentifier::ModrinthProject(id) => MODRINTH_API
-                        .list_versions(id)
+                        .version_list(id)
                         .await?
                         .into_iter()
                         .map(from_mr_version)

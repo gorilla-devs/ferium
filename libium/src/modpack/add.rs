@@ -74,7 +74,7 @@ pub async fn curseforge(config: &Config, project_id: i32) -> Result<Mod> {
 ///
 /// Returns the project struct
 pub async fn modrinth(config: &Config, project_id: &str) -> Result<Project> {
-    let project = MODRINTH_API.get_project(project_id).await?;
+    let project = MODRINTH_API.project_get(project_id).await?;
 
     // Check if project has already been added
     if config.modpacks.iter().any(|modpack| {

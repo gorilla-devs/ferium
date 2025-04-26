@@ -74,14 +74,14 @@ pub async fn verbose(profile: &mut Profile, markdown: bool) -> Result<()> {
         vec![]
     } else {
         MODRINTH_API
-            .get_multiple_projects(&mr_ids.iter().map(AsRef::as_ref).collect_vec())
+            .project_get_multiple(&mr_ids.iter().map(AsRef::as_ref).collect_vec())
             .await?
     };
     let mr_teams_members = if mr_projects.is_empty() {
         vec![]
     } else {
         MODRINTH_API
-            .list_multiple_teams_members(&mr_projects.iter().map(|p| p.team.as_ref()).collect_vec())
+            .team_multiple_list_members(&mr_projects.iter().map(|p| p.team.as_ref()).collect_vec())
             .await?
     };
 

@@ -25,15 +25,13 @@ pub static CURSEFORGE_API: LazyLock<furse::Furse> = LazyLock::new(|| {
     )))
 });
 
-pub static MODRINTH_API: LazyLock<ferinth::Ferinth> = LazyLock::new(|| {
-    ferinth::Ferinth::new(
+pub static MODRINTH_API: LazyLock<ferinth::Ferinth<()>> = LazyLock::new(|| {
+    ferinth::Ferinth::<()>::new(
         "ferium",
         // TODO: option_env!("CARGO_PKG_VERSION"),
         None,
         Some("Discord: therookiecoder"),
-        None,
     )
-    .expect("Could not build Modrinth client") // This should never fail since no `authorisation` token was provided
 });
 
 pub static HOME: LazyLock<PathBuf> =

@@ -53,7 +53,7 @@ pub async fn scan(
 
     let (mr_results, cf_results) = try_join!(
         MODRINTH_API
-            .get_versions_from_hashes(mr_hashes.clone())
+            .version_get_from_multiple_hashes(mr_hashes.clone())
             .map_err(Error::from),
         CURSEFORGE_API
             .get_fingerprint_matches(cf_hashes.clone())

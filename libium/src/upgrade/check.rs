@@ -29,7 +29,7 @@ pub async fn get_version_groups() -> Result<&'static Vec<Vec<String>>> {
     if let Some(v) = VERSION_GROUPS.get() {
         Ok(v)
     } else {
-        let versions = MODRINTH_API.list_game_versions().await?;
+        let versions = MODRINTH_API.tag_list_game_versions().await?;
         let mut v = vec![vec![]];
         for version in versions {
             if version.version_type == GameVersionType::Release {
