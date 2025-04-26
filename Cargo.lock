@@ -3528,8 +3528,9 @@ dependencies = [
 
 [[package]]
 name = "zip-extensions"
-version = "0.8.1"
-source = "git+https://github.com/andriipopazov/zip-extensions-rs?rev=c3556d757574d4d00ee65a3f0c726b45ba44876f#c3556d757574d4d00ee65a3f0c726b45ba44876f"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "79cdbf826e5a6eec81fc5a0d33cd7c09c31fd8f9918f15434f74c42d39ef337a"
 dependencies = [
  "zip",
 ]

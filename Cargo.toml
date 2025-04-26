@@ -10,11 +10,6 @@ octocrab = "0.44"
 ferinth = "2.12"
 furse = "1.6"
 
-[patch.crates-io]
-# Fix https://github.com/matzefriedrich/zip-extensions-rs/pull/19
-zip-extensions = { git = "https://github.com/andriipopazov/zip-extensions-rs", rev = "c3556d757574d4d00ee65a3f0c726b45ba44876f" }
-
-
 [package]
 
 name = "ferium"
