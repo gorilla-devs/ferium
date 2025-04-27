@@ -1,5 +1,4 @@
-use crate::TICK;
-use anyhow::{Context as _, Result};
+use anyhow::{Context, Result};
 use colored::Colorize as _;
 use ferinth::structures::{project::Project, user::TeamMember};
 use furse::structures::mod_structs::Mod;
@@ -10,6 +9,8 @@ use libium::{
 };
 use octocrab::models::{repos::Release, Repository};
 use tokio::task::JoinSet;
+
+use crate::TICK;
 
 enum Metadata {
     CF(Box<Mod>),
@@ -53,11 +54,15 @@ pub async fn verbose(profile: &mut Profile, markdown: bool) -> Result<()> {
     let mut tasks = JoinSet::new();
     let mut mr_ids = Vec::new();
     let mut cf_ids = Vec::new();
+
     for mod_ in &profile.mods {
         match mod_.identifier.clone() {
-            ModIdentifier::CurseForgeProject(project_id) => cf_ids.push(project_id),
-            ModIdentifier::ModrinthProject(project_id) => mr_ids.push(project_id),
-            ModIdentifier::GitHubRepository(owner, repo) => {
+            ModIdentifier::CurseForgeProject(project_id)
+            | ModIdentifier::PinnedCurseForgeProject(project_id, _) => cf_ids.push(project_id),
+            ModIdentifier::ModrinthProject(project_id)
+            | ModIdentifier::PinnedModrinthProject(project_id, _) => mr_ids.push(project_id),
+            ModIdentifier::GitHubRepository(owner, repo)
+            | ModIdentifier::PinnedGitHubRepository((owner, repo), _) => {
                 let repo = GITHUB_API.repos(owner, repo);
                 tasks.spawn(async move {
                     Ok::<_, anyhow::Error>((
@@ -66,7 +71,6 @@ pub async fn verbose(profile: &mut Profile, markdown: bool) -> Result<()> {
                     ))
                 });
             }
-            _ => todo!(),
         }
     }
 

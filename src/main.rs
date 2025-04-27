@@ -25,6 +25,12 @@ mod subcommands;
 #[cfg(test)]
 mod tests;
 
+use std::{
+    env::{set_var, var_os},
+    process::ExitCode,
+    sync::{LazyLock, OnceLock},
+};
+
 use anyhow::{anyhow, bail, ensure, Context as _, Result};
 use clap::{CommandFactory, Parser};
 use cli::{Ferium, ModpackSubCommands, ProfileSubCommands, SubCommands};
@@ -37,11 +43,6 @@ use libium::{
         structs::{Config, ModIdentifier, Modpack, Profile},
     },
     iter_ext::IterExt as _,
-};
-use std::{
-    env::{set_var, var_os},
-    process::ExitCode,
-    sync::{LazyLock, OnceLock},
 };
 use tokio::sync::Semaphore;
 
@@ -319,19 +320,25 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                     println!(
                         "{:20}  {}",
                         match &mod_.identifier {
-                            ModIdentifier::CurseForgeProject(id) =>
+                            ModIdentifier::CurseForgeProject(id)
+                            | ModIdentifier::PinnedCurseForgeProject(id, _) =>
                                 format!("{} {:8}", "CF".red(), id.to_string().dimmed()),
-                            ModIdentifier::ModrinthProject(id) =>
+                            ModIdentifier::ModrinthProject(id)
+                            | ModIdentifier::PinnedModrinthProject(id, _) =>
                                 format!("{} {:8}", "MR".green(), id.dimmed()),
-                            ModIdentifier::GitHubRepository(..) => "GH".purple().to_string(),
-                            _ => todo!(),
+                            ModIdentifier::GitHubRepository(..)
+                            | ModIdentifier::PinnedGitHubRepository(..) =>
+                                "GH".purple().to_string(),
                         },
                         match &mod_.identifier {
                             ModIdentifier::ModrinthProject(_)
-                            | ModIdentifier::CurseForgeProject(_) => mod_.name.bold().to_string(),
-                            ModIdentifier::GitHubRepository(owner, repo) =>
+                            | ModIdentifier::CurseForgeProject(_)
+                            | ModIdentifier::PinnedCurseForgeProject(..)
+                            | ModIdentifier::PinnedModrinthProject(..) =>
+                                mod_.name.bold().to_string(),
+                            ModIdentifier::GitHubRepository(owner, repo)
+                            | ModIdentifier::PinnedGitHubRepository((owner, repo), _) =>
                                 format!("{}/{}", owner.dimmed(), repo.bold()),
-                            _ => todo!(),
                         },
                     );
                 }
