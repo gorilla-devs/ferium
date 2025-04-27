@@ -54,9 +54,14 @@ pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
             if let Some(index) = profile.mods.iter().position(|mod_| {
                 mod_.name.eq_ignore_ascii_case(&to_remove)
                     || match &mod_.identifier {
-                        ModIdentifier::CurseForgeProject(id) => id.to_string() == to_remove,
-                        ModIdentifier::ModrinthProject(id) => id == &to_remove,
-                        ModIdentifier::GitHubRepository(owner, name) => {
+                        ModIdentifier::CurseForgeProject(id)
+                        | ModIdentifier::PinnedCurseForgeProject(id, _) => {
+                            id.to_string() == to_remove
+                        }
+                        ModIdentifier::ModrinthProject(id)
+                        | ModIdentifier::PinnedModrinthProject(id, _) => id == &to_remove,
+                        ModIdentifier::GitHubRepository(owner, name)
+                        | ModIdentifier::PinnedGitHubRepository((owner, name), _) => {
                             format!("{owner}/{name}").eq_ignore_ascii_case(&to_remove)
                         }
                         _ => todo!(),
