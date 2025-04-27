@@ -64,7 +64,6 @@ pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
                         | ModIdentifier::PinnedGitHubRepository((owner, name), _) => {
                             format!("{owner}/{name}").eq_ignore_ascii_case(&to_remove)
                         }
-                        _ => todo!(),
                     }
                     || mod_
                         .slug

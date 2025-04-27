@@ -117,10 +117,12 @@ pub async fn add(
 ) -> Result<(Vec<String>, Vec<(String, Error)>)> {
     let mut mr_ids = Vec::new();
     let mut mr_map = HashMap::new();
+
     let mut cf_ids = Vec::new();
     let mut cf_map = HashMap::new();
 
     let mut gh_ids = Vec::new();
+    let mut gh_map = HashMap::new();
 
     let mut errors = Vec::new();
 
@@ -140,7 +142,10 @@ pub async fn add(
                 mr_ids.push(project_id.clone());
                 mr_map.insert(project_id, version_id);
             }
-            ModIdentifier::PinnedGitHubRepository(..) => todo!(),
+            ModIdentifier::PinnedGitHubRepository((o, r), file_id) => {
+                gh_ids.push((o.clone(), r.clone()));
+                gh_map.insert((o, r), file_id);
+            }
         }
     }
 
@@ -324,6 +329,7 @@ pub async fn add(
             Some(asset_names),
             override_profile,
             filters.clone(),
+            gh_map.get(&repo),
         )
         .await
         {
@@ -345,6 +351,7 @@ pub async fn github(
     perform_checks: Option<Vec<Metadata>>,
     override_profile: bool,
     filters: Vec<Filter>,
+    serialized: Option<&i32>,
 ) -> Result<()> {
     // Check if project has already been added
     if profile
@@ -355,7 +362,7 @@ pub async fn github(
                 .eq_ignore_ascii_case(id.1.as_ref())
                 || matches!(
                     &mod_.identifier,
-                    ModIdentifier::GitHubRepository(owner, repo) if owner == id.0.as_ref() && repo == id.1.as_ref(),
+                    ModIdentifier::GitHubRepository(owner, repo) | ModIdentifier::PinnedGitHubRepository((owner, repo), _) if owner == id.0.as_ref() && repo == id.1.as_ref(),
                 )
         }) {
         return Err(Error::AlreadyAdded);
@@ -377,7 +384,15 @@ pub async fn github(
     // Add it to the profile
     profile.push_mod(
         id.1.as_ref().trim().to_string(),
-        ModIdentifier::GitHubRepository(id.0.to_string(), id.1.to_string()),
+        serialized.map_or_else(
+            || ModIdentifier::GitHubRepository(id.0.to_string(), id.1.to_string()),
+            |file_id| {
+                ModIdentifier::PinnedGitHubRepository(
+                    (id.0.to_string(), id.1.to_string()),
+                    *file_id,
+                )
+            },
+        ),
         id.1.as_ref().trim().to_string(),
         override_profile,
         filters,
