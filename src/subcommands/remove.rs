@@ -6,9 +6,11 @@ use libium::{
     iter_ext::IterExt as _,
 };
 
-/// If `to_remove` is empty, display a list of projects in the profile to select from and remove selected ones
+/// If `to_remove` is empty, display a list of projects in the profile to select
+/// from and remove selected ones
 ///
-/// Else, search the given strings with the projects' name and IDs and remove them
+/// Else, search the given strings with the projects' name and IDs and remove
+/// them
 pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
     let mut indices_to_remove = if to_remove.is_empty() {
         let mod_info = profile
@@ -18,16 +20,24 @@ pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
                 format!(
                     "{:11}  {}",
                     match &mod_.identifier {
-                        ModIdentifier::CurseForgeProject(id) => format!("CF {:8}", id.to_string()),
-                        ModIdentifier::ModrinthProject(id) => format!("MR {id:8}"),
-                        ModIdentifier::GitHubRepository(..) => "GH".to_string(),
-                        _ => todo!(),
+                        ModIdentifier::PinnedCurseForgeProject(id, _)
+                        | ModIdentifier::CurseForgeProject(id) =>
+                            format!("CF {:8}", id.to_string()),
+
+                        ModIdentifier::PinnedModrinthProject(id, _)
+                        | ModIdentifier::ModrinthProject(id) => format!("MR {id:8}"),
+
+                        ModIdentifier::GitHubRepository(..)
+                        | ModIdentifier::PinnedGitHubRepository(..) => "GH".to_string(),
                     },
                     match &mod_.identifier {
-                        ModIdentifier::ModrinthProject(_) | ModIdentifier::CurseForgeProject(_) =>
-                            mod_.name.clone(),
-                        ModIdentifier::GitHubRepository(owner, repo) => format!("{owner}/{repo}"),
-                        _ => todo!(),
+                        ModIdentifier::ModrinthProject(_)
+                        | ModIdentifier::CurseForgeProject(_)
+                        | ModIdentifier::PinnedCurseForgeProject(..)
+                        | ModIdentifier::PinnedModrinthProject(..) => mod_.name.clone(),
+                        ModIdentifier::GitHubRepository(owner, repo)
+                        | ModIdentifier::PinnedGitHubRepository((owner, repo), _) =>
+                            format!("{owner}/{repo}"),
                     },
                 )
             })

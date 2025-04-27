@@ -1,7 +1,9 @@
-use super::filters::Filter;
+use std::{path::PathBuf, str::FromStr};
+
 use derive_more::derive::Display;
 use serde::{Deserialize, Serialize};
-use std::{path::PathBuf, str::FromStr};
+
+use super::filters::Filter;
 
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct Config {
@@ -61,7 +63,8 @@ pub struct Profile {
 }
 
 impl Profile {
-    /// A simple constructor that automatically deals with converting to filters
+    /// A simple constructor that automatically deals with converting to
+    /// filters
     pub fn new(
         name: String,
         output_dir: PathBuf,
@@ -84,7 +87,8 @@ impl Profile {
         }
     }
 
-    /// Convert the v4 profile's `game_version` and `mod_loader` fields into filters
+    /// Convert the v4 profile's `game_version` and `mod_loader` fields into
+    /// filters
     pub(crate) fn backwards_compat(&mut self) {
         if let (Some(version), Some(loader)) = (self.game_version.take(), self.mod_loader.take()) {
             self.filters = vec![
@@ -139,7 +143,8 @@ pub struct Mod {
     #[serde(default)]
     pub filters: Vec<Filter>,
 
-    /// Whether the filters specified above replace or apply with the profile's filters
+    /// Whether the filters specified above replace or apply with the
+    /// profile's filters
     #[serde(skip_serializing_if = "is_false")]
     #[serde(default)]
     pub override_filters: bool,

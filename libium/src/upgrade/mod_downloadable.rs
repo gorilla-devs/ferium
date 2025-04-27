@@ -1,3 +1,7 @@
+use std::cmp::Reverse;
+
+use futures_util::TryFutureExt;
+
 use super::{
     from_gh_asset, from_gh_releases, from_mr_version, try_from_cf_file, DistributionDeniedError,
     DownloadData,
@@ -10,7 +14,6 @@ use crate::{
     iter_ext::IterExt as _,
     CURSEFORGE_API, GITHUB_API, MODRINTH_API,
 };
-use std::cmp::Reverse;
 
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
@@ -37,9 +40,15 @@ impl Mod {
             ModIdentifier::PinnedCurseForgeProject(mod_id, pin) => {
                 Ok(try_from_cf_file(CURSEFORGE_API.get_mod_file(*mod_id, *pin).await?)?.1)
             }
-            ModIdentifier::PinnedModrinthProject(_, pin) => {
-                Ok(from_mr_version(MODRINTH_API.version_get(pin).await?).1)
-            }
+            ModIdentifier::PinnedModrinthProject(project_id, pin) => Ok(from_mr_version(
+                MODRINTH_API
+                    .version_get(pin)
+                    .or_else(|_| async {
+                        MODRINTH_API.version_get_from_number(project_id, pin).await
+                    })
+                    .await?,
+            )
+            .1),
             ModIdentifier::PinnedGitHubRepository((owner, repo), pin) => Ok(from_gh_asset(
                 GITHUB_API
                     .repos(owner, repo)

@@ -1,22 +1,25 @@
+use std::{collections::HashMap, str::FromStr};
+
+use serde::Deserialize;
+
 use crate::{
     config::{
         filters::{Filter, ReleaseChannel},
         structs::{ModIdentifier, ModLoader, Profile},
     },
-    iter_ext::IterExt as _,
+    iter_ext::IterExt,
     upgrade::{check, Metadata},
     CURSEFORGE_API, GITHUB_API, MODRINTH_API,
 };
-use serde::Deserialize;
-use std::{collections::HashMap, str::FromStr};
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error(
         "The developer of this project has denied third party applications from downloading it"
     )]
-    /// The user can manually download the mod and place it in the `user` folder of the output directory to mitigate this.
-    /// However, they will have to manually update the mod.
+    /// The user can manually download the mod and place it in the `user`
+    /// folder of the output directory to mitigate this. However, they will
+    /// have to manually update the mod.
     DistributionDenied,
     #[error("The project has already been added")]
     AlreadyAdded,
@@ -96,12 +99,15 @@ pub fn parse_id(id: String) -> ModIdentifier {
     }
 }
 
-/// Adds mods from `identifiers`, and returns successful mods with their names, and unsuccessful mods with an error.
-/// Currently does not batch requests when adding multiple pinned mods.
+/// Adds mods from `identifiers`, and returns successful mods with their names,
+/// and unsuccessful mods with an error. Currently does not batch requests when
+/// adding multiple pinned mods.
 ///
-/// Classifies the `identifiers` into the appropriate platforms, sends batch requests to get the necessary information,
-/// checks details about the projects, and adds them to `profile` if suitable.
-/// Performs checks on the mods to see whether they're compatible with the profile if `perform_checks` is true
+/// Classifies the `identifiers` into the appropriate platforms, sends batch
+/// requests to get the necessary information, checks details about the
+/// projects, and adds them to `profile` if suitable. Performs checks on the
+/// mods to see whether they're compatible with the profile if `perform_checks`
+/// is true
 pub async fn add(
     profile: &mut Profile,
     identifiers: Vec<ModIdentifier>,
@@ -110,9 +116,15 @@ pub async fn add(
     filters: Vec<Filter>,
 ) -> Result<(Vec<String>, Vec<(String, Error)>)> {
     let mut mr_ids = Vec::new();
+    let mut mr_map = HashMap::new();
     let mut cf_ids = Vec::new();
+    let mut cf_map = HashMap::new();
+
     let mut gh_ids = Vec::new();
+
     let mut errors = Vec::new();
+
+    let mut success_names = Vec::new();
 
     for id in identifiers {
         match id {
@@ -121,11 +133,14 @@ pub async fn add(
             ModIdentifier::GitHubRepository(o, r) => gh_ids.push((o, r)),
 
             ModIdentifier::PinnedCurseForgeProject(mod_id, file_id) => {
-                let project = CURSEFORGE_API.get_mod(mod_id).await?;
-                let file = CURSEFORGE_API.get_mod_file(mod_id, file_id).await?;
+                cf_ids.push(mod_id);
+                cf_map.insert(mod_id, file_id);
             }
-            ModIdentifier::PinnedModrinthProject(project_id, version_id) => todo!(),
-            ModIdentifier::PinnedGitHubRepository((owner, repo), asset_id) => todo!(),
+            ModIdentifier::PinnedModrinthProject(project_id, version_id) => {
+                mr_ids.push(project_id.clone());
+                mr_map.insert(project_id, version_id);
+            }
+            ModIdentifier::PinnedGitHubRepository(..) => todo!(),
         }
     }
 
@@ -247,8 +262,6 @@ pub async fn add(
                 .collect_vec()
         };
 
-    let mut success_names = Vec::new();
-
     for project in cf_projects {
         if let Some(i) = cf_ids.iter().position(|&id| id == project.id) {
             cf_ids.swap_remove(i);
@@ -260,6 +273,7 @@ pub async fn add(
             perform_checks,
             override_profile,
             filters.clone(),
+            cf_map.get(&project.id),
         )
         .await
         {
@@ -287,6 +301,9 @@ pub async fn add(
             perform_checks,
             override_profile,
             filters.clone(),
+            mr_map
+                .get(&project.slug)
+                .or_else(|| mr_map.get(&project.id)),
         )
         .await
         {
@@ -318,8 +335,8 @@ pub async fn add(
     Ok((success_names, errors))
 }
 
-/// Check if the repo of `repo_handler` exists, releases mods, and is compatible with `profile`.
-/// If so, add it to the `profile`.
+/// Check if the repo of `repo_handler` exists, releases mods, and is compatible
+/// with `profile`. If so, add it to the `profile`.
 ///
 /// Returns the name of the repository to display to the user
 pub async fn github(
@@ -330,13 +347,17 @@ pub async fn github(
     filters: Vec<Filter>,
 ) -> Result<()> {
     // Check if project has already been added
-    if profile.mods.iter().any(|mod_| {
-        mod_.name.eq_ignore_ascii_case(id.1.as_ref())
-            || matches!(
-                &mod_.identifier,
-                ModIdentifier::GitHubRepository(owner, repo) if owner == id.0.as_ref() && repo == id.1.as_ref(),
-            )
-    }) {
+    if profile
+        .mods
+        .iter()
+        .any(|mod_| {
+            mod_.name
+                .eq_ignore_ascii_case(id.1.as_ref())
+                || matches!(
+                    &mod_.identifier,
+                    ModIdentifier::GitHubRepository(owner, repo) if owner == id.0.as_ref() && repo == id.1.as_ref(),
+                )
+        }) {
         return Err(Error::AlreadyAdded);
     }
 
@@ -367,23 +388,28 @@ pub async fn github(
 
 use ferinth::structures::project::{Project, ProjectType};
 
-/// Check if the project of `project_id` has not already been added, is a mod, and is compatible with `profile`.
-/// If so, add it to the `profile`.
+/// Check if the project of `project_id` has not already been added, is a mod,
+/// and is compatible with `profile`. If so, add it to the `profile`.
 pub async fn modrinth(
     project: &Project,
     profile: &mut Profile,
     perform_checks: bool,
     override_profile: bool,
     filters: Vec<Filter>,
+    serialized: Option<&String>,
 ) -> Result<()> {
     // Check if project has already been added
-    if profile.mods.iter().any(|mod_| {
-        mod_.name.eq_ignore_ascii_case(&project.title)
-            || matches!(
-                &mod_.identifier,
-                ModIdentifier::ModrinthProject(id) if id == &project.id,
-            )
-    }) {
+    if profile
+        .mods
+        .iter()
+        .any(|mod_| {
+            mod_.name
+                .eq_ignore_ascii_case(&project.title)
+                || matches!(
+                    &mod_.identifier,
+                    ModIdentifier::ModrinthProject(id) | ModIdentifier::PinnedModrinthProject(id, _) if id == &project.id,
+                )
+        }) {
         Err(Error::AlreadyAdded)
 
     // Check if the project is a mod
@@ -398,7 +424,9 @@ pub async fn modrinth(
                     filename: "".to_owned(),
                     title: "".to_owned(),
                     description: "".to_owned(),
-                    game_versions: project.game_versions.clone(),
+                    game_versions: project
+                        .game_versions
+                        .clone(),
                     loaders: project
                         .loaders
                         .iter()
@@ -408,17 +436,22 @@ pub async fn modrinth(
                 }]
                 .iter(),
                 if override_profile {
-                    profile.filters.clone()
+                    profile.filters
+                        .clone()
                 } else {
-                    [profile.filters.clone(), filters.clone()].concat()
+                    [
+                        profile.filters
+                            .clone(),
+                        filters.clone(),
+                    ]
+                    .concat()
                 }
                 .iter()
                 .filter(|f| {
                     matches!(
                         f,
                         Filter::GameVersionStrict(_)
-                            | Filter::GameVersionMinor(_)
-                            | Filter::ModLoaderAny(_)
+                            | Filter::GameVersionMinor(_) | Filter::ModLoaderAny(_)
                             | Filter::ModLoaderPrefer(_)
                     )
                 })
@@ -429,9 +462,26 @@ pub async fn modrinth(
         }
         // Add it to the profile
         profile.push_mod(
-            project.title.trim().to_owned(),
-            ModIdentifier::ModrinthProject(project.id.clone()),
-            project.slug.to_owned(),
+            project.title
+                .trim()
+                .to_owned(),
+            serialized.map_or_else(
+                || {
+                    ModIdentifier::ModrinthProject(
+                        project.id
+                            .clone(),
+                    )
+                },
+                |version_id| {
+                    ModIdentifier::PinnedModrinthProject(
+                        project.id
+                            .clone(),
+                        version_id.clone(),
+                    )
+                },
+            ),
+            project.slug
+                .to_owned(),
             override_profile,
             filters,
         );
@@ -439,14 +489,15 @@ pub async fn modrinth(
     }
 }
 
-/// Check if the mod of `project_id` has not already been added, is a mod, and is compatible with `profile`.
-/// If so, add it to the `profile`.
+/// Check if the mod of `project_id` has not already been added, is a mod, and
+/// is compatible with `profile`. If so, add it to the `profile`.
 pub async fn curseforge(
     project: &furse::structures::mod_structs::Mod,
     profile: &mut Profile,
     perform_checks: bool,
     override_profile: bool,
     filters: Vec<Filter>,
+    serialized: Option<&i32>,
 ) -> Result<()> {
     // Check if project has already been added
     if profile.mods.iter().any(|mod_| {
@@ -510,7 +561,7 @@ pub async fn curseforge(
         }
         profile.push_mod(
             project.name.trim().to_string(),
-            ModIdentifier::CurseForgeProject(project.id),
+            serialized.map_or_else(|| ModIdentifier::CurseForgeProject(project.id), |file_id| ModIdentifier::PinnedCurseForgeProject(project.id, *file_id)),
             project.slug.clone(),
             override_profile,
             filters,
