@@ -123,7 +123,7 @@ xbps-install ferium
 #### [crates.io](https://crates.io) using the _Rust toolchain_
 [![crates.io](https://repology.org/badge/version-for-repo/crates_io/rust:ferium.svg)](https://crates.io/crates/ferium)
 ```bash
-cargo install ferium
+cargo install --locked ferium
 ```
 > [!TIP]
 > Use a tool like [cargo-update](https://crates.io/crates/cargo-update) to keep ferium updated to the latest version!
