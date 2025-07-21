@@ -56,10 +56,6 @@ pub enum SubCommands {
         #[clap(long, short, visible_alias = "override")]
         force: bool,
 
-        /// Pin a mod to a specific version
-        #[clap(long, short, visible_alias = "lock")]
-        pin: Option<String>,
-
         #[command(flatten)]
         filters: FilterArguments,
     },

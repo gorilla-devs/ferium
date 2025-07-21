@@ -175,14 +175,77 @@ const fn is_false(b: &bool) -> bool {
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
-pub enum ModIdentifier {
+pub enum ConfigModIdentifier {
     CurseForgeProject(i32),
     ModrinthProject(String),
     GitHubRepository(String, String),
 
     PinnedCurseForgeProject(i32, i32),
     PinnedModrinthProject(String, String),
-    PinnedGitHubRepository((String, String), i32),
+    PinnedGitHubRepository((String, String), i64),
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[serde(from = "ConfigModIdentifier", into = "ConfigModIdentifier")]
+pub enum ModIdentifier {
+    CurseForgeProject(i32, Option<i32>),
+    ModrinthProject(String, Option<String>),
+    GitHubRepository((String, String), Option<i64>),
+}
+
+impl From<ConfigModIdentifier> for ModIdentifier {
+    fn from(from: ConfigModIdentifier) -> Self {
+        match from {
+            ConfigModIdentifier::CurseForgeProject(p) => ModIdentifier::CurseForgeProject(p, None),
+            ConfigModIdentifier::ModrinthProject(p) => ModIdentifier::ModrinthProject(p, None),
+            ConfigModIdentifier::GitHubRepository(o, r) => {
+                ModIdentifier::GitHubRepository((o, r), None)
+            }
+            ConfigModIdentifier::PinnedCurseForgeProject(p, v) => {
+                ModIdentifier::CurseForgeProject(p, Some(v))
+            }
+            ConfigModIdentifier::PinnedModrinthProject(p, v) => {
+                ModIdentifier::ModrinthProject(p, Some(v))
+            }
+            ConfigModIdentifier::PinnedGitHubRepository(p, v) => {
+                ModIdentifier::GitHubRepository(p, Some(v))
+            }
+        }
+    }
+}
+
+impl From<ModIdentifier> for ConfigModIdentifier {
+    fn from(from: ModIdentifier) -> Self {
+        match from {
+            ModIdentifier::CurseForgeProject(p, None) => ConfigModIdentifier::CurseForgeProject(p),
+            ModIdentifier::ModrinthProject(p, None) => ConfigModIdentifier::ModrinthProject(p),
+            ModIdentifier::GitHubRepository((o, r), None) => {
+                ConfigModIdentifier::GitHubRepository(o, r)
+            }
+            ModIdentifier::CurseForgeProject(p, Some(v)) => {
+                ConfigModIdentifier::PinnedCurseForgeProject(p, v)
+            }
+            ModIdentifier::ModrinthProject(p, Some(v)) => {
+                ConfigModIdentifier::PinnedModrinthProject(p, v)
+            }
+            ModIdentifier::GitHubRepository(p, Some(v)) => {
+                ConfigModIdentifier::PinnedGitHubRepository(p, v)
+            }
+        }
+    }
+}
+
+impl ModIdentifier {
+    /// Checks if `self` and `other` refer to the same project,
+    /// ignoring any differences in pinning.
+    pub fn is_same_as(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::CurseForgeProject(l0, _), Self::CurseForgeProject(r0, _)) => l0 == r0,
+            (Self::ModrinthProject(l0, _), Self::ModrinthProject(r0, _)) => l0 == r0,
+            (Self::GitHubRepository(l0, _), Self::GitHubRepository(r0, _)) => l0 == r0,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Display, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]

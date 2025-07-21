@@ -1,13 +1,16 @@
 use colored::Colorize as _;
-use libium::{add::Error, iter_ext::IterExt as _};
+use libium::{add::Error, config::structs::ModIdentifier, iter_ext::IterExt as _};
 use std::collections::HashMap;
 
-pub fn display_successes_failures(successes: &[String], failures: Vec<(String, Error)>) -> bool {
+pub fn display_successes_failures(
+    successes: &[(String, ModIdentifier)],
+    failures: Vec<(String, Error)>,
+) -> bool {
     if !successes.is_empty() {
         println!(
             "{} {}",
             "Successfully added".green(),
-            successes.iter().map(|s| s.bold()).display(", ")
+            successes.iter().map(|(name, _)| name.bold()).display(", ")
         );
 
     // No need to print the ID again if there is only one

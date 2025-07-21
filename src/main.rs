@@ -215,17 +215,17 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                         println!("{} {}", "Unknown file:".yellow(), filename.dimmed());
                     }
                     (_, Some(mr_id), None) => {
-                        send_ids.push(ModIdentifier::ModrinthProject(mr_id));
+                        send_ids.push(ModIdentifier::ModrinthProject(mr_id, None));
                     }
                     (_, None, Some(cf_id)) => {
-                        send_ids.push(ModIdentifier::CurseForgeProject(cf_id));
+                        send_ids.push(ModIdentifier::CurseForgeProject(cf_id, None));
                     }
                     (_, Some(mr_id), Some(cf_id)) => match platform {
                         cli::Platform::Modrinth => {
-                            send_ids.push(ModIdentifier::ModrinthProject(mr_id));
+                            send_ids.push(ModIdentifier::ModrinthProject(mr_id, None));
                         }
                         cli::Platform::Curseforge => {
-                            send_ids.push(ModIdentifier::CurseForgeProject(cf_id));
+                            send_ids.push(ModIdentifier::CurseForgeProject(cf_id, None));
                         }
                     },
                 }
@@ -240,50 +240,23 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
         SubCommands::Add {
             identifiers,
             force,
-            pin,
             filters,
         } => {
             let profile = get_active_profile(&mut config)?;
             let override_profile = filters.override_profile;
             let filters: Vec<_> = filters.into();
 
+            // TODO: conf multiple filters if the user sets the option
             ensure!(
                 // If filters are specified, there should only be one mod
                 filters.is_empty() || identifiers.len() == 1,
                 "You can only configure filters when adding a single mod!"
             );
-            ensure!(
-                // If a pin is specified, there should only be one mod
-                pin.is_none() || identifiers.len() == 1,
-                "You can only pin a version when adding a single mod!"
-            );
 
-            let identifiers = if let Some(pin) = pin {
-                let id = libium::add::parse_id(identifiers[0].clone());
-                vec![match id {
-                    ModIdentifier::CurseForgeProject(project_id) => {
-                        ModIdentifier::PinnedCurseForgeProject(
-                            project_id,
-                            pin.parse().context("Invalid file ID for CurseForge file")?,
-                        )
-                    }
-                    ModIdentifier::ModrinthProject(project_id) => {
-                        ModIdentifier::PinnedModrinthProject(project_id, pin)
-                    }
-                    ModIdentifier::GitHubRepository(owner, repo) => {
-                        ModIdentifier::PinnedGitHubRepository(
-                            (owner, repo),
-                            pin.parse().context("Invalid asset ID for GitHub")?,
-                        )
-                    }
-                    _ => unreachable!(),
-                }]
-            } else {
-                identifiers
-                    .into_iter()
-                    .map(libium::add::parse_id)
-                    .collect_vec()
-            };
+            let identifiers = identifiers
+                .into_iter()
+                .map(libium::add::parse_id)
+                .collect::<libium::add::Result<Vec<_>>>()?;
 
             let (successes, failures) =
                 libium::add(profile, identifiers, !force, override_profile, filters).await?;
@@ -317,21 +290,28 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                 );
                 for mod_ in &profile.mods {
                     println!(
-                        "{:20}  {}",
+                        "{:20}  {}{}",
                         match &mod_.identifier {
-                            ModIdentifier::CurseForgeProject(id) =>
+                            ModIdentifier::CurseForgeProject(id, _) =>
                                 format!("{} {:8}", "CF".red(), id.to_string().dimmed()),
-                            ModIdentifier::ModrinthProject(id) =>
+                            ModIdentifier::ModrinthProject(id, _) =>
                                 format!("{} {:8}", "MR".green(), id.dimmed()),
                             ModIdentifier::GitHubRepository(..) => "GH".purple().to_string(),
-                            _ => todo!(),
                         },
                         match &mod_.identifier {
-                            ModIdentifier::ModrinthProject(_)
-                            | ModIdentifier::CurseForgeProject(_) => mod_.name.bold().to_string(),
-                            ModIdentifier::GitHubRepository(owner, repo) =>
+                            ModIdentifier::ModrinthProject(..)
+                            | ModIdentifier::CurseForgeProject(..) => mod_.name.bold().to_string(),
+                            ModIdentifier::GitHubRepository((owner, repo), _) =>
                                 format!("{}/{}", owner.dimmed(), repo.bold()),
-                            _ => todo!(),
+                        },
+                        match &mod_.identifier {
+                            ModIdentifier::ModrinthProject(_, Some(pin)) =>
+                                format!("\n   📌 {}", pin.dimmed()),
+                            ModIdentifier::CurseForgeProject(_, Some(pin)) =>
+                                format!("\n   📌 {}", pin.to_string().dimmed()),
+                            ModIdentifier::GitHubRepository(_, Some(pin)) =>
+                                format!("\n   📌 {}", pin.to_string().dimmed()),
+                            _ => String::new(),
                         },
                     );
                 }

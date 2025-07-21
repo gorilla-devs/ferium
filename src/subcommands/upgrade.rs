@@ -95,16 +95,14 @@ pub async fn get_platform_downloadables(profile: &Profile) -> Result<(Vec<Downlo
                                 format!(
                                     "Dependency: {}",
                                     match &dep {
-                                        ModIdentifier::CurseForgeProject(id) => id.to_string(),
-                                        ModIdentifier::ModrinthProject(id)
-                                        | ModIdentifier::PinnedModrinthProject(id, _) =>
-                                            id.to_owned(),
-                                        _ => unreachable!(),
+                                        ModIdentifier::CurseForgeProject(id, _) => id.to_string(),
+                                        ModIdentifier::ModrinthProject(id, _) => id.to_owned(),
+                                        ModIdentifier::GitHubRepository(..) => unreachable!(),
                                     }
                                 ),
                                 match dep {
-                                    ModIdentifier::PinnedModrinthProject(id, _) => {
-                                        ModIdentifier::ModrinthProject(id)
+                                    ModIdentifier::ModrinthProject(id, Some(_)) => {
+                                        ModIdentifier::ModrinthProject(id, None)
                                     }
                                     _ => dep,
                                 },

@@ -99,7 +99,7 @@ pub fn try_from_cf_file(
                 .iter()
                 .filter_map(|d| {
                     if d.relation_type == CFFileRelationType::RequiredDependency {
-                        Some(ModIdentifier::CurseForgeProject(d.mod_id))
+                        Some(ModIdentifier::CurseForgeProject(d.mod_id, None))
                     } else {
                         None
                     }
@@ -110,7 +110,7 @@ pub fn try_from_cf_file(
                 .iter()
                 .filter_map(|d| {
                     if d.relation_type == CFFileRelationType::Incompatible {
-                        Some(ModIdentifier::CurseForgeProject(d.mod_id))
+                        Some(ModIdentifier::CurseForgeProject(d.mod_id, None))
                     } else {
                         None
                     }
@@ -151,9 +151,11 @@ pub fn from_mr_version(version: MRVersion) -> (Metadata, DownloadData) {
                     if d.dependency_type == MRDependencyType::Required {
                         match (d.project_id, d.version_id) {
                             (Some(proj_id), Some(ver_id)) => {
-                                Some(ModIdentifier::PinnedModrinthProject(proj_id, ver_id))
+                                Some(ModIdentifier::ModrinthProject(proj_id, Some(ver_id)))
                             }
-                            (Some(proj_id), None) => Some(ModIdentifier::ModrinthProject(proj_id)),
+                            (Some(proj_id), None) => {
+                                Some(ModIdentifier::ModrinthProject(proj_id, None))
+                            }
                             _ => {
                                 eprintln!("Project ID not available");
                                 None
@@ -171,9 +173,11 @@ pub fn from_mr_version(version: MRVersion) -> (Metadata, DownloadData) {
                     if d.dependency_type == MRDependencyType::Incompatible {
                         match (d.project_id, d.version_id) {
                             (Some(proj_id), Some(ver_id)) => {
-                                Some(ModIdentifier::PinnedModrinthProject(proj_id, ver_id))
+                                Some(ModIdentifier::ModrinthProject(proj_id, Some(ver_id)))
                             }
-                            (Some(proj_id), None) => Some(ModIdentifier::ModrinthProject(proj_id)),
+                            (Some(proj_id), None) => {
+                                Some(ModIdentifier::ModrinthProject(proj_id, None))
+                            }
                             _ => {
                                 eprintln!("Project ID not available");
                                 None
