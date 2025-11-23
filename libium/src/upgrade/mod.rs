@@ -284,6 +284,7 @@ impl DownloadData {
         );
 
         let mut response = client.get(url).send().await?;
+        response.error_for_status_ref()?;
 
         while let Some(chunk) = response.chunk().await? {
             temp_file.write_all(&chunk)?;
