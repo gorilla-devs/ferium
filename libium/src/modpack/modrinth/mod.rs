@@ -7,7 +7,7 @@ use std::{
 };
 
 use zip::{write::SimpleFileOptions, ZipWriter};
-use zip_extensions::ZipWriterExtensions;
+use zip_extensions::deflate::zip_writer_extensions::ZipWriterExtensions;
 
 /// Create a Modrinth modpack at `output` using the provided `metadata` and optional `overrides`
 pub fn create(
@@ -45,6 +45,8 @@ pub fn create(
     if let Some(overrides) = overrides {
         writer.create_from_directory(&overrides.to_owned())?;
     }
+
+    writer.finish()?;
 
     Ok(())
 }

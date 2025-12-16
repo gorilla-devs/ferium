@@ -2,7 +2,9 @@ pub mod add;
 pub mod curseforge;
 pub mod modrinth;
 
-pub use zip_extensions::{zip_create_from_directory, zip_extract};
+pub use zip_extensions::{
+    deflate::zip_writer::zip_create_from_directory, inflate::zip_extract::zip_extract,
+};
 
 use crate::read_wrapper;
 use std::io::{Read, Seek};
