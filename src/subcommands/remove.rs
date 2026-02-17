@@ -30,9 +30,9 @@ pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
                             format!("{owner}/{repo}"),
                     },
                     match &mod_.identifier {
-                        ModIdentifier::ModrinthProject(_, Some(pin)) => format!(" (📌 {pin})"),
                         ModIdentifier::CurseForgeProject(_, Some(pin)) => format!(" (📌 {pin})"),
-                        ModIdentifier::GitHubRepository(_, Some(pin)) => format!(" (📌 {pin})"),
+                        ModIdentifier::ModrinthProject(_, Some(pin))
+                        | ModIdentifier::GitHubRepository(_, Some(pin)) => format!(" (📌 {pin})"),
                         _ => String::new(),
                     },
                 )

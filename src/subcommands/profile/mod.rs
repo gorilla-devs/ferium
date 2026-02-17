@@ -87,7 +87,7 @@ pub async fn check_output_directory(output_dir: &PathBuf) -> Result<()> {
         "The provided output directory is not absolute, i.e. it is a relative path"
     );
     if output_dir.file_name() != Some(std::ffi::OsStr::new("mods")) {
-        println!("{}", "Warning! The output directory is not called `mods`. Most mod loaders will load from a directory called `mods`.".bright_yellow());
+        println!("{}", "WARNING: The output directory is not called `mods`. Most mod loaders will load from a directory called `mods`.".bright_yellow());
     }
 
     let mut backup = false;

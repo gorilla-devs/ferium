@@ -32,7 +32,7 @@ pub async fn clean(
         println!(
             "{}",
             format!(
-                "Warning: {} duplicate files were found {}. Remove the mod it belongs to",
+                "WARNING: {} duplicate files were found {}. Remove the mod it belongs to",
                 dupes.len(),
                 dupes
                     .into_iter()

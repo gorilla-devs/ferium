@@ -18,7 +18,7 @@ pub enum Error {
     DistributionDenied(#[from] DistributionDeniedError),
     CheckError(#[from] super::check::Error),
     #[error("The pin provided is an invalid identifier")]
-    InvalidPinID(#[from] std::num::ParseIntError),
+    InvalidPinID,
     #[error("Modrinth: {0}")]
     ModrinthError(#[from] ferinth::Error),
     #[error("CurseForge: {0}")]
@@ -40,9 +40,15 @@ impl Mod {
             ModIdentifier::GitHubRepository((owner, repo), Some(pin)) => Ok(from_gh_asset(
                 GITHUB_API
                     .repos(owner, repo)
-                    .release_assets()
-                    .get(*pin as u64)
-                    .await?,
+                    .releases()
+                    .list()
+                    .send()
+                    .await?
+                    .items
+                    .into_iter()
+                    .flat_map(|release| release.assets)
+                    .find(|asset| &asset.node_id == pin)
+                    .ok_or(Error::InvalidPinID)?,
             )),
             id => {
                 let download_files = match &id {

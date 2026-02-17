@@ -84,12 +84,12 @@ struct ReleaseAssetConnection {
 }
 #[derive(Deserialize, Debug)]
 struct ReleaseAsset {
-    id: i64,
+    id: String,
     name: String,
 }
 
 pub fn parse_id(id: String) -> Result<ModIdentifier> {
-    let split = id.split('-').collect_vec();
+    let split = id.split(':').collect_vec();
     let (id, pin) = match split.as_slice() {
         [id, pin] => (id, Some(pin)),
         [id] => (id, None),
@@ -438,81 +438,81 @@ pub async fn add(
     );
 
     for (((owner, repo), releases), pin) in gh_repos.into_iter().zip(gh_asset_ids) {
-        let res = 'gh_check: {
-            let identifier = ModIdentifier::GitHubRepository((owner.clone(), repo.clone()), pin);
+        let res =
+            'gh_check: {
+                let identifier =
+                    ModIdentifier::GitHubRepository((owner.clone(), repo.clone()), pin.clone());
 
-            if profile.mods.iter().any(|mod_| {
-                mod_.name.eq_ignore_ascii_case(repo.as_ref())
-                    || matches!(
-                        &mod_.identifier,
-                        ModIdentifier::GitHubRepository((o, r), _) if o == &owner && r == &repo,
-                    )
-            }) {
-                break 'gh_check Err(Error::AlreadyAdded);
-            }
-            if let Some(pin) = pin {
-                if !releases
-                    .into_iter()
-                    .flat_map(|release| release.release_assets.nodes)
-                    .any(|asset| asset.id == pin)
-                {
-                    break 'gh_check Err(Error::IncorrectVersionPin);
+                if profile.mods.iter().any(|mod_| {
+                    mod_.name.eq_ignore_ascii_case(repo.as_ref())
+                        || matches!(
+                            &mod_.identifier,
+                            ModIdentifier::GitHubRepository((o, r), _) if o == &owner && r == &repo,
+                        )
+                }) {
+                    break 'gh_check Err(Error::AlreadyAdded);
                 }
-            } else if perform_checks {
-                // Check if the repo is compatible
-                check::select_latest(
-                    releases
+                if let Some(pin) = &pin {
+                    if !releases
                         .into_iter()
-                        .flat_map(|release| {
-                            release
-                                .release_assets
-                                .nodes
-                                .into_iter()
-                                .map(move |asset| Metadata {
-                                    title: release.name.clone(),
-                                    description: release.description.clone(),
-                                    channel: if release.is_prerelease {
-                                        ReleaseChannel::Beta
-                                    } else {
-                                        ReleaseChannel::Release
-                                    },
-                                    game_versions: asset
-                                        .name
-                                        .trim_end_matches(".jar")
-                                        .split(['-', '_', '+'])
-                                        .map(|s| s.trim_start_matches("mc"))
-                                        .map(ToOwned::to_owned)
-                                        .collect_vec(),
-                                    loaders: asset
-                                        .name
-                                        .trim_end_matches(".jar")
-                                        .split(['-', '_', '+'])
-                                        .filter_map(|s| ModLoader::from_str(s).ok())
-                                        .collect_vec(),
-                                    filename: asset.name,
+                        .flat_map(|release| release.release_assets.nodes)
+                        .any(|asset| &asset.id == pin)
+                    {
+                        break 'gh_check Err(Error::IncorrectVersionPin);
+                    }
+                } else if perform_checks {
+                    // Check if the repo is compatible
+                    check::select_latest(
+                        releases
+                            .into_iter()
+                            .flat_map(|release| {
+                                release.release_assets.nodes.into_iter().map(move |asset| {
+                                    Metadata {
+                                        title: release.name.clone(),
+                                        description: release.description.clone(),
+                                        channel: if release.is_prerelease {
+                                            ReleaseChannel::Beta
+                                        } else {
+                                            ReleaseChannel::Release
+                                        },
+                                        game_versions: asset
+                                            .name
+                                            .trim_end_matches(".jar")
+                                            .split(['-', '_', '+'])
+                                            .map(|s| s.trim_start_matches("mc"))
+                                            .map(ToOwned::to_owned)
+                                            .collect_vec(),
+                                        loaders: asset
+                                            .name
+                                            .trim_end_matches(".jar")
+                                            .split(['-', '_', '+'])
+                                            .filter_map(|s| ModLoader::from_str(s).ok())
+                                            .collect_vec(),
+                                        filename: asset.name,
+                                    }
                                 })
-                        })
-                        .collect_vec()
-                        .iter(),
-                    if override_profile {
-                        profile.filters.clone()
-                    } else {
-                        [profile.filters.clone(), filters.clone()].concat()
-                    },
-                )
-                .await?;
-            }
+                            })
+                            .collect_vec()
+                            .iter(),
+                        if override_profile {
+                            profile.filters.clone()
+                        } else {
+                            [profile.filters.clone(), filters.clone()].concat()
+                        },
+                    )
+                    .await?;
+                }
 
-            profile.push_mod(
-                repo.clone(),
-                identifier.clone(),
-                repo.clone(),
-                override_profile,
-                filters.clone(),
-            );
+                profile.push_mod(
+                    repo.clone(),
+                    identifier.clone(),
+                    repo.clone(),
+                    override_profile,
+                    filters.clone(),
+                );
 
-            Ok(identifier)
-        };
+                Ok(identifier)
+            };
         match res {
             Ok(id) => success_names.push((format!("{owner}/{repo}"), id)),
             Err(err) => errors.push((format!("{owner}/{repo}"), err)),

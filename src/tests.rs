@@ -234,6 +234,46 @@ async fn already_added() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn add_all_pinned() {
+    assert_matches!(
+        actual_main(get_args(
+            SubCommands::Add {
+                identifiers: vec![
+                    "starlight:HZYU0kdg".to_owned(),
+                    "591388:6713391".to_owned(),
+                    "CaffeineMC/sodium:RA_kwDODijHac4Kh-Lc".to_owned()
+                ],
+                force: false,
+                filters: FilterArguments::default(),
+            },
+            Some("empty_profile"),
+        ))
+        .await,
+        Ok(()),
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn add_all_invalid_pins() {
+    assert_matches!(
+        actual_main(get_args(
+            SubCommands::Add {
+                identifiers: vec![
+                    "starlight:ihzX2Dvy".to_owned(),
+                    "591388:4947005".to_owned(),
+                    "CaffeineMC/sodium:kwDODijHac4Kh".to_owned()
+                ],
+                force: false,
+                filters: FilterArguments::default(),
+            },
+            Some("empty_profile"),
+        ))
+        .await,
+        Err(_),
+    );
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn scan() {
     assert_matches!(
         actual_main(get_args(

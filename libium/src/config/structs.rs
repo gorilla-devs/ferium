@@ -182,7 +182,7 @@ pub enum ConfigModIdentifier {
 
     PinnedCurseForgeProject(i32, i32),
     PinnedModrinthProject(String, String),
-    PinnedGitHubRepository((String, String), i64),
+    PinnedGitHubRepository((String, String), String),
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
@@ -190,7 +190,7 @@ pub enum ConfigModIdentifier {
 pub enum ModIdentifier {
     CurseForgeProject(i32, Option<i32>),
     ModrinthProject(String, Option<String>),
-    GitHubRepository((String, String), Option<i64>),
+    GitHubRepository((String, String), Option<String>),
 }
 
 impl From<ConfigModIdentifier> for ModIdentifier {
