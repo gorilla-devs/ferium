@@ -7,7 +7,7 @@ use std::{
 };
 
 use zip::{write::SimpleFileOptions, ZipWriter};
-use zip_extensions::ZipWriterExtensions;
+use zip_extensions::zip_writer_extensions::ZipWriterExtensions as _;
 
 /// Create a Modrinth modpack at `output` using the provided `metadata` and optional `overrides`
 pub fn create(

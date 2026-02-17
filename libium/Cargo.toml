@@ -27,13 +27,14 @@ reqwest.workspace = true
 furse.workspace = true
 clap.workspace = true
 
-derive_more = { version = "2.0", features = ["display"] }
+derive_more = { version = "2.1", features = ["display"] }
 serde = { version = "1.0", features = ["derive"] }
 url = { version = "2.5", features = ["serde"] }
-zip-extensions = "0.8"
+zip-extensions = "0.13"
 futures-util = "0.3"
 directories = "6.0"
 thiserror = "2.0"
-regex = "1.11"
+base64 = "0.22"
+regex = "1.12"
 sha1 = "0.10"
-zip = "3.0"
+zip = "6.0"

@@ -6,7 +6,7 @@ use crate::{
 };
 use libium::config::structs::ModLoader;
 use std::{
-    assert_matches::assert_matches,
+    assert_matches,
     env::current_dir,
     fs::{copy, create_dir_all},
     path::PathBuf,
@@ -26,7 +26,7 @@ fn get_args(subcommand: SubCommands, config_file: Option<&str>) -> Ferium {
         .join("tests")
         .join("configs")
         .join("running")
-        .join(format!("{:X}.json", rand::random::<usize>()));
+        .join(format!("{:X}.json", rand::random::<u32>()));
     let _ = create_dir_all(running.parent().unwrap());
     if let Some(config_file) = config_file {
         copy(format!("./tests/configs/{config_file}.json"), &running).unwrap();

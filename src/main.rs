@@ -1,4 +1,3 @@
-#![cfg_attr(test, feature(assert_matches))]
 #![deny(
     clippy::all,
     clippy::perf,
@@ -305,12 +304,11 @@ async fn actual_main(mut cli_app: Ferium) -> Result<()> {
                                 format!("{}/{}", owner.dimmed(), repo.bold()),
                         },
                         match &mod_.identifier {
-                            ModIdentifier::ModrinthProject(_, Some(pin)) =>
-                                format!("\n   📌 {}", pin.dimmed()),
                             ModIdentifier::CurseForgeProject(_, Some(pin)) =>
                                 format!("\n   📌 {}", pin.to_string().dimmed()),
-                            ModIdentifier::GitHubRepository(_, Some(pin)) =>
-                                format!("\n   📌 {}", pin.to_string().dimmed()),
+                            ModIdentifier::ModrinthProject(_, Some(pin))
+                            | ModIdentifier::GitHubRepository(_, Some(pin)) =>
+                                format!("\n   📌 {}", pin.dimmed()),
                             _ => String::new(),
                         },
                     );
