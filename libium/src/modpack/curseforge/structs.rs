@@ -9,7 +9,7 @@ pub struct Manifest {
     pub manifest_type: ManifestType,
     pub manifest_version: i32,
     pub name: String,
-    pub version: String,
+    pub version: Option<String>,
     pub author: String,
     /// The files this modpack needs
     pub files: Vec<ModpackFile>,
