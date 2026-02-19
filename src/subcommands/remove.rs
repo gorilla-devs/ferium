@@ -75,7 +75,7 @@ pub fn remove(profile: &mut Profile, to_remove: Vec<String>) -> Result<()> {
 
     let mut removed = Vec::new();
     for index in indices_to_remove {
-        removed.push(profile.mods.swap_remove(index).name);
+        removed.push(profile.mods.remove(index).name);
     }
 
     if !removed.is_empty() {

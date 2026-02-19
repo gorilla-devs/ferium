@@ -36,7 +36,7 @@ pub async fn clean(
                 dupes.len(),
                 dupes
                     .into_iter()
-                    .map(|i| to_download.swap_remove(i).filename())
+                    .map(|i| to_download.remove(i).filename())
                     .display(", ")
             )
             .yellow()
@@ -57,11 +57,11 @@ pub async fn clean(
                 .position(|thing| filename == thing.filename())
             {
                 // Don't download it
-                to_download.swap_remove(index);
+                to_download.remove(index);
             // Likewise, if it is already installed
             } else if let Some(index) = to_install.iter().position(|thing| filename == thing.0) {
                 // Don't install it
-                to_install.swap_remove(index);
+                to_install.remove(index);
             // Or else, move the file to `directory`/.old
             // If the file is a `.part` file or if the move failed, delete the file
             } else if filename.ends_with("part")

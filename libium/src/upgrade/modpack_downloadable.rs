@@ -20,6 +20,8 @@ pub enum Error {
     ReqwestError(#[from] reqwest::Error),
     DownloadError(#[from] super::Error),
     IOError(#[from] std::io::Error),
+    #[error("The modpack has no files available")]
+    NoFilesAvailable,
 }
 type Result<T> = std::result::Result<T, Error>;
 
@@ -30,12 +32,22 @@ impl ModpackIdentifier {
         update: impl Fn(usize) + Send,
     ) -> Result<PathBuf> {
         let (_, download_data) = match self {
-            ModpackIdentifier::CurseForgeModpack(id) => {
-                try_from_cf_file(CURSEFORGE_API.get_mod_files(*id).await?.swap_remove(0))?
-            }
-            ModpackIdentifier::ModrinthModpack(id) => {
-                from_mr_version(MODRINTH_API.version_list(id).await?.swap_remove(0))
-            }
+            ModpackIdentifier::CurseForgeModpack(id) => try_from_cf_file(
+                CURSEFORGE_API
+                    .get_mod_files(*id)
+                    .await?
+                    .into_iter()
+                    .nth(0)
+                    .ok_or(Error::NoFilesAvailable)?,
+            )?,
+            ModpackIdentifier::ModrinthModpack(id) => from_mr_version(
+                MODRINTH_API
+                    .version_list(id)
+                    .await?
+                    .into_iter()
+                    .nth(0)
+                    .ok_or(Error::NoFilesAvailable)?,
+            ),
         };
 
         let cache_dir = PROJECT_DIRS.cache_dir().join("downloaded");

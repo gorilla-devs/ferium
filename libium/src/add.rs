@@ -254,7 +254,7 @@ pub async fn add(
 
     for (project, pin) in cf_projects.into_iter().zip(cf_file_ids) {
         if let Some(i) = cf_project_ids.iter().position(|&id| id == project.id) {
-            cf_project_ids.swap_remove(i);
+            cf_project_ids.remove(i);
         }
 
         let res = 'cf_check: {
@@ -359,7 +359,7 @@ pub async fn add(
             .iter()
             .position(|id| id == &project.id || project.slug.eq_ignore_ascii_case(id))
         {
-            mr_project_ids.swap_remove(i);
+            mr_project_ids.remove(i);
         }
 
         let res = 'mr_check: {

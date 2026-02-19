@@ -92,7 +92,7 @@ pub fn try_from_cf_file(
             download_url: file
                 .download_url
                 .ok_or(DistributionDeniedError(file.mod_id, file.id))?,
-            output: file.file_name.as_str().into(),
+            output: file.file_name.into(),
             length: file.file_length as usize,
             dependencies: file
                 .dependencies
