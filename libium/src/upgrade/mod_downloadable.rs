@@ -64,6 +64,7 @@ impl Mod {
                         .version_list(id)
                         .await?
                         .into_iter()
+                        .filter(|v| !v.files.is_empty())
                         .map(from_mr_version)
                         .collect_vec(),
                     ModIdentifier::GitHubRepository((owner, repo), None) => GITHUB_API
